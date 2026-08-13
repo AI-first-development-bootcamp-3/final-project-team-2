@@ -32,5 +32,6 @@
 ## Notes
 
 - Stack mentions (NestJS/Prisma/Postgres) kept out of functional requirements and success criteria; epic-level stack decisions noted only in Assumptions for planning handoff.
-- Jira KAN-32 acceptance criteria mapped to FR-001–FR-008 and SC-001–SC-006.
-- Spec ready for `/speckit-clarify` (optional) or `/speckit-plan`.
+- Jira KAN-32 acceptance criteria mapped to FR-001–FR-011 and SC-001–SC-007; domain details aligned with `docs/GENERAL_SPEC.md` during `/speckit-clarify`.
+- Spec ready for `/speckit-plan`.
+- Deferred to planning: behavior when first schema apply runs on a non-empty or partially applied database.
