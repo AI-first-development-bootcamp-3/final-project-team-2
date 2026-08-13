@@ -26,10 +26,10 @@
 
 **Purpose**: Dependencies and scaffolding so Prisma + contracts can be authored
 
-- [ ] T001 Add Prisma Client, bcrypt, and `@types/bcrypt` dependencies to `server/api/package.json` and wire `prisma.seed` to `prisma/seed.ts`
-- [ ] T002 [P] Create `server/api/prisma/` directory with empty placeholder `server/api/prisma/schema.prisma` (generator + PostgreSQL datasource using `DATABASE_URL` only)
-- [ ] T003 [P] Add `.env.example` under `server/api/` documenting `DATABASE_URL` for local Postgres
-- [ ] T004 [P] Add domain enum modules in `packages/contracts/src/` for `UserRole`, `WorkLocation`, `AbsenceType`, `HalfDayPeriod`, `TaskStatus`, and `AuditAction` (Zod), and re-export from `packages/contracts/src/index.ts`
+- [X] T001 Add Prisma Client, bcrypt, and `@types/bcrypt` dependencies to `server/api/package.json` and wire `prisma.seed` to `prisma/seed.ts`
+- [X] T002 [P] Create `server/api/prisma/` directory with empty placeholder `server/api/prisma/schema.prisma` (generator + PostgreSQL datasource using `DATABASE_URL` only)
+- [X] T003 [P] Add `.env.example` under `server/api/` documenting `DATABASE_URL` for local Postgres
+- [X] T004 [P] Add domain enum modules in `packages/contracts/src/` for `UserRole`, `WorkLocation`, `AbsenceType`, `HalfDayPeriod`, `TaskStatus`, and `AuditAction` (Zod), and re-export from `packages/contracts/src/index.ts`
 
 **Checkpoint**: Dependencies and package layout ready
 
@@ -41,10 +41,10 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T005 Implement full Prisma models and enums in `server/api/prisma/schema.prisma` per `specs/001-domain-data-seed/data-model.md` and `contracts/schema-entities.md` (User, Client, Project, Task, TaskAssignment, TimeEntry, Absence, AbsenceAttachment, MonthLock, AuditLog; soft-delete only where required; TaskAssignment unique `(userId, taskId)`; MonthLock unique `(year, month)`)
-- [ ] T006 [P] Create stable demo identity constants in `server/api/prisma/demo-ids.ts` (fixed UUIDs for demo clients/projects/tasks/users and stable demo emails) for wipe-safe seeding
-- [ ] T007 Create stub `server/api/prisma/seed.ts` that connects with PrismaClient and exits with a clear “seed not implemented” message (so `prisma db seed` is wired before US2)
-- [ ] T008 Add npm/pnpm scripts in `server/api/package.json` for `prisma:generate`, `prisma:migrate`, and `prisma:seed` wrapping Prisma CLI commands from `contracts/seed-command.md`
+- [X] T005 Implement full Prisma models and enums in `server/api/prisma/schema.prisma` per `specs/001-domain-data-seed/data-model.md` and `contracts/schema-entities.md` (User, Client, Project, Task, TaskAssignment, TimeEntry, Absence, AbsenceAttachment, MonthLock, AuditLog; soft-delete only where required; TaskAssignment unique `(userId, taskId)`; MonthLock unique `(year, month)`)
+- [X] T006 [P] Create stable demo identity constants in `server/api/prisma/demo-ids.ts` (fixed UUIDs for demo clients/projects/tasks/users and stable demo emails) for wipe-safe seeding
+- [X] T007 Create stub `server/api/prisma/seed.ts` that connects with PrismaClient and exits with a clear “seed not implemented” message (so `prisma db seed` is wired before US2)
+- [X] T008 Add npm/pnpm scripts in `server/api/package.json` for `prisma:generate`, `prisma:migrate`, and `prisma:seed` wrapping Prisma CLI commands from `contracts/seed-command.md`
 
 **Checkpoint**: Foundation ready — schema defined; migrate/seed scripts exist; user stories can start
 
@@ -58,9 +58,9 @@
 
 ### Implementation for User Story 1
 
-- [ ] T009 [US1] Generate and commit the first Prisma migration under `server/api/prisma/migrations/` from `server/api/prisma/schema.prisma` (empty-DB baseline)
-- [ ] T010 [US1] Document migrate-on-empty-DB steps in `specs/001-domain-data-seed/quickstart.md` (replace placeholders with real script names from T008)
-- [ ] T011 [US1] Verify migration against `contracts/schema-entities.md` (all 10 models present; `deletedAt` only on User/Client/Project/Task/TimeEntry/Absence; constraints for TaskAssignment and MonthLock) using `pnpm exec prisma migrate deploy` on an empty DB from `server/api/`
+- [X] T009 [US1] Generate and commit the first Prisma migration under `server/api/prisma/migrations/` from `server/api/prisma/schema.prisma` (empty-DB baseline)
+- [X] T010 [US1] Document migrate-on-empty-DB steps in `specs/001-domain-data-seed/quickstart.md` (replace placeholders with real script names from T008)
+- [X] T011 [US1] Verify migration against `contracts/schema-entities.md` (all 10 models present; `deletedAt` only on User/Client/Project/Task/TimeEntry/Absence; constraints for TaskAssignment and MonthLock) using `pnpm exec prisma migrate deploy` on an empty DB from `server/api/`
 
 **Checkpoint**: User Story 1 fully functional — empty DB → migrate → schema inventory passes
 

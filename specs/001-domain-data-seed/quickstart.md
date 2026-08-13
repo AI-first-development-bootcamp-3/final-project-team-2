@@ -11,21 +11,36 @@
 
 ## Setup
 
-1. Set `DATABASE_URL` for `server/api` (env file or shell).  
+1. Copy `server/api/.env.example` to `server/api/.env` and set `DATABASE_URL`.  
 2. From `server/api`:
+
+```bash
+pnpm run prisma:migrate
+pnpm run prisma:seed
+```
+
+Equivalent Prisma CLI (same package scripts wrap these):
 
 ```bash
 pnpm exec prisma migrate deploy
 pnpm exec prisma db seed
 ```
 
-(Exact package script aliases may wrap these; prefer documented `package.json` scripts once added.)
+Generate the client after schema changes:
+
+```bash
+pnpm run prisma:generate
+```
 
 ## Validate schema (User Story 1)
 
-- Migration exits 0 on a fresh empty database.  
-- Models listed in [contracts/schema-entities.md](./contracts/schema-entities.md) exist.  
-- Soft-deletable models have `deleted_at`; TaskAssignment / MonthLock / AuditLog follow non-soft-delete rules.
+On a **fresh empty** database:
+
+1. `pnpm run prisma:migrate` (exit 0).  
+2. Confirm models listed in [contracts/schema-entities.md](./contracts/schema-entities.md) exist (tables: `users`, `clients`, `projects`, `tasks`, `task_assignments`, `time_entries`, `absences`, `absence_attachments`, `month_locks`, `audit_logs`).  
+3. Soft-deletable models have `deleted_at` (`users`, `clients`, `projects`, `tasks`, `time_entries`, `absences`).  
+4. `task_assignments` has unique `(user_id, task_id)`; `month_locks` has unique `(year, month)`; `users` has unique active email (`deleted_at IS NULL`).  
+5. TaskAssignment / MonthLock / AuditLog / AbsenceAttachment have **no** `deleted_at`.
 
 ## Validate seed (User Story 2)
 

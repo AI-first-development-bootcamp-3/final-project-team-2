@@ -1,5 +1,6 @@
 node_modules/
 dist/
+build/
 .env
 .env.local
 .env.*.local
@@ -7,3 +8,8 @@ dist/
 *.tsbuildinfo
 coverage/
 .vercel/
+*.log
+.DS_Store
+Thumbs.db
+*.tmp
+*.swp
