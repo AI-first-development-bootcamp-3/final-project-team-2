@@ -27,4 +27,4 @@
 ## 5. Coordination
 
 - [x] 5.1 Grep repo and PR #6 body for bare `/health` references; update repo docs, note the path change in the new PR description
-- [ ] 5.2 Open PR into `dev` once PR #6 merges (rebase if #6 changed); include the health-path change callout for the e2e story owner
+- [x] 5.2 Opened as stacked PR #7 (base `feat/kan-31-docker-compose`; auto-retargets to `dev` when PR #6 merges); health-path change callout for the e2e story owner included in the PR body
