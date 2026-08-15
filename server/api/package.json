@@ -7,7 +7,8 @@
     "build": "nest build",
     "start": "node dist/main.js",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test": "vitest run --coverage"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
@@ -20,12 +21,15 @@
     "@abra/config": "workspace:*",
     "@eslint/js": "^9.0.0",
     "@nestjs/cli": "^10.0.0",
+    "@nestjs/testing": "^10.0.0",
     "@types/express": "^5.0.0",
     "@types/node": "^22.0.0",
+    "@vitest/coverage-v8": "^4.1.10",
     "eslint": "^9.0.0",
     "globals": "^16.0.0",
     "prisma": "^6.0.0",
     "typescript": "^5.0.0",
-    "typescript-eslint": "^8.0.0"
+    "typescript-eslint": "^8.0.0",
+    "vitest": "^4.1.10"
   }
 }
