@@ -1,38 +1,38 @@
-import { defineConfig } from "@playwright/test";
+import { defineConfig } from '@playwright/test';
 
 const isCI = !!process.env.CI;
 
 export default defineConfig({
-  testDir: "./specs",
+  testDir: './specs',
   fullyParallel: true,
   forbidOnly: isCI,
   retries: isCI ? 2 : 0,
   workers: isCI ? 1 : undefined,
-  reporter: isCI ? "github" : "html",
+  reporter: isCI ? 'github' : 'html',
 
   use: {
-    trace: "on-first-retry",
+    trace: 'on-first-retry',
   },
 
   projects: [
     {
-      name: "chromium",
-      use: { browserName: "chromium" },
+      name: 'chromium',
+      use: { browserName: 'chromium' },
     },
   ],
 
   webServer: [
     {
-      command: "pnpm --filter @abra/mobile dev",
+      command: 'pnpm --filter @abra/mobile dev',
       port: 5173,
       reuseExistingServer: !isCI,
-      cwd: "..",
+      cwd: '..',
     },
     {
-      command: "pnpm --filter @abra/api dev",
+      command: 'pnpm --filter @abra/api dev',
       port: 3000,
       reuseExistingServer: !isCI,
-      cwd: "..",
+      cwd: '..',
     },
   ],
 });
