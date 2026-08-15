@@ -55,6 +55,9 @@ export async function applySoftDeleteMiddleware(params: {
     return query(args);
   }
 
+  // Use base client (not extended) to call update/updateMany directly.
+  // This avoids recursive middleware and is intentional — the base client
+  // bypasses the extension chain, which prevents infinite loops.
   // Intercept delete → soft delete via model delegate (not query())
   if (operation === 'delete') {
     const modelName = toCamelCase(model);

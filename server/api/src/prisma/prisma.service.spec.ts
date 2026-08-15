@@ -72,10 +72,10 @@ describe('applySoftDeleteMiddleware', () => {
     );
   });
 
-  it('converts deleteMany to soft delete with existing data', async () => {
+  it('converts deleteMany to soft delete (ignores caller data)', async () => {
     const query = makeQuery();
     const client = makeClient();
-    const args = { where: { role: 'employee' }, data: { is_active: false } };
+    const args = { where: { role: 'employee' } };
     await applySoftDeleteMiddleware({ model: 'User', operation: 'deleteMany', args, query, client });
     expect(query).not.toHaveBeenCalled();
     expect(client.user.updateMany).toHaveBeenCalledWith(
