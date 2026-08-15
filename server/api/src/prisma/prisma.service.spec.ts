@@ -39,39 +39,62 @@ describe('PrismaService', () => {
 describe('applySoftDeleteMiddleware', () => {
   const makeQuery = () => vi.fn().mockResolvedValue('result');
 
+  const makeClient = () => ({
+    user: {
+      update: vi.fn().mockResolvedValue('updated'),
+      updateMany: vi.fn().mockResolvedValue({ count: 1 }),
+    },
+    auditLog: {
+      update: vi.fn().mockResolvedValue('updated'),
+      updateMany: vi.fn().mockResolvedValue({ count: 1 }),
+    },
+  });
+
   it('passes through non-soft-delete models unchanged', async () => {
     const query = makeQuery();
+    const client = makeClient();
     const args = { where: { id: '123' } };
-    await applySoftDeleteMiddleware({ model: 'AuditLog', operation: 'findMany', args, query });
+    await applySoftDeleteMiddleware({ model: 'AuditLog', operation: 'findMany', args, query, client });
     expect(query).toHaveBeenCalledWith(args);
   });
 
   it('converts delete to soft delete for soft-delete models', async () => {
     const query = makeQuery();
+    const client = makeClient();
     const args = { where: { id: '123' } };
-    await applySoftDeleteMiddleware({ model: 'User', operation: 'delete', args, query });
-    expect(query).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ deleted_at: expect.any(Date) }) }),
+    await applySoftDeleteMiddleware({ model: 'User', operation: 'delete', args, query, client });
+    expect(query).not.toHaveBeenCalled();
+    expect(client.user.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: args.where,
+        data: expect.objectContaining({ deleted_at: expect.any(Date) }),
+      }),
     );
   });
 
   it('converts deleteMany to soft delete with existing data', async () => {
     const query = makeQuery();
+    const client = makeClient();
     const args = { where: { role: 'employee' }, data: { is_active: false } };
-    await applySoftDeleteMiddleware({ model: 'User', operation: 'deleteMany', args, query });
-    expect(query).toHaveBeenCalledWith(
+    await applySoftDeleteMiddleware({ model: 'User', operation: 'deleteMany', args, query, client });
+    expect(query).not.toHaveBeenCalled();
+    expect(client.user.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({ deleted_at: expect.any(Date), is_active: false }),
+        where: args.where,
+        data: expect.objectContaining({ deleted_at: expect.any(Date) }),
       }),
     );
   });
 
   it('converts deleteMany to soft delete without existing data', async () => {
     const query = makeQuery();
+    const client = makeClient();
     const args = { where: { role: 'employee' } };
-    await applySoftDeleteMiddleware({ model: 'User', operation: 'deleteMany', args, query });
-    expect(query).toHaveBeenCalledWith(
+    await applySoftDeleteMiddleware({ model: 'User', operation: 'deleteMany', args, query, client });
+    expect(query).not.toHaveBeenCalled();
+    expect(client.user.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
+        where: args.where,
         data: expect.objectContaining({ deleted_at: expect.any(Date) }),
       }),
     );
@@ -79,8 +102,9 @@ describe('applySoftDeleteMiddleware', () => {
 
   it('adds deleted_at: null filter on findMany for soft-delete models', async () => {
     const query = makeQuery();
+    const client = makeClient();
     const args = { where: { role: 'employee' } };
-    await applySoftDeleteMiddleware({ model: 'User', operation: 'findMany', args, query });
+    await applySoftDeleteMiddleware({ model: 'User', operation: 'findMany', args, query, client });
     expect(query).toHaveBeenCalledWith(
       expect.objectContaining({ where: expect.objectContaining({ deleted_at: null }) }),
     );
@@ -88,8 +112,9 @@ describe('applySoftDeleteMiddleware', () => {
 
   it('adds deleted_at: null when no where clause exists', async () => {
     const query = makeQuery();
+    const client = makeClient();
     const args = {};
-    await applySoftDeleteMiddleware({ model: 'Client', operation: 'findMany', args, query });
+    await applySoftDeleteMiddleware({ model: 'Client', operation: 'findMany', args, query, client });
     expect(query).toHaveBeenCalledWith(
       expect.objectContaining({ where: { deleted_at: null } }),
     );
@@ -97,15 +122,17 @@ describe('applySoftDeleteMiddleware', () => {
 
   it('does not override explicit deleted_at filter in reads', async () => {
     const query = makeQuery();
+    const client = makeClient();
     const args = { where: { deleted_at: { not: null } } };
-    await applySoftDeleteMiddleware({ model: 'User', operation: 'findMany', args, query });
+    await applySoftDeleteMiddleware({ model: 'User', operation: 'findMany', args, query, client });
     expect(query).toHaveBeenCalledWith(args);
   });
 
   it('passes through non-read/delete operations unchanged', async () => {
     const query = makeQuery();
+    const client = makeClient();
     const args = { data: { full_name: 'Test' } };
-    await applySoftDeleteMiddleware({ model: 'User', operation: 'update', args, query });
+    await applySoftDeleteMiddleware({ model: 'User', operation: 'update', args, query, client });
     expect(query).toHaveBeenCalledWith(args);
   });
 
