@@ -14,23 +14,33 @@ const envSchema = z.object({
         .filter(Boolean),
     ),
   // Optional until consumed: the Prisma change flips this to required.
+  // Both postgresql:// and postgres:// are valid schemes (Neon issues both).
   DATABASE_URL: z
     .string()
     .url()
-    .startsWith('postgresql://', 'must be a postgresql:// connection string')
+    .refine(
+      (value) => value.startsWith('postgresql://') || value.startsWith('postgres://'),
+      'must be a postgresql:// or postgres:// connection string',
+    )
     .optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;
 
+export class EnvValidationError extends Error {
+  constructor(issues: z.ZodIssue[]) {
+    const lines = issues.map(
+      (issue) => `  ${issue.path.join('.') || '(root)'}: ${issue.message}`,
+    );
+    super(`Invalid environment configuration — refusing to start:\n${lines.join('\n')}`);
+    this.name = 'EnvValidationError';
+  }
+}
+
 export function parseEnv(source: NodeJS.ProcessEnv = process.env): Env {
   const result = envSchema.safeParse(source);
   if (!result.success) {
-    console.error('Invalid environment configuration — refusing to start:');
-    for (const issue of result.error.issues) {
-      console.error(`  ${issue.path.join('.') || '(root)'}: ${issue.message}`);
-    }
-    process.exit(1);
+    throw new EnvValidationError(result.error.issues);
   }
   return result.data;
 }

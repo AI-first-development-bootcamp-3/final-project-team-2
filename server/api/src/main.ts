@@ -1,10 +1,22 @@
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
-import { parseEnv } from './env';
+import { EnvValidationError, parseEnv, type Env } from './env';
+
+function loadEnvOrExit(): Env {
+  try {
+    return parseEnv();
+  } catch (error) {
+    if (error instanceof EnvValidationError) {
+      console.error(error.message);
+      process.exit(1);
+    }
+    throw error;
+  }
+}
 
 async function bootstrap() {
-  const env = parseEnv();
+  const env = loadEnvOrExit();
 
   const app = await NestFactory.create(AppModule);
   app.setGlobalPrefix('api/v1');
@@ -16,8 +28,10 @@ async function bootstrap() {
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, document);
-  // GENERAL_SPEC §6.11 places docs under the API prefix; same content either way
-  app.getHttpAdapter().get('/api/v1/docs', (_req, res) => res.redirect('/docs'));
+  // GENERAL_SPEC §6.11 places docs under the API prefix; same content either way.
+  // Deliberately 302, not 301: browsers cache 301s indefinitely, which would
+  // strand clients if this path ever serves real content.
+  app.getHttpAdapter().get('/api/v1/docs', (_req, res) => res.redirect(302, '/docs'));
 
   await app.listen(env.PORT);
 }
