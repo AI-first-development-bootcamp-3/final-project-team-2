@@ -23,14 +23,7 @@ describe('PrismaService', () => {
 
     const service = module.get(PrismaService);
     expect(service.softDeleteModels).toEqual(
-      expect.arrayContaining([
-        'User',
-        'Client',
-        'Project',
-        'Task',
-        'TimeEntry',
-        'Absence',
-      ]),
+      expect.arrayContaining(['User', 'Client', 'Project', 'Task', 'TimeEntry', 'Absence']),
     );
     expect(service.softDeleteModels).toHaveLength(6);
   });
@@ -54,7 +47,13 @@ describe('applySoftDeleteMiddleware', () => {
     const query = makeQuery();
     const client = makeClient();
     const args = { where: { id: '123' } };
-    await applySoftDeleteMiddleware({ model: 'AuditLog', operation: 'findMany', args, query, client });
+    await applySoftDeleteMiddleware({
+      model: 'AuditLog',
+      operation: 'findMany',
+      args,
+      query,
+      client,
+    });
     expect(query).toHaveBeenCalledWith(args);
   });
 
@@ -76,7 +75,13 @@ describe('applySoftDeleteMiddleware', () => {
     const query = makeQuery();
     const client = makeClient();
     const args = { where: { role: 'employee' } };
-    await applySoftDeleteMiddleware({ model: 'User', operation: 'deleteMany', args, query, client });
+    await applySoftDeleteMiddleware({
+      model: 'User',
+      operation: 'deleteMany',
+      args,
+      query,
+      client,
+    });
     expect(query).not.toHaveBeenCalled();
     expect(client.user.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -90,7 +95,13 @@ describe('applySoftDeleteMiddleware', () => {
     const query = makeQuery();
     const client = makeClient();
     const args = { where: { role: 'employee' } };
-    await applySoftDeleteMiddleware({ model: 'User', operation: 'deleteMany', args, query, client });
+    await applySoftDeleteMiddleware({
+      model: 'User',
+      operation: 'deleteMany',
+      args,
+      query,
+      client,
+    });
     expect(query).not.toHaveBeenCalled();
     expect(client.user.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -114,10 +125,14 @@ describe('applySoftDeleteMiddleware', () => {
     const query = makeQuery();
     const client = makeClient();
     const args = {};
-    await applySoftDeleteMiddleware({ model: 'Client', operation: 'findMany', args, query, client });
-    expect(query).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { deleted_at: null } }),
-    );
+    await applySoftDeleteMiddleware({
+      model: 'Client',
+      operation: 'findMany',
+      args,
+      query,
+      client,
+    });
+    expect(query).toHaveBeenCalledWith(expect.objectContaining({ where: { deleted_at: null } }));
   });
 
   it('does not override explicit deleted_at filter in reads', async () => {

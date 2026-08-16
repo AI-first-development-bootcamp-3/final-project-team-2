@@ -3,7 +3,7 @@ import { Test } from '@nestjs/testing';
 import { AppController } from './app.controller';
 
 describe('AppController', () => {
-  it('getHealth returns { status: "ok" }', async () => {
+  it('GET /health returns { status: "ok" }', async () => {
     const module = await Test.createTestingModule({
       controllers: [AppController],
     }).compile();

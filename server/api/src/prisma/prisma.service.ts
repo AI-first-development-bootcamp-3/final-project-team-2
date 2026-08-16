@@ -68,7 +68,10 @@ export async function applySoftDeleteMiddleware(params: {
   if (operation === 'deleteMany') {
     const modelName = toCamelCase(model);
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    return client[modelName]!.updateMany({ where: args['where'], data: { deleted_at: new Date() } });
+    return client[modelName]!.updateMany({
+      where: args['where'],
+      data: { deleted_at: new Date() },
+    });
   }
 
   // Intercept reads → filter out soft-deleted
