@@ -12,10 +12,11 @@
     }
   },
   "scripts": {
-    "build": "tsc",
-    "typecheck": "tsc --noEmit",
+    "build": "tsc --project tsconfig.build.json",
+    "typecheck": "tsc --noEmit && tsc --noEmit --project tsconfig.node.json",
     "lint": "eslint .",
-    "test": "vitest run --coverage"
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "zod": "^3.0.0"

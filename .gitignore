@@ -1,12 +1,14 @@
 node_modules/
 dist/
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
 .turbo/
 *.tsbuildinfo
 coverage/
 .vercel/
+# Vercel serverless function build output
+server/api/api/
 
 # Playwright
 e2e/test-results/

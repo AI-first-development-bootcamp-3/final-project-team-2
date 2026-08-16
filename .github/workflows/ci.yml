@@ -3,14 +3,16 @@ name: CI
 on:
   pull_request:
     branches: [dev, staging, main]
+  push:
+    branches: [dev, staging, main]
 
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  lint:
-    name: Lint
+  ci:
+    name: Lint, Typecheck, Test & Build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -24,62 +26,23 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - name: ESLint
-        run: pnpm lint
+      - name: Generate Prisma Client
+        run: pnpm --filter @abra/api exec prisma generate
 
       - name: Prettier
         run: pnpm format:check
 
-  typecheck:
-    name: Typecheck
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+      - name: ESLint
+        run: pnpm lint
 
-      - uses: pnpm/action-setup@v4
+      - name: Typecheck
+        run: pnpm typecheck
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: ".nvmrc"
-          cache: "pnpm"
+      - name: Unit Tests (70% coverage gate)
+        run: pnpm test:coverage
 
-      - run: pnpm install --frozen-lockfile
-
-      - run: pnpm typecheck
-
-  test:
-    name: Unit Tests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: pnpm/action-setup@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: ".nvmrc"
-          cache: "pnpm"
-
-      - run: pnpm install --frozen-lockfile
-
-      - run: pnpm test
-
-  build:
-    name: Build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: pnpm/action-setup@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: ".nvmrc"
-          cache: "pnpm"
-
-      - run: pnpm install --frozen-lockfile
-
-      - run: pnpm build
+      - name: Build
+        run: pnpm build
 
   e2e:
     name: E2E
@@ -95,6 +58,9 @@ jobs:
           cache: "pnpm"
 
       - run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma Client
+        run: pnpm --filter @abra/api exec prisma generate
 
       - name: Install e2e dependencies
         run: cd e2e && npm ci

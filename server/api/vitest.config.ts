@@ -1,17 +1,8 @@
+import swc from 'unplugin-swc';
 import { defineConfig } from 'vitest/config';
+import baseTestConfig from '@abra/config/vitest/base';
 
 export default defineConfig({
-  test: {
-    globals: true,
-    root: './',
-    coverage: {
-      provider: 'v8',
-      thresholds: {
-        lines: 70,
-        branches: 70,
-        functions: 70,
-        statements: 70,
-      },
-    },
-  },
+  test: baseTestConfig,
+  plugins: [swc.vite({ module: { type: 'es6' } })],
 });

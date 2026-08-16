@@ -1,0 +1,214 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ───────────────────────────────────────────────
+
+enum UserRole {
+  employee
+  admin
+}
+
+enum WorkLocation {
+  office
+  client_site
+  home
+}
+
+enum AbsenceType {
+  vacation
+  sick
+  military
+  other
+}
+
+enum TaskStatus {
+  open
+  closed
+}
+
+enum HalfDayPeriod {
+  morning
+  afternoon
+}
+
+enum AuditAction {
+  create
+  update
+  delete
+  lock_month
+  unlock_month
+}
+
+// ─── Models ──────────────────────────────────────────────
+
+model User {
+  id            String   @id @default(uuid()) @db.Uuid
+  email         String   @db.VarChar(255)
+  full_name     String   @db.VarChar(255)
+  password_hash String   @db.VarChar(255)
+  role          UserRole
+  is_active     Boolean  @default(true)
+  token_version Int      @default(0)
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+  deleted_at    DateTime?
+
+  task_assignments TaskAssignment[]
+  time_entries     TimeEntry[]
+  absences         Absence[]
+  locked_months    MonthLock[]      @relation("LockedBy")
+  unlocked_months  MonthLock[]      @relation("UnlockedBy")
+  audit_logs       AuditLog[]
+
+  // Partial unique index handled via raw SQL in migration (Step 6a)
+  @@map("users")
+}
+
+model Client {
+  id           String   @id @default(uuid()) @db.Uuid
+  name         String   @db.VarChar(255)
+  contact_info String?  @db.Text
+  is_active    Boolean  @default(true)
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+  deleted_at   DateTime?
+
+  projects Project[]
+
+  @@map("clients")
+}
+
+model Project {
+  id         String   @id @default(uuid()) @db.Uuid
+  client_id  String   @db.Uuid
+  name       String   @db.VarChar(255)
+  is_active  Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  deleted_at DateTime?
+
+  client Client @relation(fields: [client_id], references: [id])
+  tasks  Task[]
+
+  @@map("projects")
+}
+
+model Task {
+  id          String     @id @default(uuid()) @db.Uuid
+  project_id  String     @db.Uuid
+  name        String     @db.VarChar(255)
+  description String?    @db.Text
+  status      TaskStatus @default(open)
+  created_at  DateTime   @default(now())
+  updated_at  DateTime   @updatedAt
+  deleted_at  DateTime?
+
+  project          Project          @relation(fields: [project_id], references: [id])
+  task_assignments TaskAssignment[]
+  time_entries     TimeEntry[]
+
+  @@map("tasks")
+}
+
+model TaskAssignment {
+  id         String   @id @default(uuid()) @db.Uuid
+  user_id    String   @db.Uuid
+  task_id    String   @db.Uuid
+  created_at DateTime @default(now())
+
+  user User @relation(fields: [user_id], references: [id])
+  task Task @relation(fields: [task_id], references: [id])
+
+  @@unique([user_id, task_id])
+  @@map("task_assignments")
+}
+
+model TimeEntry {
+  id          String        @id @default(uuid()) @db.Uuid
+  user_id     String        @db.Uuid
+  task_id     String?       @db.Uuid
+  date        DateTime      @db.Date
+  start_at    DateTime
+  end_at      DateTime?
+  location    WorkLocation?
+  description String?       @db.Text
+  created_at  DateTime      @default(now())
+  updated_at  DateTime      @updatedAt
+  deleted_at  DateTime?
+
+  user User  @relation(fields: [user_id], references: [id])
+  task Task? @relation(fields: [task_id], references: [id])
+
+  @@map("time_entries")
+}
+
+model Absence {
+  id              String         @id @default(uuid()) @db.Uuid
+  user_id         String         @db.Uuid
+  type            AbsenceType
+  start_date      DateTime       @db.Date
+  end_date        DateTime       @db.Date
+  is_half_day     Boolean        @default(false)
+  half_day_period HalfDayPeriod?
+  notes           String?        @db.Text
+  created_at      DateTime       @default(now())
+  updated_at      DateTime       @updatedAt
+  deleted_at      DateTime?
+
+  user        User                @relation(fields: [user_id], references: [id])
+  attachments AbsenceAttachment[]
+
+  @@map("absences")
+}
+
+model AbsenceAttachment {
+  id         String   @id @default(uuid()) @db.Uuid
+  absence_id String   @db.Uuid
+  file_name  String   @db.VarChar(255)
+  file_type  String   @db.VarChar(50)
+  file_size  Int
+  blob_key   String   @db.VarChar(500)
+  created_at DateTime @default(now())
+
+  absence Absence @relation(fields: [absence_id], references: [id])
+
+  @@map("absence_attachments")
+}
+
+model MonthLock {
+  id          String    @id @default(uuid()) @db.Uuid
+  year        Int
+  month       Int
+  locked_by   String    @db.Uuid
+  locked_at   DateTime
+  is_locked   Boolean   @default(true)
+  unlocked_by String?   @db.Uuid
+  unlocked_at DateTime?
+
+  locker   User  @relation("LockedBy", fields: [locked_by], references: [id])
+  unlocker User? @relation("UnlockedBy", fields: [unlocked_by], references: [id])
+
+  @@unique([year, month])
+  @@map("month_locks")
+}
+
+model AuditLog {
+  id          String      @id @default(uuid()) @db.Uuid
+  actor_id    String      @db.Uuid
+  action      AuditAction
+  entity_type String      @db.VarChar(50)
+  entity_id   String      @db.Uuid
+  before      Json?
+  after       Json?
+  created_at  DateTime    @default(now())
+
+  actor User @relation(fields: [actor_id], references: [id])
+
+  @@map("audit_logs")
+}
