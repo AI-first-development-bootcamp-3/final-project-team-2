@@ -140,7 +140,7 @@ async function main(): Promise<void> {
 
   // ─── Time Entries — one fully reported week ─────────
   // Sun 2026-08-09 to Thu 2026-08-13 (Israeli work week)
-  // Employee 1: 5 days, 8-9h each
+  // Employee 1: 5 days, 9h each
   const emp1Entries = [
     {
       date: '2026-08-09',
@@ -160,7 +160,7 @@ async function main(): Promise<void> {
     },
     {
       date: '2026-08-11',
-      start: '08:30',
+      start: '08:00',
       end: '17:00',
       task_id: frontendDev.id,
       location: WorkLocation.office,
@@ -177,7 +177,7 @@ async function main(): Promise<void> {
     {
       date: '2026-08-13',
       start: '09:00',
-      end: '17:30',
+      end: '18:00',
       task_id: apiIntegration.id,
       location: WorkLocation.office,
       description: 'REST API client setup',
@@ -252,6 +252,33 @@ async function main(): Promise<void> {
     });
   }
 
+  // ─── Absences ─────────────────────────────────────────
+  // Bob takes a vacation day on Thu Aug 13 (he has no time entry for that day)
+  await prisma.absence.create({
+    data: {
+      user_id: emp2.id,
+      type: 'vacation',
+      start_date: new Date('2026-08-13'),
+      end_date: new Date('2026-08-13'),
+      is_half_day: false,
+      notes: 'Day off',
+    },
+  });
+
+  // ─── Month Locks ──────────────────────────────────────
+  // July 2026 is locked by admin (previous month closed)
+  const admin = await prisma.user.findFirstOrThrow({ where: { role: UserRole.admin } });
+
+  await prisma.monthLock.create({
+    data: {
+      year: 2026,
+      month: 7,
+      locked_by: admin.id,
+      locked_at: new Date('2026-08-01T09:00:00.000+03:00'),
+      is_locked: true,
+    },
+  });
+
   console.log('Seed complete:');
   console.log(`  Users: 3 (1 admin, 2 employees)`);
   console.log(`  Clients: 2`);
@@ -259,6 +286,8 @@ async function main(): Promise<void> {
   console.log(`  Tasks: 6`);
   console.log(`  Assignments: 6`);
   console.log(`  Time entries: ${emp1Entries.length + emp2Entries.length}`);
+  console.log(`  Absences: 1`);
+  console.log(`  Month locks: 1 (July 2026 locked)`);
 }
 
 main()
