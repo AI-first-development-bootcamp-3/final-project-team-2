@@ -29,9 +29,7 @@ export type Env = z.infer<typeof envSchema>;
 
 export class EnvValidationError extends Error {
   constructor(issues: z.ZodIssue[]) {
-    const lines = issues.map(
-      (issue) => `  ${issue.path.join('.') || '(root)'}: ${issue.message}`,
-    );
+    const lines = issues.map((issue) => `  ${issue.path.join('.') || '(root)'}: ${issue.message}`);
     super(`Invalid environment configuration — refusing to start:\n${lines.join('\n')}`);
     this.name = 'EnvValidationError';
   }

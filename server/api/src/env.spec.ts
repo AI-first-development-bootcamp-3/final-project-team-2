@@ -23,18 +23,16 @@ describe('parseEnv', () => {
   });
 
   it('accepts postgresql:// and postgres:// DATABASE_URLs', () => {
-    expect(
-      parseEnv({ DATABASE_URL: 'postgresql://user:pw@localhost:5432/db' }).DATABASE_URL,
-    ).toBe('postgresql://user:pw@localhost:5432/db');
+    expect(parseEnv({ DATABASE_URL: 'postgresql://user:pw@localhost:5432/db' }).DATABASE_URL).toBe(
+      'postgresql://user:pw@localhost:5432/db',
+    );
     expect(parseEnv({ DATABASE_URL: 'postgres://user:pw@host/db' }).DATABASE_URL).toBe(
       'postgres://user:pw@host/db',
     );
   });
 
   it('rejects a DATABASE_URL with a different scheme', () => {
-    expect(() => parseEnv({ DATABASE_URL: 'mysql://user:pw@host/db' })).toThrow(
-      EnvValidationError,
-    );
+    expect(() => parseEnv({ DATABASE_URL: 'mysql://user:pw@host/db' })).toThrow(EnvValidationError);
   });
 
   it('names the offending keys in the error message', () => {

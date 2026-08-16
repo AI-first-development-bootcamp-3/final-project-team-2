@@ -22,10 +22,7 @@ async function bootstrap() {
   app.setGlobalPrefix('api/v1');
   app.enableCors({ origin: env.CORS_ORIGINS });
 
-  const config = new DocumentBuilder()
-    .setTitle('Abra Timesheet API')
-    .setVersion('1.0')
-    .build();
+  const config = new DocumentBuilder().setTitle('Abra Timesheet API').setVersion('1.0').build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, document);
   // GENERAL_SPEC §6.11 places docs under the API prefix; same content either way.

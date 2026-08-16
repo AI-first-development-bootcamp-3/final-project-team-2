@@ -17,6 +17,7 @@ The spec makes containerization a hard requirement (GENERAL_SPEC §3.3, ADR-18):
 ## Capabilities
 
 ### New Capabilities
+
 - `dev-runtime`: One-command containerized development runtime — what `docker compose up --build` must bring up, how services are wired (ports, env, database), and the env-file contract (`.env.example` committed, `.env` ignored).
 
 ### Modified Capabilities
