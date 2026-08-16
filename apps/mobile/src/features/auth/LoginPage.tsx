@@ -15,11 +15,7 @@ export const LoginPage: React.FC = () => {
           <div className="flex flex-col items-center text-center gap-6">
             {/* 1. Abra Logo at top of card */}
             <div className="flex items-center justify-center w-full mb-1">
-              <img
-                src="/assets/logo.svg"
-                alt="Abra Logo"
-                className="h-6 w-auto object-contain"
-              />
+              <img src="/assets/logo.svg" alt="Abra Logo" className="h-6 w-auto object-contain" />
             </div>
 
             {/* Stopwatch Illustration from Figma */}
@@ -33,9 +29,7 @@ export const LoginPage: React.FC = () => {
 
             {/* 2. Horizontally Centered Header & Subtitle */}
             <div className="flex flex-col items-center gap-2 w-full text-center">
-              <h1 className="text-2xl font-medium text-navy text-center w-full">
-                ברוכים הבאים!
-              </h1>
+              <h1 className="text-2xl font-medium text-navy text-center w-full">ברוכים הבאים!</h1>
               <p className="text-base font-normal text-darkGray text-center leading-relaxed w-full">
                 ברוכים הבאים למערכת דיווחי השעות שלנו 🥳
                 <br />

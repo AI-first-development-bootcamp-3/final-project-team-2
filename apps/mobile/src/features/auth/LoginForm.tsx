@@ -60,7 +60,11 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="w-full flex flex-col gap-5 text-right dir-rtl" noValidate>
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="w-full flex flex-col gap-5 text-right dir-rtl"
+      noValidate
+    >
       {serverError && (
         <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm text-right font-medium animate-fadeIn">
           {serverError}
@@ -97,9 +101,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
         </label>
       </div>
 
-      <LoginButton isLoading={isLoading}>
-        התחבר
-      </LoginButton>
+      <LoginButton isLoading={isLoading}>התחבר</LoginButton>
     </form>
   );
 };

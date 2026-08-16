@@ -9,7 +9,7 @@ describe('LoginPage Component', () => {
     return render(
       <BrowserRouter>
         <LoginPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
   };
 

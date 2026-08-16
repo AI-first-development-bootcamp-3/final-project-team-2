@@ -14,16 +14,9 @@ export const VAL_MESSAGES: Record<string, string> = {
 };
 
 export const LoginSchema = z.object({
-  email: z
-    .string()
-    .min(1, { message: 'VAL-01' })
-    .email({ message: 'VAL-02' }),
-  password: z
-    .string()
-    .min(1, { message: 'VAL-03' })
-    .min(8, { message: 'VAL-04' }),
+  email: z.string().min(1, { message: 'VAL-01' }).email({ message: 'VAL-02' }),
+  password: z.string().min(1, { message: 'VAL-03' }).min(8, { message: 'VAL-04' }),
   rememberMe: z.boolean().default(false),
 });
 
 export type LoginFormData = z.infer<typeof LoginSchema>;
-

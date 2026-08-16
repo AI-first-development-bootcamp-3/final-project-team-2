@@ -26,13 +26,11 @@ export const InputField = forwardRef<HTMLInputElement, InputFieldProps>(
           {...props}
         />
         {error && (
-          <span className="text-xs font-medium text-red-600 text-right mt-0.5">
-            {error}
-          </span>
+          <span className="text-xs font-medium text-red-600 text-right mt-0.5">{error}</span>
         )}
       </div>
     );
-  }
+  },
 );
 
 InputField.displayName = 'InputField';
