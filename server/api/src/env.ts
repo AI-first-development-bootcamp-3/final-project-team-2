@@ -2,17 +2,27 @@ import { z } from 'zod';
 
 // Server-private env schema — request/response schemas belong in
 // packages/contracts, this shape must not leak to the frontends.
+// Set-but-empty vars (PORT= in a wrapper script or CI) mean "use the default",
+// but zod defaults only fire on undefined — normalize first.
+const emptyToUndefined = (value: unknown) => (value === '' ? undefined : value);
+
 const envSchema = z.object({
-  PORT: z.coerce.number().int().positive().default(3000),
-  CORS_ORIGINS: z
-    .string()
-    .default('http://localhost:5173,http://localhost:5174')
-    .transform((value) =>
-      value
-        .split(',')
-        .map((origin) => origin.trim())
-        .filter(Boolean),
-    ),
+  PORT: z.preprocess(emptyToUndefined, z.coerce.number().int().positive().default(3000)),
+  CORS_ORIGINS: z.preprocess(
+    emptyToUndefined,
+    z
+      .string()
+      .default('http://localhost:5173,http://localhost:5174')
+      .transform((value) =>
+        value
+          .split(',')
+          .map((origin) => origin.trim())
+          .filter(Boolean),
+      )
+      // A value like ',' would otherwise yield [] and silently block every
+      // browser origin — fail loudly instead.
+      .refine((origins) => origins.length > 0, 'must contain at least one origin'),
+  ),
   // Optional until consumed: the Prisma change flips this to required.
   // Both postgresql:// and postgres:// are valid schemes (Neon issues both).
   DATABASE_URL: z
