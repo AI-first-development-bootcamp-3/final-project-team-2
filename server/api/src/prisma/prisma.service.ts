@@ -1,14 +1,8 @@
 import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
-import { PrismaClient, Prisma } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 
-export const SOFT_DELETE_MODELS: Prisma.ModelName[] = [
-  'User',
-  'Client',
-  'Project',
-  'Task',
-  'TimeEntry',
-  'Absence',
-];
+/** Model names that use soft-delete (deleted_at column). */
+export const SOFT_DELETE_MODELS = ['User', 'Client', 'Project', 'Task', 'TimeEntry', 'Absence'];
 
 export const SOFT_DELETE_READ_ACTIONS = [
   'findFirst',
@@ -93,7 +87,7 @@ export async function applySoftDeleteMiddleware(params: {
 export class PrismaService extends PrismaClient implements OnModuleInit {
   private readonly logger = new Logger(PrismaService.name);
 
-  readonly softDeleteModels: Prisma.ModelName[] = SOFT_DELETE_MODELS;
+  readonly softDeleteModels: readonly string[] = SOFT_DELETE_MODELS;
 
   constructor() {
     super();
@@ -102,7 +96,17 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
     const extended = this.$extends({
       query: {
         $allModels: {
-          async $allOperations({ model, operation, args, query }) {
+          async $allOperations({
+            model,
+            operation,
+            args,
+            query,
+          }: {
+            model: string;
+            operation: string;
+            args: Record<string, unknown>;
+            query: (args: Record<string, unknown>) => Promise<unknown>;
+          }) {
             return applySoftDeleteMiddleware({ model, operation, args, query, client: baseClient });
           },
         },
@@ -110,7 +114,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
     });
 
     // Propagate softDeleteModels to the extended client instance
-    (extended as unknown as { softDeleteModels: Prisma.ModelName[] }).softDeleteModels =
+    (extended as unknown as { softDeleteModels: readonly string[] }).softDeleteModels =
       SOFT_DELETE_MODELS;
 
     // Return the extended client so all Prisma model accessors are available
