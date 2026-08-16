@@ -1,24 +1,33 @@
 import { describe, it, expect } from 'vitest';
 import { parseEnv, EnvValidationError } from './env';
 
+const VALID_DB_URL = 'postgresql://user:pw@localhost:5432/db';
+
 describe('parseEnv', () => {
-  it('applies defaults when nothing is set', () => {
-    const env = parseEnv({});
+  it('applies defaults when only DATABASE_URL is set', () => {
+    const env = parseEnv({ DATABASE_URL: VALID_DB_URL });
     expect(env.PORT).toBe(3000);
     expect(env.CORS_ORIGINS).toEqual(['http://localhost:5173', 'http://localhost:5174']);
-    expect(env.DATABASE_URL).toBeUndefined();
+    expect(env.DATABASE_URL).toBe(VALID_DB_URL);
+  });
+
+  it('throws when DATABASE_URL is missing', () => {
+    expect(() => parseEnv({})).toThrow(EnvValidationError);
   });
 
   it('coerces PORT to a number', () => {
-    expect(parseEnv({ PORT: '8080' }).PORT).toBe(8080);
+    expect(parseEnv({ PORT: '8080', DATABASE_URL: VALID_DB_URL }).PORT).toBe(8080);
   });
 
   it('rejects a non-numeric PORT', () => {
-    expect(() => parseEnv({ PORT: 'abc' })).toThrow(EnvValidationError);
+    expect(() => parseEnv({ PORT: 'abc', DATABASE_URL: VALID_DB_URL })).toThrow(EnvValidationError);
   });
 
   it('splits and trims CORS_ORIGINS, dropping empty entries', () => {
-    const env = parseEnv({ CORS_ORIGINS: ' http://a.test , http://b.test ,, ' });
+    const env = parseEnv({
+      CORS_ORIGINS: ' http://a.test , http://b.test ,, ',
+      DATABASE_URL: VALID_DB_URL,
+    });
     expect(env.CORS_ORIGINS).toEqual(['http://a.test', 'http://b.test']);
   });
 

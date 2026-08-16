@@ -2,6 +2,11 @@ import { defineConfig } from '@playwright/test';
 
 const isCI = !!process.env.CI;
 
+const MOBILE_PORT = +(process.env.MOBILE_PORT || 5173);
+const API_PORT = +(process.env.API_PORT || 3000);
+
+export const API_BASE_URL = `http://localhost:${API_PORT}/api/v1`;
+
 export default defineConfig({
   testDir: './specs',
   fullyParallel: true,
@@ -11,6 +16,7 @@ export default defineConfig({
   reporter: isCI ? [['github'], ['html']] : 'html',
 
   use: {
+    baseURL: `http://localhost:${MOBILE_PORT}`,
     trace: 'on-first-retry',
   },
 
@@ -24,13 +30,16 @@ export default defineConfig({
   webServer: [
     {
       command: 'pnpm --filter @abra/mobile dev',
-      port: 5173,
+      port: MOBILE_PORT,
       reuseExistingServer: !isCI,
       cwd: '..',
     },
     {
-      command: 'pnpm --filter @abra/api dev',
-      port: 3000,
+      command: isCI
+        ? 'pnpm --filter @abra/api build && pnpm --filter @abra/api start'
+        : 'pnpm --filter @abra/api dev',
+      port: API_PORT,
+      timeout: 120_000,
       reuseExistingServer: !isCI,
       cwd: '..',
     },

@@ -16,18 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - uses: pnpm/action-setup@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: ".nvmrc"
-          cache: "pnpm"
-
-      - run: pnpm install --frozen-lockfile
-
-      - name: Generate Prisma Client
-        run: pnpm --filter @abra/api exec prisma generate
+      - uses: ./.github/actions/setup
 
       - name: Prettier
         run: pnpm format:check
@@ -65,30 +54,22 @@ jobs:
       DATABASE_URL: postgresql://test:test@localhost:5432/abra_test
     steps:
       - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
 
-      - uses: pnpm/action-setup@v4
+      - name: Run migrations
+        run: pnpm --filter @abra/api exec prisma migrate deploy
 
-      - uses: actions/setup-node@v4
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
         with:
-          node-version-file: ".nvmrc"
-          cache: "pnpm"
-
-      - run: pnpm install --frozen-lockfile
-
-      - name: Generate Prisma Client
-        run: pnpm --filter @abra/api exec prisma generate
-
-      - name: Push schema to test DB
-        run: pnpm --filter @abra/api exec prisma db push --skip-generate
-
-      - name: Install e2e dependencies
-        run: cd e2e && npm ci
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
 
       - name: Install Playwright Chromium
-        run: cd e2e && npx playwright install --with-deps chromium
+        run: pnpm --filter @abra/e2e exec playwright install --with-deps chromium
 
       - name: Run e2e tests
-        run: cd e2e && npx playwright test
+        run: pnpm --filter @abra/e2e test
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4

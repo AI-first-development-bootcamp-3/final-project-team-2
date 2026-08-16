@@ -1,0 +1,19 @@
+name: Setup
+description: Install pnpm, Node.js, dependencies and generate Prisma client
+
+runs:
+  using: composite
+  steps:
+    - uses: pnpm/action-setup@v4
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version-file: ".nvmrc"
+        cache: "pnpm"
+
+    - run: pnpm install --frozen-lockfile
+      shell: bash
+
+    - name: Generate Prisma Client
+      run: pnpm --filter @abra/api exec prisma generate
+      shell: bash
