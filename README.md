@@ -46,15 +46,32 @@ pnpm --filter @abra/admin dev
 
 Requires Node 22+ and pnpm 9 (`corepack enable`). Each service documents its own variables in a committed `.env.example` next to its `package.json`; copy to `.env` and adjust. Real `.env` files are git-ignored — never commit one.
 
+**Important:** The API requires a `DATABASE_URL` environment variable pointing to a running PostgreSQL instance. Without it, the server will refuse to start.
+
 ## Running tests
 
-| Kind                       | Command                                | Status                                                                     |
-| -------------------------- | -------------------------------------- | -------------------------------------------------------------------------- |
-| Unit tests                 | `pnpm test` (all workspaces via turbo) | active — vitest suites in every workspace                                  |
-| Unit tests + coverage gate | `pnpm test:coverage` (what CI runs)    | active — fails below 70% lines/branches/functions/statements               |
-| E2E (Playwright)           | —                                      | pending the e2e story (smoke specs: app shell renders, health returns 200) |
+| Kind                       | Command                                | Status                                                       |
+| -------------------------- | -------------------------------------- | ------------------------------------------------------------ |
+| Unit tests                 | `pnpm test` (all workspaces via turbo) | active — vitest suites in every workspace                    |
+| Unit tests + coverage gate | `pnpm test:coverage` (what CI runs)    | active — fails below 70% lines/branches/functions/statements |
+| E2E (Playwright)           | `pnpm test:e2e`                        | active — smoke specs: app shell renders, health returns 200  |
 
-CI (GitHub Actions) runs Prettier, ESLint, typecheck, the coverage-gated tests and a full build on every PR to `dev`/`staging`/`main` and on pushes to those branches.
+### Running E2E tests locally
+
+Prerequisites: a running PostgreSQL instance (e.g. `docker compose up postgres`).
+
+```bash
+pnpm install                 # installs all workspaces including e2e
+pnpm test:e2e                # starts mobile + API, runs Playwright specs
+```
+
+Playwright browsers are installed automatically on first run. To install them manually:
+
+```bash
+pnpm --filter @abra/e2e exec playwright install --with-deps chromium
+```
+
+CI (GitHub Actions) runs Prettier, ESLint, typecheck, the coverage-gated tests, a full build, and E2E Playwright specs on every PR to `dev`/`staging`/`main` and on pushes to those branches.
 
 ## Deployments
 
@@ -69,12 +86,13 @@ Production deploys to Vercel on merge to `main` (three projects: mobile, admin, 
 
 ## Scripts
 
-| Command                        | What it does                              |
-| ------------------------------ | ----------------------------------------- |
-| `pnpm dev`                     | Run all workspaces in dev/watch mode      |
-| `pnpm build`                   | Build all workspaces                      |
-| `pnpm lint`                    | ESLint across all workspaces              |
-| `pnpm typecheck`               | `tsc --noEmit` across all workspaces      |
-| `pnpm test`                    | Run tests across all workspaces           |
-| `pnpm test:coverage`           | Run tests with the 70% coverage gate (CI) |
-| `pnpm format` / `format:check` | Prettier write / check                    |
+| Command                        | What it does                                |
+| ------------------------------ | ------------------------------------------- |
+| `pnpm dev`                     | Run all workspaces in dev/watch mode        |
+| `pnpm build`                   | Build all workspaces                        |
+| `pnpm lint`                    | ESLint across all workspaces                |
+| `pnpm typecheck`               | `tsc --noEmit` across all workspaces        |
+| `pnpm test`                    | Run tests across all workspaces             |
+| `pnpm test:coverage`           | Run tests with the 70% coverage gate (CI)   |
+| `pnpm test:e2e`                | Run Playwright E2E specs (needs running DB) |
+| `pnpm format` / `format:check` | Prettier write / check                      |
