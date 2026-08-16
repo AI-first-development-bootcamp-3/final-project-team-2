@@ -2,7 +2,7 @@ name: Prisma Migrate (Production)
 
 on:
   push:
-    branches: [main]
+    branches: [dev]
     paths:
       - "server/api/prisma/**"
 
