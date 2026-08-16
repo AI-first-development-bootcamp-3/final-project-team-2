@@ -12,9 +12,11 @@
     }
   },
   "scripts": {
-    "build": "tsc",
-    "typecheck": "tsc --noEmit",
-    "lint": "eslint ."
+    "build": "tsc --project tsconfig.build.json",
+    "typecheck": "tsc --noEmit && tsc --noEmit --project tsconfig.node.json",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "zod": "^3.0.0"
@@ -22,8 +24,10 @@
   "devDependencies": {
     "@abra/config": "workspace:*",
     "@eslint/js": "^9.0.0",
+    "@vitest/coverage-v8": "^4.1.10",
     "eslint": "^9.0.0",
     "typescript": "^5.0.0",
-    "typescript-eslint": "^8.0.0"
+    "typescript-eslint": "^8.0.0",
+    "vitest": "^4.1.10"
   }
 }

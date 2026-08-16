@@ -24,10 +24,7 @@ async function bootstrap() {
   // credentials: true is required for the spec's httpOnly refresh-cookie flow
   app.enableCors({ origin: env.CORS_ORIGINS, credentials: true });
 
-  const config = new DocumentBuilder()
-    .setTitle('Abra Timesheet API')
-    .setVersion('1.0')
-    .build();
+  const config = new DocumentBuilder().setTitle('Abra Timesheet API').setVersion('1.0').build();
   const document = SwaggerModule.createDocument(app, config);
   // Mounted twice so both the short path and GENERAL_SPEC §6.11's prefixed
   // path serve the full UI including docs-json/docs-yaml — no redirect needed.

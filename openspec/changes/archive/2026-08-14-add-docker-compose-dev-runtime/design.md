@@ -51,7 +51,7 @@ Postgres gets `pg_isready`-based healthcheck; the API uses `depends_on: conditio
 ## Risks / Trade-offs
 
 - [No hot reload in containers] → Documented split: containers for the graded run/demo, `pnpm dev` for development. Compose Postgres is usable from host dev via `localhost:5432`.
-- [`--build` forgotten after pull, stale images] → README specifies `docker compose up --build` as *the* command, not plain `up`.
+- [`--build` forgotten after pull, stale images] → README specifies `docker compose up --build` as _the_ command, not plain `up`.
 - [First build is slow (full workspace install)] → Shared base stage caches the install layer; rebuilds after code-only changes skip reinstall. `.dockerignore` excludes `node_modules`, `dist`, `.git`.
 - [Port collisions on dev machines (3000/5173/5174/5432 taken)] → Host-side mappings interpolated from root `.env`, overridable without touching compose.
 - [Vite 6 dev server blocks unknown hosts in some setups] → Only `localhost` access is in scope; revisit `server.allowedHosts` only if someone needs LAN access.
