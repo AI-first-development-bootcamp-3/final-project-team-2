@@ -7,3 +7,5 @@ dist/
 *.tsbuildinfo
 coverage/
 .vercel/
+# Vercel serverless function build output
+server/api/api/
