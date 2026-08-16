@@ -26,6 +26,9 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      - name: Generate Prisma Client
+        run: pnpm --filter @abra/api exec prisma generate
+
       - name: Prettier
         run: pnpm format:check
 

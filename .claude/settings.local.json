@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm turbo:*)",
+      "mcp__atlassian__getAccessibleAtlassianResources",
+      "mcp__atlassian__searchJiraIssuesUsingJql",
+      "mcp__atlassian__getJiraIssue",
+      "Bash(pnpm remove:*)",
+      "Bash(pnpm add:*)",
+      "Bash(pnpm --filter @abra/contracts test)",
+      "Bash(find /c/Users/User.DESKTOP-CMKJMMA/Abra_Project/Final_project -name *.prisma -o -name .env*)"
+    ]
+  }
+}
