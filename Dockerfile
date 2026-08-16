@@ -18,6 +18,10 @@ RUN pnpm install --frozen-lockfile
 
 COPY . .
 
+# Workspace packages resolve via their dist/ exports; .dockerignore strips
+# host-built dist, so build them here or imports fail inside the container.
+RUN pnpm --filter @abra/contracts build
+
 FROM base AS api
 EXPOSE 3000
 RUN chmod +x server/api/docker-entrypoint.sh
