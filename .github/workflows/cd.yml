@@ -34,6 +34,9 @@ jobs:
              [ "${{ github.event.pull_request.head.repo.full_name }}" != "${{ github.repository }}" ]; then
             echo "::warning::Fork PR detected — skipping deploy (secrets are unavailable)"
             echo "result=false" >> "$GITHUB_OUTPUT"
+          elif [ -z "${{ secrets.VERCEL_TOKEN }}" ] || [ -z "${{ secrets.VERCEL_ORG_ID }}" ]; then
+            echo "::error::Required secrets (VERCEL_TOKEN, VERCEL_ORG_ID) are missing or empty"
+            exit 1
           else
             echo "result=true" >> "$GITHUB_OUTPUT"
           fi
