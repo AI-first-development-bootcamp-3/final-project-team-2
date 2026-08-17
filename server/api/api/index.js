@@ -17,10 +17,7 @@ module.exports = async (req, res) => {
     app.setGlobalPrefix('api/v1');
     app.enableCors({ origin: env.CORS_ORIGINS, credentials: true });
 
-    const config = new DocumentBuilder()
-      .setTitle('Abra Timesheet API')
-      .setVersion('1.0')
-      .build();
+    const config = new DocumentBuilder().setTitle('Abra Timesheet API').setVersion('1.0').build();
     const document = SwaggerModule.createDocument(app, config);
     SwaggerModule.setup('docs', app, document, { useGlobalPrefix: true });
 
