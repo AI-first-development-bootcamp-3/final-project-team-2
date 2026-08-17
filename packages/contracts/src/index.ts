@@ -32,22 +32,38 @@ export {
 } from './users/list.js';
 export type { UsersListQuery, UserListItem, UsersListSuccess } from './users/list.js';
 
+export { CreateUserBodySchema, UserCreateSuccessSchema } from './users/create.js';
+export type { CreateUserBody, UserCreateSuccess } from './users/create.js';
+
 export { UpdateUserSchema, ResetPasswordSchema } from './users/update.js';
 export type { UpdateUserPayload, ResetPasswordPayload } from './users/update.js';
 
+// KAN-46 / US3: login consumers (KAN-39) must query with this normalized email.
+// No auth login service exists under server/api/src/modules/ yet — do not add a
+// login screen here. Playwright create-then-login remains KAN-49.
 export const LoginSchema = z.object({
-  email: z.string().min(1, { message: 'VAL-01' }).email({ message: 'VAL-02' }),
+  email: z
+    .string()
+    .min(1, { message: 'VAL-01' })
+    .transform((value) => value.trim())
+    .pipe(z.string().min(1, { message: 'VAL-01' }).email({ message: 'VAL-02' }))
+    .transform((value) => value.toLowerCase()),
   password: z.string().min(1, { message: 'VAL-03' }).min(8, { message: 'VAL-04' }),
   rememberMe: z.boolean().optional().default(false),
 });
 
 export type LoginFormData = z.infer<typeof LoginSchema>;
 
-export type ValCode = 'VAL-01' | 'VAL-02' | 'VAL-03' | 'VAL-04';
+export type ValCode =
+  'VAL-01' | 'VAL-02' | 'VAL-03' | 'VAL-04' | 'VAL-10' | 'VAL-11' | 'VAL-12' | 'VAL-13';
 
 export const VAL_MESSAGES: Record<ValCode, string> = {
   'VAL-01': 'כתובת האימייל היא שדה חובה',
   'VAL-02': 'כתובת האימייל שהוזנה אינה תקינה',
   'VAL-03': 'הסיסמה היא שדה חובה',
   'VAL-04': 'הסיסמה חייבת להכיל 8 תווים לפחות',
+  'VAL-10': 'שם מלא הוא שדה חובה',
+  'VAL-11': 'כתובת האימייל כבר בשימוש (VAL-11)',
+  'VAL-12': 'יש לבחור תפקיד תקין',
+  'VAL-13': 'הסיסמה הראשונית היא שדה חובה',
 };
