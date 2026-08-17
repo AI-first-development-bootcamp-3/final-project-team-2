@@ -36,8 +36,8 @@ export default defineConfig({
     },
     {
       command: isCI
-        ? 'pnpm --filter @abra/api build && pnpm --filter @abra/api start'
-        : 'pnpm --filter @abra/api dev',
+        ? 'pnpm --filter @abra/contracts build && pnpm --filter @abra/api build && pnpm --filter @abra/api start'
+        : 'pnpm --filter @abra/contracts build && pnpm --filter @abra/api dev',
       port: API_PORT,
       timeout: 120_000,
       reuseExistingServer: !isCI,
