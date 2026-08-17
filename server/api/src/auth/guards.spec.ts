@@ -1,16 +1,10 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { Controller, Get, type INestApplication } from '@nestjs/common';
-import { APP_GUARD, Reflector } from '@nestjs/core';
-import { Test } from '@nestjs/testing';
-import cookieParser from 'cookie-parser';
+import { Reflector } from '@nestjs/core';
 import request from 'supertest';
-import { AuthModule } from './auth.module';
-import { JwtGuard } from './jwt.guard';
 import { RolesGuard } from './roles.guard';
 import { Public, Auth, Roles } from './auth.decorators';
-import { PrismaService } from '../prisma/prisma.service';
-import { ENV } from '../env.provider';
-import { makeFakePrisma, makeFakeUser, TEST_ENV, type FakeUser } from './auth.testing';
+import { makeAuthApp, makeFakeUser, type FakeUser } from './auth.testing';
 
 // Minimal route surface exercising every decorator the real app uses.
 @Controller('probe')
@@ -57,31 +51,10 @@ class PublicProbeController {
   }
 }
 
-async function makeGuardedApp(users: FakeUser[]): Promise<{
-  app: INestApplication;
-  prisma: ReturnType<typeof makeFakePrisma>;
-}> {
-  const prisma = makeFakePrisma(users);
-  const moduleRef = await Test.createTestingModule({
-    imports: [AuthModule],
-    controllers: [ProbeController, PublicProbeController],
-    providers: [
-      Reflector,
-      { provide: APP_GUARD, useClass: JwtGuard },
-      { provide: APP_GUARD, useClass: RolesGuard },
-    ],
-  })
-    .overrideProvider(PrismaService)
-    .useValue(prisma)
-    .overrideProvider(ENV)
-    .useValue(TEST_ENV)
-    .compile();
-
-  const app = moduleRef.createNestApplication();
-  app.setGlobalPrefix('api/v1');
-  app.use(cookieParser());
-  await app.init();
-  return { app, prisma };
+// makeAuthApp registers the production guard pipeline; the probes just add
+// routes exercising every decorator combination.
+function makeGuardedApp(users: FakeUser[]): ReturnType<typeof makeAuthApp> {
+  return makeAuthApp(users, [ProbeController, PublicProbeController]);
 }
 
 async function loginToken(app: INestApplication, email: string, password: string): Promise<string> {
