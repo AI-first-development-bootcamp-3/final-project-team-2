@@ -5,7 +5,14 @@ const config: Config = {
   darkMode: ['class'],
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
-    extend: {},
+    extend: {
+      // Brand palette shared with apps/mobile (Figma design tokens)
+      colors: {
+        navy: '#141E3E',
+        darkGray: '#53575B',
+        lightBg: '#F2F2F7',
+      },
+    },
   },
   plugins: [tailwindAnimate],
 };

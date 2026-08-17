@@ -54,7 +54,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSubmitCredentials }) => 
       )}
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="email" className="text-sm font-medium text-slate-700">
+        <label htmlFor="email" className="text-sm font-medium text-darkGray">
           אימייל
         </label>
         <input
@@ -62,7 +62,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSubmitCredentials }) => 
           type="email"
           placeholder="name@example.com"
           autoComplete="email"
-          className="rounded-lg border border-slate-300 px-3 py-2 text-right focus:border-slate-500 focus:outline-none"
+          className="rounded-lg border border-slate-300 px-3 py-2.5 text-right focus:border-navy focus:outline-none focus:ring-1 focus:ring-navy/30"
           {...register('email')}
         />
         {fieldError(errors.email) && (
@@ -71,7 +71,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSubmitCredentials }) => 
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="password" className="text-sm font-medium text-slate-700">
+        <label htmlFor="password" className="text-sm font-medium text-darkGray">
           סיסמה
         </label>
         <input
@@ -79,7 +79,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSubmitCredentials }) => 
           type="password"
           placeholder="••••••••"
           autoComplete="current-password"
-          className="rounded-lg border border-slate-300 px-3 py-2 text-right focus:border-slate-500 focus:outline-none"
+          className="rounded-lg border border-slate-300 px-3 py-2.5 text-right focus:border-navy focus:outline-none focus:ring-1 focus:ring-navy/30"
           {...register('password')}
         />
         {fieldError(errors.password) && (
@@ -91,10 +91,10 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSubmitCredentials }) => 
         <input
           id="rememberMe"
           type="checkbox"
-          className="h-4 w-4 cursor-pointer rounded border-slate-300"
+          className="h-4 w-4 cursor-pointer rounded border-slate-300 text-navy focus:ring-navy/30"
           {...register('rememberMe')}
         />
-        <label htmlFor="rememberMe" className="cursor-pointer text-sm font-medium text-slate-600">
+        <label htmlFor="rememberMe" className="cursor-pointer text-sm font-medium text-darkGray">
           זכור אותי
         </label>
       </div>
@@ -102,7 +102,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSubmitCredentials }) => 
       <button
         type="submit"
         disabled={isLoading}
-        className="rounded-lg bg-slate-900 px-4 py-3 font-semibold text-white transition hover:bg-slate-700 disabled:opacity-60"
+        className="h-16 w-full rounded-lg bg-navy text-base font-semibold text-white transition hover:bg-navy/90 disabled:opacity-60"
       >
         {isLoading ? 'מתחבר…' : 'התחבר למערכת'}
       </button>

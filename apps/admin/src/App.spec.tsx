@@ -10,6 +10,6 @@ describe('App', () => {
 
   it('lands an unauthenticated visitor on the login screen', () => {
     render(<App />);
-    expect(screen.getByText(/ברוכים הבאים למערכת הניהול של אברא/)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /ברוכים הבאים למערכת/ })).toBeInTheDocument();
   });
 });
