@@ -34,7 +34,12 @@ export const UpdateUserSchema = z.object({
   fullName: z.string().min(2, 'שם מלא חייב להכיל לפחות 2 תווים').optional(),
   email: z.string().email('כתובת אימייל אינה תקינה').optional(),
   role: UserRole.optional(),
-  isActive: z.boolean().optional(),
+  // HR Metadata fields required by Epic §2
+  employeeNumber: z.string().optional(),
+  jobTitle: z.string().optional(),
+  employmentType: z.string().optional(),
+  employmentPercentage: z.number().min(1).max(100).optional(),
+  orgUnit: z.string().optional(),
 });
 
 export type UpdateUserPayload = z.infer<typeof UpdateUserSchema>;
@@ -52,7 +57,9 @@ export type ResetPasswordPayload = z.infer<typeof ResetPasswordSchema>;
 
 - **Auth**: Required (`JwtAuthGuard`, `@Roles('admin')`).
 - **Request Body**: `UpdateUserPayload`.
-- **Response**: `200 OK` with updated User object (excluding password hash).
+- **Audit Visibility**: Prisma automatically updates `updated_at: new Date()` upon executing `prisma.user.update(...)` for full audit visibility.
+- **Scope Note**: `isActive` is omitted from `UpdateUserSchema` to avoid conflicting with KAN-48 (Deactivation/Restoration).
+- **Response**: `200 OK` with updated User object (excluding `password_hash`).
 - **Error Responses**:
   - `400 Bad Request`: Validation failure.
   - `404 Not Found`: User ID does not exist.
@@ -62,6 +69,7 @@ export type ResetPasswordPayload = z.infer<typeof ResetPasswordSchema>;
 
 - **Auth**: Required (`JwtAuthGuard`, `@Roles('admin')`).
 - **Request Body**: `ResetPasswordPayload`.
+- **Audit & Security**: Hashes new password with bcrypt, updates `updated_at`, and increments `token_version` to immediately revoke active JWT sessions.
 - **Response**: `200 OK` `{ "message": "הסיסמה שונתה בהצלחה" }`.
 - **Error Responses**:
   - `400 Bad Request`: Password validation failure (<8 chars).
