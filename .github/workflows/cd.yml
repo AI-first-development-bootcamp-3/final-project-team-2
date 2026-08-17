@@ -16,66 +16,69 @@ jobs:
     runs-on: ubuntu-latest
     env:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_MOBILE_PROJECT_ID }}
     steps:
       - uses: actions/checkout@v4
 
       - name: Install Vercel CLI
         run: npm i -g vercel
 
+      - name: Create Vercel project config
+        run: |
+          mkdir -p .vercel
+          echo '{"projectId":"${{ secrets.VERCEL_MOBILE_PROJECT_ID }}","orgId":"${{ secrets.VERCEL_ORG_ID }}"}' > .vercel/project.json
+
       - name: Deploy
-        id: deploy
         run: |
           if [ "${{ github.event_name }}" = "push" ]; then
-            URL=$(vercel deploy --prod --token=$VERCEL_TOKEN)
+            vercel deploy --prod --token=$VERCEL_TOKEN
           else
-            URL=$(vercel deploy --token=$VERCEL_TOKEN)
+            vercel deploy --token=$VERCEL_TOKEN
           fi
-          echo "url=$URL" >> "$GITHUB_OUTPUT"
 
   deploy-admin:
     name: Deploy Admin
     runs-on: ubuntu-latest
     env:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_ADMIN_PROJECT_ID }}
     steps:
       - uses: actions/checkout@v4
 
       - name: Install Vercel CLI
         run: npm i -g vercel
 
+      - name: Create Vercel project config
+        run: |
+          mkdir -p .vercel
+          echo '{"projectId":"${{ secrets.VERCEL_ADMIN_PROJECT_ID }}","orgId":"${{ secrets.VERCEL_ORG_ID }}"}' > .vercel/project.json
+
       - name: Deploy
-        id: deploy
         run: |
           if [ "${{ github.event_name }}" = "push" ]; then
-            URL=$(vercel deploy --prod --token=$VERCEL_TOKEN)
+            vercel deploy --prod --token=$VERCEL_TOKEN
           else
-            URL=$(vercel deploy --token=$VERCEL_TOKEN)
+            vercel deploy --token=$VERCEL_TOKEN
           fi
-          echo "url=$URL" >> "$GITHUB_OUTPUT"
 
   deploy-api:
     name: Deploy API
     runs-on: ubuntu-latest
     env:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_API_PROJECT_ID }}
     steps:
       - uses: actions/checkout@v4
 
       - name: Install Vercel CLI
         run: npm i -g vercel
 
+      - name: Create Vercel project config
+        run: |
+          mkdir -p .vercel
+          echo '{"projectId":"${{ secrets.VERCEL_API_PROJECT_ID }}","orgId":"${{ secrets.VERCEL_ORG_ID }}"}' > .vercel/project.json
+
       - name: Deploy
-        id: deploy
         run: |
           if [ "${{ github.event_name }}" = "push" ]; then
-            URL=$(vercel deploy --prod --token=$VERCEL_TOKEN)
+            vercel deploy --prod --token=$VERCEL_TOKEN
           else
-            URL=$(vercel deploy --token=$VERCEL_TOKEN)
+            vercel deploy --token=$VERCEL_TOKEN
           fi
-          echo "url=$URL" >> "$GITHUB_OUTPUT"
