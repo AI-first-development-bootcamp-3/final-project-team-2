@@ -9,6 +9,8 @@ coverage/
 .vercel/
 # Vercel serverless function build output
 server/api/api/
+.agents/
+.DS_Store
 
 # Playwright
 e2e/test-results/

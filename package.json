@@ -17,6 +17,7 @@
     "test:e2e": "pnpm --filter @abra/e2e test"
   },
   "devDependencies": {
+    "@vitejs/plugin-react": "^4.0.0",
     "prettier": "^3.0.0",
     "turbo": "^2.0.0"
   }
