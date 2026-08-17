@@ -1,6 +1,11 @@
-import { Body, Controller, HttpCode, Post, Res } from '@nestjs/common';
-import type { Response } from 'express';
-import { LoginSchema, type LoginFormData, type LoginResponse } from '@abra/contracts';
+import { Body, Controller, HttpCode, Post, Req, Res } from '@nestjs/common';
+import type { Request, Response } from 'express';
+import {
+  LoginSchema,
+  type LoginFormData,
+  type LoginResponse,
+  type RefreshResponse,
+} from '@abra/contracts';
 import { AuthService } from './auth.service';
 import { REFRESH_COOKIE, refreshCookieOptions } from './auth.constants';
 import { ZodValidationPipe } from './zod-validation.pipe';
@@ -18,5 +23,12 @@ export class AuthController {
     const result = await this.authService.login(credentials);
     res.cookie(REFRESH_COOKIE, result.refreshToken, refreshCookieOptions(result.refreshMaxAgeMs));
     return result.response;
+  }
+
+  @Post('refresh')
+  @HttpCode(200)
+  refresh(@Req() req: Request): Promise<RefreshResponse> {
+    const cookies = req.cookies as Record<string, string> | undefined;
+    return this.authService.refresh(cookies?.[REFRESH_COOKIE]);
   }
 }

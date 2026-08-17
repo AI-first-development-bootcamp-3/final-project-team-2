@@ -4,7 +4,7 @@ import type { INestApplication } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
 import request from 'supertest';
 import * as bcrypt from 'bcrypt';
-import { LoginResponse } from '@abra/contracts';
+import { LoginResponse, RefreshResponse } from '@abra/contracts';
 import { AuthModule } from './auth.module';
 import { AuthService } from './auth.service';
 import { REFRESH_COOKIE } from './auth.constants';
@@ -193,6 +193,76 @@ describe('POST /api/v1/auth/login (failures)', () => {
 
     expect(JSON.stringify(res.body)).toContain('password');
     expect(JSON.stringify(res.body)).toContain('VAL-04');
+  });
+});
+
+export function extractRefreshCookie(res: request.Response): string {
+  const cookies = res.headers['set-cookie'] as unknown as string[];
+  const cookie = cookies?.find((c) => c.startsWith(`${REFRESH_COOKIE}=`));
+  if (!cookie) throw new Error('no refresh cookie set');
+  return cookie.split(';')[0];
+}
+
+describe('POST /api/v1/auth/refresh', () => {
+  let app: INestApplication;
+  let users: Awaited<ReturnType<typeof makeFakeUser>>[];
+
+  beforeAll(async () => {
+    users = [await makeFakeUser()];
+    ({ app } = await makeAuthApp(users));
+  });
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  async function loginCookie(): Promise<string> {
+    const res = await request(app.getHttpServer())
+      .post('/api/v1/auth/login')
+      .send({ email: 'employee1@abra.co', password: 'Employee123!' })
+      .expect(200);
+    return extractRefreshCookie(res);
+  }
+
+  it('issues a new access token for a valid refresh cookie', async () => {
+    const cookie = await loginCookie();
+    const res = await request(app.getHttpServer())
+      .post('/api/v1/auth/refresh')
+      .set('Cookie', cookie)
+      .expect(200);
+
+    const parsed = RefreshResponse.safeParse(res.body);
+    expect(parsed.success).toBe(true);
+    if (parsed.success) {
+      const payload = decodeJwtPayload(parsed.data.accessToken);
+      expect(payload.userId).toBe('7d9d2c8e-8f9a-4b6e-9d3e-2f1a5b8c9d0e');
+      expect(payload.role).toBe('employee');
+    }
+  });
+
+  it('rejects a refresh without a cookie', async () => {
+    await request(app.getHttpServer()).post('/api/v1/auth/refresh').expect(401);
+  });
+
+  it('rejects a tampered refresh cookie', async () => {
+    const cookie = await loginCookie();
+    await request(app.getHttpServer())
+      .post('/api/v1/auth/refresh')
+      .set('Cookie', `${cookie}tampered`)
+      .expect(401);
+  });
+
+  it('rejects a refresh token whose version no longer matches the user', async () => {
+    const cookie = await loginCookie();
+    users[0].token_version += 1;
+    try {
+      await request(app.getHttpServer())
+        .post('/api/v1/auth/refresh')
+        .set('Cookie', cookie)
+        .expect(401);
+    } finally {
+      users[0].token_version -= 1;
+    }
   });
 });
 

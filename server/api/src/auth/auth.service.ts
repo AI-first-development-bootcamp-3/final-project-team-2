@@ -1,7 +1,7 @@
 import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import type { LoginFormData, LoginResponse } from '@abra/contracts';
+import type { LoginFormData, LoginResponse, RefreshResponse } from '@abra/contracts';
 import { PrismaService } from '../prisma/prisma.service';
 import { ENV } from '../env.provider';
 import type { Env } from '../env';
@@ -48,6 +48,25 @@ export class AuthService {
       refreshToken,
       refreshMaxAgeMs,
     };
+  }
+
+  async refresh(refreshToken: string | undefined): Promise<RefreshResponse> {
+    if (!refreshToken) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+    let payload: { userId: string; tokenVersion: number };
+    try {
+      payload = await this.jwt.verifyAsync(refreshToken, { secret: this.env.JWT_REFRESH_SECRET });
+    } catch {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+    const user = await this.prisma.user.findFirst({ where: { id: payload.userId } });
+    // token_version mismatch means the token was revoked (logout, password
+    // reset, deactivation) after being issued.
+    if (!user || user.token_version !== payload.tokenVersion) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+    return { accessToken: await this.signAccessToken(user.id, user.role) };
   }
 
   /** Stateless check — signature + expiry only, never touches the database. */
