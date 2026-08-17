@@ -13,9 +13,13 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@abra/contracts": "workspace:^",
+    "@hookform/resolvers": "3.9.0",
     "clsx": "^2.0.0",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
+    "react-hook-form": "^7.53.0",
+    "react-router-dom": "^6.26.0",
     "tailwind-merge": "^2.0.0"
   },
   "devDependencies": {
