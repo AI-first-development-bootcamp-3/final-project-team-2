@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import type { LoginFormData } from '@abra/contracts';
 import { LoginForm } from './LoginForm';
 import { login } from '../../lib/api';
@@ -11,11 +11,14 @@ import { setAuthSession } from '../../lib/auth';
 // 2026 — email+password, no SSO).
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogin = async (data: LoginFormData) => {
     const session = await login(data);
-    setAuthSession(session);
-    navigate('/');
+    setAuthSession(session, data.rememberMe);
+    // Return to the page the guard bounced the visitor from, if any.
+    const from = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname;
+    navigate(from ?? '/', { replace: true });
   };
 
   return (
