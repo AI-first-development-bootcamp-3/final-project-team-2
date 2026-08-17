@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { UserRole } from './enums.js';
 
 export * from './enums.js';
 
