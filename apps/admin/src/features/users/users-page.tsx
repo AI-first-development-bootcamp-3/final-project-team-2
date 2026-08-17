@@ -6,6 +6,7 @@ import { DeactivateUserModal } from './deactivate-user-modal';
 import { EditUserModal } from './edit-user-modal';
 import { ResetPasswordModal } from './reset-password-modal';
 import { RestoreUserModal } from './restore-user-modal';
+import { UsersCreateForm } from './users-create-form';
 import { createUsersColumns } from './users-columns';
 
 const PAGE_SIZE = 20;
@@ -48,6 +49,7 @@ export function UsersPage() {
   const [resettingPasswordUser, setResettingPasswordUser] = useState<UserListItem | null>(null);
   const [deactivatingUser, setDeactivatingUser] = useState<UserListItem | null>(null);
   const [restoringUser, setRestoringUser] = useState<UserListItem | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const path = useMemo(
@@ -101,7 +103,16 @@ export function UsersPage() {
 
   return (
     <section>
-      <h2 className="mb-4 text-xl font-semibold">משתמשים</h2>
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <h2 className="text-xl font-semibold">משתמשים</h2>
+        <button
+          type="button"
+          className="rounded border bg-neutral-900 px-3 py-1 text-white"
+          onClick={() => setCreateOpen(true)}
+        >
+          יצירת משתמש
+        </button>
+      </div>
 
       {successMessage ? (
         <div
@@ -233,6 +244,15 @@ export function UsersPage() {
           }}
         />
       ) : null}
+
+      <UsersCreateForm
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        onCreated={() => {
+          setCreateOpen(false);
+          fetchUsers();
+        }}
+      />
     </section>
   );
 }

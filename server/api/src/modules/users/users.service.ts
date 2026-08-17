@@ -1,13 +1,15 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
-import type {
-  DeactivateUserResponse,
-  ResetPasswordPayload,
-  RestoreUserResponse,
-  UpdateUserPayload,
-  UserListItem,
-  UsersListQuery,
+import {
+  VAL_MESSAGES,
+  type CreateUserBody,
+  type DeactivateUserResponse,
+  type ResetPasswordPayload,
+  type RestoreUserResponse,
+  type UpdateUserPayload,
+  type UserListItem,
+  type UsersListQuery,
 } from '@abra/contracts';
 import { PrismaService } from '../../prisma/prisma.service';
 
@@ -25,6 +27,24 @@ const USER_LIST_SELECT = {
   role: true,
   is_active: true,
 } as const;
+
+const BCRYPT_SALT_ROUNDS = 10;
+
+function toListItem(row: {
+  id: string;
+  full_name: string;
+  email: string;
+  role: UserListItem['role'];
+  is_active: boolean;
+}): UserListItem {
+  return {
+    id: row.id,
+    fullName: row.full_name,
+    email: row.email,
+    role: row.role,
+    isActive: row.is_active,
+  };
+}
 
 @Injectable()
 export class UsersService {
@@ -50,19 +70,60 @@ export class UsersService {
     ]);
 
     return {
-      data: rows.map((row) => ({
-        id: row.id,
-        fullName: row.full_name,
-        email: row.email,
-        role: row.role,
-        isActive: row.is_active,
-      })),
+      data: rows.map(toListItem),
       meta: {
         page: query.page,
         limit: query.limit,
         total,
       },
     };
+  }
+
+  async create(input: CreateUserBody): Promise<UserListItem> {
+    const fullName = input.fullName.trim();
+    const email = input.email.trim().toLowerCase();
+
+    const existing = await this.prisma.user.findFirst({
+      where: { email: { equals: email, mode: 'insensitive' } },
+    });
+    if (existing) {
+      this.throwEmailConflict();
+    }
+
+    const passwordHash = await bcrypt.hash(input.password, BCRYPT_SALT_ROUNDS);
+
+    try {
+      const row = await this.prisma.user.create({
+        data: {
+          full_name: fullName,
+          email,
+          password_hash: passwordHash,
+          role: input.role,
+        },
+        select: USER_LIST_SELECT,
+      });
+      return toListItem(row);
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        this.throwEmailConflict();
+      }
+      throw error;
+    }
+  }
+
+  private throwEmailConflict(): never {
+    throw new ConflictException({
+      statusCode: 409,
+      message: 'Conflict',
+      error: 'Conflict',
+      details: [
+        {
+          field: 'email',
+          rule: 'VAL-11',
+          message: VAL_MESSAGES['VAL-11'],
+        },
+      ],
+    });
   }
 
   async updateUser(id: string, payload: UpdateUserPayload): Promise<UserListItem> {
