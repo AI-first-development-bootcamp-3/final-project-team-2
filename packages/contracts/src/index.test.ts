@@ -49,6 +49,23 @@ describe('Contracts Smoke Test', () => {
     if (!shortPassword.success) {
       expect(shortPassword.error?.issues[0]?.message).toBe('VAL-04');
     }
+
+    // Mixed-case email is trimmed and lowercased so it matches stored create emails
+    const mixedCase = LoginSchema.safeParse({
+      email: '  Nadav@Org.com  ',
+      password: 'password123',
+    });
+    expect(mixedCase.success).toBe(true);
+    if (mixedCase.success) {
+      expect(mixedCase.data.email).toBe('nadav@org.com');
+    }
+
+    // Whitespace-only email -> VAL-01 after trim
+    const whitespaceEmail = LoginSchema.safeParse({ email: '   ', password: 'password123' });
+    expect(whitespaceEmail.success).toBe(false);
+    if (!whitespaceEmail.success) {
+      expect(whitespaceEmail.error?.issues[0]?.message).toBe('VAL-01');
+    }
   });
 
   it('should default rememberMe to false when omitted', () => {
