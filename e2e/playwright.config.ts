@@ -42,6 +42,10 @@ export default defineConfig({
       timeout: 120_000,
       reuseExistingServer: !isCI,
       cwd: '..',
+      env: {
+        ...process.env,
+        DATABASE_URL: process.env.DATABASE_URL || 'postgresql://test:test@localhost:5432/abra_test',
+      },
     },
   ],
 });
