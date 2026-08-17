@@ -1,15 +1,17 @@
+import type { AuthUser } from '@abra/contracts';
+
 const AUTH_KEY = 'abra_timesheet_auth_session';
 
 export interface AuthSession {
-  email: string;
-  token: string;
+  accessToken: string;
+  user: AuthUser;
 }
 
 export function getAuthSession(): AuthSession | null {
   try {
     const raw = localStorage.getItem(AUTH_KEY);
     if (!raw) return null;
-    return JSON.parse(raw);
+    return JSON.parse(raw) as AuthSession;
   } catch {
     return null;
   }

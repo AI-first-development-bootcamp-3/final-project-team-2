@@ -1,8 +1,12 @@
 import React from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { GlassCard } from '../../components/ui/GlassCard';
 import { LoginForm } from './LoginForm';
 
 export const LoginPage: React.FC = () => {
+  const [searchParams] = useSearchParams();
+  const sessionExpired = searchParams.get('expired') === '1';
+
   return (
     <div className="min-h-screen w-full bg-slate-900 flex justify-center items-center font-sans">
       {/* 393px Mobile Portrait Viewport Frame */}
@@ -36,6 +40,15 @@ export const LoginPage: React.FC = () => {
                 שנוצרה במיוחד עבורכם!
               </p>
             </div>
+
+            {sessionExpired && (
+              <div
+                role="alert"
+                className="w-full rounded-lg border border-amber-200 bg-amber-50 p-3 text-center text-sm font-medium text-amber-800"
+              >
+                פג תוקף ההתחברות, יש להתחבר מחדש.
+              </div>
+            )}
 
             {/* Email + Password Form */}
             <LoginForm />

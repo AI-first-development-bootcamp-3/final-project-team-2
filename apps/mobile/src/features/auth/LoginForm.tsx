@@ -6,6 +6,7 @@ import { LoginSchema, LoginFormData, VAL_MESSAGES, ValCode } from '@abra/contrac
 import { InputField } from '../../components/ui/InputField';
 import { LoginButton } from '../../components/ui/LoginButton';
 import { setAuthSession } from '../../lib/auth';
+import { login } from '../../lib/api';
 
 interface LoginFormProps {
   onSuccess?: () => void;
@@ -34,19 +35,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
     setIsLoading(true);
 
     try {
-      // Simulate API login authentication call (POST /api/v1/auth/login)
-      await new Promise((resolve) => setTimeout(resolve, 800));
-
-      // Mock validation check for demo purposes (e.g. invalid credentials)
-      if (data.email === 'error@example.com') {
-        throw new Error('INVALID_CREDENTIALS');
-      }
-
-      // Store authenticated session
-      setAuthSession({
-        email: data.email,
-        token: 'mock-session-token-123',
-      });
+      const session = await login(data);
+      setAuthSession(session);
 
       if (onSuccess) {
         onSuccess();
