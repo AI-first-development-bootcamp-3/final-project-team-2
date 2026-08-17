@@ -92,6 +92,7 @@ jobs:
         run: npm i -g vercel@^59.0.0
 
       - name: Deploy
+        working-directory: ${{ matrix.directory }}
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets[matrix.project-id-secret] }}
