@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { UsersPage } from './users-page';
@@ -55,7 +55,7 @@ describe('UsersPage', () => {
     expect(screen.queryByLabelText(/גודל עמוד|per page|page size/i)).not.toBeInTheDocument();
     expect(
       screen.queryByRole('button', {
-        name: /יצירה|עריכה|איפוס|השבתה|create|edit|reset|deactivate/i,
+        name: /עריכה|איפוס סיסמה|השבתה|edit|reset password|deactivate/i,
       }),
     ).not.toBeInTheDocument();
   });
@@ -193,5 +193,74 @@ describe('UsersPage', () => {
     });
     renderPage();
     expect(await screen.findByText('לא פעיל', { selector: 'td' })).toBeInTheDocument();
+  });
+
+  it('opens create from Users with four required fields and default employee role', async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await screen.findByText('Alice Cohen');
+    await user.click(screen.getByRole('button', { name: 'יצירת משתמש' }));
+
+    const dialog = screen.getByRole('dialog');
+    expect(dialog).toBeInTheDocument();
+    expect(within(dialog).getByLabelText('שם מלא')).toBeRequired();
+    expect(within(dialog).getByLabelText('אימייל')).toBeRequired();
+    expect(within(dialog).getByLabelText('סיסמה ראשונית')).toBeRequired();
+    expect(within(dialog).getByLabelText('תפקיד')).toHaveValue('employee');
+    expect(within(dialog).getByRole('option', { name: 'רגיל' })).toBeInTheDocument();
+    expect(within(dialog).getByRole('option', { name: 'אדמין' })).toBeInTheDocument();
+  });
+
+  it('closes the modal on success and refetches the current page without resetting query', async () => {
+    const user = userEvent.setup();
+    apiFetch.mockImplementation((path: string, init?: RequestInit) => {
+      if (init?.method === 'POST') {
+        return Promise.resolve({
+          data: {
+            id: '770e8400-e29b-41d4-a716-446655440002',
+            fullName: 'Nadav Cohen',
+            email: 'nadav@org.com',
+            role: 'employee',
+            isActive: true,
+          },
+        });
+      }
+      const page = new URLSearchParams(path.split('?')[1]).get('page');
+      return Promise.resolve({
+        data: [alice],
+        meta: { page: Number(page), limit: 20, total: 40 },
+      });
+    });
+    renderPage();
+    await screen.findByText('Alice Cohen');
+    await user.click(screen.getByRole('button', { name: 'הבא' }));
+    await waitFor(() => {
+      const lastGet = apiFetch.mock.calls.filter((call) => call[1]?.method !== 'POST').at(-1);
+      expect(String(lastGet?.[0])).toContain('page=2');
+    });
+
+    await user.click(screen.getByRole('button', { name: 'יצירת משתמש' }));
+    const dialog = screen.getByRole('dialog');
+    await user.type(within(dialog).getByLabelText('שם מלא'), 'Nadav Cohen');
+    await user.type(within(dialog).getByLabelText('אימייל'), 'Nadav@Org.com');
+    await user.type(within(dialog).getByLabelText('סיסמה ראשונית'), 'secret123');
+    await user.click(within(dialog).getByRole('button', { name: 'שמירה' }));
+
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+    const postCall = apiFetch.mock.calls.find((call) => call[1]?.method === 'POST');
+    expect(postCall?.[0]).toBe('/users');
+    expect(JSON.parse(String(postCall?.[1]?.body))).toMatchObject({
+      fullName: 'Nadav Cohen',
+      email: 'nadav@org.com',
+      password: 'secret123',
+      role: 'employee',
+    });
+    const lastGet = apiFetch.mock.calls.filter((call) => call[1]?.method !== 'POST').at(-1);
+    expect(String(lastGet?.[0])).toContain('page=2');
+    expect(String(lastGet?.[0])).toContain('sort=fullName');
+    expect(screen.getByRole('table')).not.toHaveTextContent('secret123');
+    expect(screen.queryByText(/password/i)).not.toBeInTheDocument();
   });
 });

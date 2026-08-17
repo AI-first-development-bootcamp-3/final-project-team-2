@@ -27,13 +27,17 @@ const FIELD_RULES: Record<string, string> = {
   q: 'VAL-QUERY',
 };
 
+function ruleFromIssueMessage(message: string): string | undefined {
+  return /^VAL-[A-Z0-9-]+$/i.test(message) ? message : undefined;
+}
+
 export function zodIssuesToDetails(issues: z.ZodIssue[]): ApiErrorDetail[] {
   return issues.map((issue) => {
     const field = issue.path.map(String).join('.') || '(root)';
     const rootField = String(issue.path[0] ?? '');
     return {
       field,
-      rule: FIELD_RULES[rootField] ?? 'VAL-QUERY',
+      rule: ruleFromIssueMessage(issue.message) ?? FIELD_RULES[rootField] ?? 'VAL-QUERY',
       message: issue.message,
     };
   });
