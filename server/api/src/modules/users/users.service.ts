@@ -4,7 +4,9 @@ import * as bcrypt from 'bcrypt';
 import {
   VAL_MESSAGES,
   type CreateUserBody,
+  type DeactivateUserResponse,
   type ResetPasswordPayload,
+  type RestoreUserResponse,
   type UpdateUserPayload,
   type UserListItem,
   type UsersListQuery,
@@ -179,6 +181,50 @@ export class UsersService {
     });
 
     return { message: 'הסיסמה שונתה בהצלחה' };
+  }
+
+  async deactivateUser(id: string): Promise<DeactivateUserResponse> {
+    const existing = await this.prisma.user.findUnique({ where: { id } });
+    if (!existing) {
+      throw new NotFoundException('משתמש לא נמצא');
+    }
+
+    const now = new Date();
+    const updated = await this.prisma.user.update({
+      where: { id },
+      data: {
+        is_active: false,
+        deleted_at: now,
+        token_version: { increment: 1 },
+      },
+    });
+
+    return {
+      id: updated.id,
+      isActive: false,
+      deletedAt: updated.deleted_at ? updated.deleted_at.toISOString() : now.toISOString(),
+    };
+  }
+
+  async restoreUser(id: string): Promise<RestoreUserResponse> {
+    const existing = await this.prisma.user.findUnique({ where: { id } });
+    if (!existing) {
+      throw new NotFoundException('משתמש לא נמצא');
+    }
+
+    const updated = await this.prisma.user.update({
+      where: { id },
+      data: {
+        is_active: true,
+        deleted_at: null,
+      },
+    });
+
+    return {
+      id: updated.id,
+      isActive: true,
+      deletedAt: null,
+    };
   }
 
   private buildWhere(query: UsersListQuery): Prisma.UserWhereInput {

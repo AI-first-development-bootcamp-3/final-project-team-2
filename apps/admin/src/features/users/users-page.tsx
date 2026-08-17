@@ -2,8 +2,10 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { UserListItem, UsersListQuery, UsersListSuccess } from '@abra/contracts';
 import { DataTable, type SortOrder } from '@/components/ui/data-table';
 import { apiFetch } from '@/lib/api/client';
+import { DeactivateUserModal } from './deactivate-user-modal';
 import { EditUserModal } from './edit-user-modal';
 import { ResetPasswordModal } from './reset-password-modal';
+import { RestoreUserModal } from './restore-user-modal';
 import { UsersCreateForm } from './users-create-form';
 import { createUsersColumns } from './users-columns';
 
@@ -45,6 +47,8 @@ export function UsersPage() {
   const [error, setError] = useState<string | null>(null);
   const [editingUser, setEditingUser] = useState<UserListItem | null>(null);
   const [resettingPasswordUser, setResettingPasswordUser] = useState<UserListItem | null>(null);
+  const [deactivatingUser, setDeactivatingUser] = useState<UserListItem | null>(null);
+  const [restoringUser, setRestoringUser] = useState<UserListItem | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
@@ -91,6 +95,8 @@ export function UsersPage() {
       createUsersColumns({
         onEdit: (user) => setEditingUser(user),
         onResetPassword: (user) => setResettingPasswordUser(user),
+        onDeactivate: (user) => setDeactivatingUser(user),
+        onRestore: (user) => setRestoringUser(user),
       }),
     [],
   );
@@ -212,6 +218,28 @@ export function UsersPage() {
           onClose={() => setResettingPasswordUser(null)}
           onSuccess={() => {
             setSuccessMessage('הסיסמה שונתה בהצלחה');
+            fetchUsers();
+          }}
+        />
+      ) : null}
+
+      {deactivatingUser ? (
+        <DeactivateUserModal
+          user={deactivatingUser}
+          onClose={() => setDeactivatingUser(null)}
+          onSuccess={() => {
+            setSuccessMessage('המשתמש הושבת בהצלחה');
+            fetchUsers();
+          }}
+        />
+      ) : null}
+
+      {restoringUser ? (
+        <RestoreUserModal
+          user={restoringUser}
+          onClose={() => setRestoringUser(null)}
+          onSuccess={() => {
+            setSuccessMessage('המשתמש הופעל מחדש בהצלחה');
             fetchUsers();
           }}
         />

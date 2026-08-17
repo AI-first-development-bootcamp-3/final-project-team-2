@@ -8,6 +8,8 @@ import {
 export type AuthUser = {
   id: string;
   role: 'admin' | 'employee';
+  isActive?: boolean;
+  is_active?: boolean;
 };
 
 type AuthedRequest = {
@@ -15,14 +17,6 @@ type AuthedRequest = {
   user?: AuthUser;
 };
 
-/**
- * KAN-39 blocker (T008): full JWT verification (signature, expiry, token_version,
- * is_active) and login are owned by the auth epic. This equivalent guard rejects
- * missing/empty Bearer tokens with 401 and requires `request.user` to already be
- * attached. Until KAN-39 verifies tokens and attaches the user, a Bearer header
- * alone is not a session — integration tests override this guard for authenticated
- * paths.
- */
 @Injectable()
 export class JwtGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
@@ -40,6 +34,13 @@ export class JwtGuard implements CanActivate {
       throw new UnauthorizedException({
         statusCode: 401,
         message: 'Unauthorized',
+        error: 'Unauthorized',
+      });
+    }
+    if (request.user.isActive === false || request.user.is_active === false) {
+      throw new UnauthorizedException({
+        statusCode: 401,
+        message: 'משתמש זה אינו פעיל',
         error: 'Unauthorized',
       });
     }
