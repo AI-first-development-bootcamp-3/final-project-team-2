@@ -132,3 +132,54 @@ describe('POST /api/v1/auth/login (happy path)', () => {
     expect(refreshCookie).toMatch(/SameSite=Strict/i);
   });
 });
+
+describe('POST /api/v1/auth/login (failures)', () => {
+  let app: INestApplication;
+
+  beforeAll(async () => {
+    app = await makeAuthApp([await makeFakeUser()]);
+  });
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  it('rejects a wrong password with a generic 401 and no cookie', async () => {
+    const res = await request(app.getHttpServer())
+      .post('/api/v1/auth/login')
+      .send({ email: 'employee1@abra.co', password: 'WrongPassword1!' })
+      .expect(401);
+
+    expect(res.body.message).toBe('Invalid credentials');
+    expect(res.headers['set-cookie']).toBeUndefined();
+  });
+
+  it('answers an unknown email with the identical generic error', async () => {
+    const res = await request(app.getHttpServer())
+      .post('/api/v1/auth/login')
+      .send({ email: 'nobody@abra.co', password: 'Whatever123!' })
+      .expect(401);
+
+    expect(res.body.message).toBe('Invalid credentials');
+  });
+
+  it('rejects a malformed email with a 400 naming the field', async () => {
+    const res = await request(app.getHttpServer())
+      .post('/api/v1/auth/login')
+      .send({ email: 'not-an-email', password: 'Employee123!' })
+      .expect(400);
+
+    expect(JSON.stringify(res.body)).toContain('email');
+    expect(JSON.stringify(res.body)).toContain('VAL-02');
+  });
+
+  it('rejects a short password with a 400 naming the field', async () => {
+    const res = await request(app.getHttpServer())
+      .post('/api/v1/auth/login')
+      .send({ email: 'employee1@abra.co', password: 'short' })
+      .expect(400);
+
+    expect(JSON.stringify(res.body)).toContain('password');
+    expect(JSON.stringify(res.body)).toContain('VAL-04');
+  });
+});
