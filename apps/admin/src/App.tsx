@@ -1,6 +1,7 @@
 import React, { useEffect, useSyncExternalStore } from 'react';
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { LoginPage } from './features/auth/LoginPage';
+import { UsersPage } from './features/users/users-page';
 import { clearAuthSession, getAuthSession, subscribeToAuthChanges } from './lib/auth';
 
 // Reactive session read: consumers re-render when the session is written or
@@ -49,10 +50,14 @@ function CatchAll() {
   return <Navigate to={session?.user.role === 'admin' ? '/' : '/login'} replace />;
 }
 
-function PortalHome() {
+// Console shell around admin screens; grows a sidebar with later epics.
+function ConsoleLayout({ children }: { children: React.ReactElement }) {
   return (
-    <div className="flex min-h-screen items-center justify-center">
-      <h1 className="text-2xl font-bold">Abra Timesheet - Admin Console</h1>
+    <div dir="rtl" className="min-h-screen bg-white text-neutral-900">
+      <header className="border-b px-6 py-4">
+        <h1 className="text-2xl font-bold">Abra Timesheet - Admin Console</h1>
+      </header>
+      <main className="px-6 py-6">{children}</main>
     </div>
   );
 }
@@ -69,10 +74,20 @@ export function AppRoutes() {
         }
       />
       <Route
+        path="/admin/users"
+        element={
+          <RequireAdmin>
+            <ConsoleLayout>
+              <UsersPage />
+            </ConsoleLayout>
+          </RequireAdmin>
+        }
+      />
+      <Route
         path="/"
         element={
           <RequireAdmin>
-            <PortalHome />
+            <Navigate to="/admin/users" replace />
           </RequireAdmin>
         }
       />

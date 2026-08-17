@@ -18,3 +18,5 @@ docs
 .claude
 *.md
 !README.md
+*.log
+*.log*

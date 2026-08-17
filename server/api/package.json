@@ -15,7 +15,7 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "@abra/contracts": "workspace:^",
+    "@abra/contracts": "workspace:*",
     "@nestjs/common": "^10.0.0",
     "@nestjs/core": "^10.0.0",
     "@nestjs/jwt": "^11.0.2",

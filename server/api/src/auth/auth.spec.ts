@@ -107,6 +107,44 @@ describe('POST /api/v1/auth/login (failures)', () => {
   });
 });
 
+describe('POST /api/v1/auth/login (account state)', () => {
+  let app: INestApplication;
+
+  beforeAll(async () => {
+    ({ app } = await makeAuthApp([
+      await makeFakeUser({ is_active: false }),
+      await makeFakeUser({
+        id: '3f2a1b0c-9d8e-4f7a-b6c5-d4e3f2a1b0c9',
+        email: 'deleted@abra.co',
+        deleted_at: new Date('2026-08-01T00:00:00Z'),
+      }),
+    ]));
+  });
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  it('rejects a deactivated user with the same generic 401', async () => {
+    const res = await request(app.getHttpServer())
+      .post('/api/v1/auth/login')
+      .send({ email: 'employee1@abra.co', password: 'Employee123!' })
+      .expect(401);
+
+    expect(res.body.message).toBe('Invalid credentials');
+    expect(res.headers['set-cookie']).toBeUndefined();
+  });
+
+  it('rejects a soft-deleted user with the same generic 401', async () => {
+    const res = await request(app.getHttpServer())
+      .post('/api/v1/auth/login')
+      .send({ email: 'deleted@abra.co', password: 'Employee123!' })
+      .expect(401);
+
+    expect(res.body.message).toBe('Invalid credentials');
+  });
+});
+
 describe('POST /api/v1/auth/refresh', () => {
   let app: INestApplication;
   let user: Awaited<ReturnType<typeof makeFakeUser>>;
@@ -154,6 +192,19 @@ describe('POST /api/v1/auth/refresh', () => {
       .post('/api/v1/auth/refresh')
       .set('Cookie', `${cookie}tampered`)
       .expect(401);
+  });
+
+  it('rejects a refresh after the user is deactivated, even with a live token', async () => {
+    const cookie = await loginCookie();
+    user.is_active = false;
+    try {
+      await request(app.getHttpServer())
+        .post('/api/v1/auth/refresh')
+        .set('Cookie', cookie)
+        .expect(401);
+    } finally {
+      user.is_active = true;
+    }
   });
 
   it('rejects a refresh token whose version no longer matches the user', async () => {
