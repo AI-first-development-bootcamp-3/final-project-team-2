@@ -5,8 +5,10 @@ test.describe('Employee app shell', () => {
     await page.goto('/');
 
     await expect(page).toHaveTitle('Abra Timesheet');
+    await expect(page).toHaveURL(/.*login/);
 
-    const heading = page.getByRole('heading', { name: 'ברוכים הבאים!' });
+    const heading = page.locator('h1');
     await expect(heading).toBeVisible();
+    await expect(heading).toContainText('ברוכים הבאים');
   });
 });
