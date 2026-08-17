@@ -1,10 +1,12 @@
 # KAN-35: Vercel CD Implementation Plan
 
+> **SUPERSEDED:** This plan originally described a Vercel Git-integration approach with `installCommand`/`buildCommand` in each `vercel.json`. The shipped implementation uses **GitHub Actions + Vercel CLI** instead (see `cd.yml` and the design spec). The manual setup tasks (2-4) below remain accurate; Task 1's vercel.json snippets are outdated.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Set up continuous deployment with three Vercel projects, Neon Postgres (branching), Vercel Blob, and proper environment separation.
 
-**Architecture:** Vercel native Git integration deploys each app from a monorepo root directory. Production deploys on push to `dev`, preview deploys on PRs. Neon provides branch databases per preview. GitHub Actions handles schema migrations separately.
+**Architecture:** GitHub Actions deploys each app via Vercel CLI from monorepo sub-directories. Production deploys on push to `dev` (gated on CI), preview deploys on PRs. Neon provides branch databases per preview. Migrations run as a prerequisite job before API deployment.
 
 **Tech Stack:** Vercel (hosting/CD), Neon Postgres (database), Vercel Blob (file storage), pnpm + Turborepo (monorepo build), GitHub Actions (migrations)
 
