@@ -25,7 +25,7 @@ export class AuthService {
     const user = await this.prisma.user.findFirst({ where: { email: credentials.email } });
     // Same generic error for unknown email and wrong password — the response
     // must not reveal whether the email exists.
-    if (!user) {
+    if (!user || !user.is_active) {
       throw new UnauthorizedException('Invalid credentials');
     }
     const passwordMatches = await bcrypt.compare(credentials.password, user.password_hash);
@@ -65,7 +65,7 @@ export class AuthService {
     const user = await this.prisma.user.findFirst({ where: { id: payload.userId } });
     // token_version mismatch means the token was revoked (logout, password
     // reset, deactivation) after being issued.
-    if (!user || user.token_version !== payload.tokenVersion) {
+    if (!user || !user.is_active || user.token_version !== payload.tokenVersion) {
       throw new UnauthorizedException('Invalid refresh token');
     }
     return { accessToken: await this.signAccessToken(user.id, user.role) };

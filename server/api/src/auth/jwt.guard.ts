@@ -8,6 +8,7 @@ import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
 import { AuthService } from './auth.service';
 import { IS_PUBLIC_KEY } from './auth.decorators';
+import { PrismaService } from '../prisma/prisma.service';
 
 export interface AuthenticatedUser {
   userId: string;
@@ -23,6 +24,7 @@ export class JwtGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
     private readonly authService: AuthService,
+    private readonly prisma: PrismaService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -45,6 +47,13 @@ export class JwtGuard implements CanActivate {
     try {
       payload = await this.authService.verifyAccessToken(token);
     } catch {
+      throw new UnauthorizedException();
+    }
+
+    // Deliberate statefulness (spec): deactivation takes effect on the very
+    // next request, even while an access token is still unexpired.
+    const user = await this.prisma.user.findFirst({ where: { id: payload.userId } });
+    if (!user || !user.is_active) {
       throw new UnauthorizedException();
     }
 

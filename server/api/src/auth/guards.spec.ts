@@ -170,3 +170,69 @@ describe('RolesGuard — ADR-26 role matrix (KAN-41 4.2)', () => {
     expect(res.body).toEqual({ ok: 'admin-only' });
   });
 });
+
+describe('RolesGuard — defensive unauthenticated branch', () => {
+  it('throws Unauthorized if a roled route is reached with no user attached', () => {
+    const reflector = {
+      getAllAndOverride: (key: string) => (key === 'roles' ? ['admin'] : undefined),
+    } as unknown as Reflector;
+    const guard = new RolesGuard(reflector);
+    const context = {
+      getHandler: () => ({}),
+      getClass: () => ({}),
+      switchToHttp: () => ({ getRequest: () => ({}) }),
+    } as never;
+    expect(() => guard.canActivate(context)).toThrow();
+  });
+});
+
+describe('Deactivated users are rejected on every request (KAN-41 4.3)', () => {
+  let app: INestApplication;
+  let users: FakeUser[];
+
+  beforeAll(async () => {
+    users = [await makeFakeUser()];
+    ({ app } = await makeGuardedApp(users));
+  });
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  it('rejects a live access token, a refresh, and a re-login after deactivation', async () => {
+    const loginRes = await request(app.getHttpServer())
+      .post('/api/v1/auth/login')
+      .send({ email: 'employee1@abra.co', password: 'Employee123!' })
+      .expect(200);
+    const token = loginRes.body.accessToken as string;
+    const cookies = loginRes.headers['set-cookie'] as unknown as string[];
+    const cookie = (cookies.find((c) => c.startsWith('refresh_token=')) ?? '').split(';')[0] ?? '';
+
+    // Sanity: the token works while active
+    await request(app.getHttpServer())
+      .get('/api/v1/probe/any-user')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+
+    users[0].is_active = false;
+    try {
+      await request(app.getHttpServer())
+        .get('/api/v1/probe/any-user')
+        .set('Authorization', `Bearer ${token}`)
+        .expect(401);
+
+      await request(app.getHttpServer())
+        .post('/api/v1/auth/refresh')
+        .set('Cookie', cookie)
+        .expect(401);
+
+      const reLogin = await request(app.getHttpServer())
+        .post('/api/v1/auth/login')
+        .send({ email: 'employee1@abra.co', password: 'Employee123!' })
+        .expect(401);
+      expect(reLogin.body.message).toBe('Invalid credentials');
+    } finally {
+      users[0].is_active = true;
+    }
+  });
+});
