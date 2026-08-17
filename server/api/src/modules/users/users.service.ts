@@ -1,7 +1,12 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
-import { VAL_MESSAGES, type CreateUserBody, type UserListItem, type UsersListQuery } from '@abra/contracts';
+import {
+  VAL_MESSAGES,
+  type CreateUserBody,
+  type UserListItem,
+  type UsersListQuery,
+} from '@abra/contracts';
 import { PrismaService } from '../../prisma/prisma.service';
 
 const SORT_COLUMN: Record<UsersListQuery['sort'], keyof Prisma.UserOrderByWithRelationInput> = {

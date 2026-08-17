@@ -9,12 +9,12 @@
 
 Content-Type: `application/json`
 
-| Field | Type | Required | Notes |
-| ----- | ---- | -------- | ----- |
-| `fullName` | string | yes | Trim; empty after trim → VAL-10 |
-| `email` | string | yes | Trim, then lowercase for storage; format → VAL-02 |
-| `password` | string | yes | Write-only initial password; **not** trimmed; empty → VAL-13; shorter than 8 characters → VAL-04 |
-| `role` | `employee` \| `admin` | yes | VAL-12. Empty form **UI** defaults to `employee`; API still validates |
+| Field      | Type                  | Required | Notes                                                                                            |
+| ---------- | --------------------- | -------- | ------------------------------------------------------------------------------------------------ |
+| `fullName` | string                | yes      | Trim; empty after trim → VAL-10                                                                  |
+| `email`    | string                | yes      | Trim, then lowercase for storage; format → VAL-02                                                |
+| `password` | string                | yes      | Write-only initial password; **not** trimmed; empty → VAL-13; shorter than 8 characters → VAL-04 |
+| `role`     | `employee` \| `admin` | yes      | VAL-12. Empty form **UI** defaults to `employee`; API still validates                            |
 
 ```json
 {
@@ -60,16 +60,16 @@ Standard envelope (GENERAL_SPEC §6.5):
 }
 ```
 
-| Status | When | `details[].rule` |
-| ------ | ---- | ---------------- |
-| `400` | Missing/whitespace name | VAL-10 |
-| `400` | Missing or malformed email (including spaces-only) | VAL-02 (format / required-as-invalid-email) |
-| `400` | Invalid or missing role | VAL-12 |
-| `400` | Missing password | VAL-13 |
-| `400` | Password shorter than 8 characters | VAL-04 |
-| `409` | Email already used by a **non-deleted** person (case-insensitive) | VAL-11 on `email` |
-| `401` | Missing/invalid token | — |
-| `403` | Authenticated non-admin | — |
+| Status | When                                                              | `details[].rule`                            |
+| ------ | ----------------------------------------------------------------- | ------------------------------------------- |
+| `400`  | Missing/whitespace name                                           | VAL-10                                      |
+| `400`  | Missing or malformed email (including spaces-only)                | VAL-02 (format / required-as-invalid-email) |
+| `400`  | Invalid or missing role                                           | VAL-12                                      |
+| `400`  | Missing password                                                  | VAL-13                                      |
+| `400`  | Password shorter than 8 characters                                | VAL-04                                      |
+| `409`  | Email already used by a **non-deleted** person (case-insensitive) | VAL-11 on `email`                           |
+| `401`  | Missing/invalid token                                             | —                                           |
+| `403`  | Authenticated non-admin                                           | —                                           |
 
 409 example:
 
@@ -78,7 +78,9 @@ Standard envelope (GENERAL_SPEC §6.5):
   "statusCode": 409,
   "message": "Conflict",
   "error": "Conflict",
-  "details": [{ "field": "email", "rule": "VAL-11", "message": "כתובת האימייל כבר בשימוש (VAL-11)" }]
+  "details": [
+    { "field": "email", "rule": "VAL-11", "message": "כתובת האימייל כבר בשימוש (VAL-11)" }
+  ]
 }
 ```
 

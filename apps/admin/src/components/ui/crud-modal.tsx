@@ -36,9 +36,7 @@ export function CrudModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="crud-modal-title"
-        className={cn(
-          'w-full max-w-md rounded-md border bg-white p-6 text-neutral-900 shadow-lg',
-        )}
+        className={cn('w-full max-w-md rounded-md border bg-white p-6 text-neutral-900 shadow-lg')}
       >
         <form onSubmit={handleSubmit} noValidate>
           <h2 id="crud-modal-title" className="mb-4 text-lg font-semibold">

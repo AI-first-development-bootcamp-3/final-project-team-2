@@ -468,9 +468,7 @@ describe('POST /api/v1/users', () => {
       .expect(409);
 
     expect(response.body.details).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ field: 'email', rule: 'VAL-11' }),
-      ]),
+      expect.arrayContaining([expect.objectContaining({ field: 'email', rule: 'VAL-11' })]),
     );
     expect(JSON.stringify(response.body)).toContain('VAL-11');
     expect(created.prisma.user.create).not.toHaveBeenCalled();
@@ -514,7 +512,9 @@ describe('POST /api/v1/users', () => {
     expectNoSecrets(response.body);
     expect(JSON.stringify(response.body)).not.toMatch(/mustChange|must_change|password_hash/);
     expect(created.prisma.user.create.mock.calls[0]?.[0]?.data).not.toHaveProperty('token_version');
-    expect(created.prisma.user.create.mock.calls[0]?.[0]?.data).not.toHaveProperty('must_change_password');
+    expect(created.prisma.user.create.mock.calls[0]?.[0]?.data).not.toHaveProperty(
+      'must_change_password',
+    );
   });
 
   it('maps Prisma P2002 on email to 409 VAL-11', async () => {

@@ -32,32 +32,32 @@ Deliver Jira KAN-46 (Epic KAN-43): admin-only create-person from the Users scree
 
 ## Constitution Check
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+_GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
 Project `.specify/memory/constitution.md` is still a template (not ratified). Gates below are taken from **GENERAL_SPEC** + this feature’s FR-013 until a real constitution is adopted.
 
-| Gate | Status | Notes |
-| ---- | ------ | ----- |
-| Shared contracts in `packages/contracts/` for API + admin | PASS | Create request + created-person + envelopes designed in Phase 1 `contracts/` |
-| Same-phase FE + BE (no FE-only or BE-only ship) | PASS | Plan and quickstart require contract + API + admin together |
-| Secrets never in responses or logs (§13.2) | PASS | Hash only; DTO reuses public list fields |
-| Admin-only create (§5.2, §7.2); employees denied | PASS | Same JwtGuard + RolesGuard as list |
-| Unique email among non-deleted (§4.1 / VAL-11); 409 on conflict (§6.6) | PASS | Partial unique index + service mapping |
-| 201 on create; 400 with VAL ids (§6.5 / §6.6 / §9.2) | PASS | Encoded in research + contract |
-| No force-change-on-first-login (§5.2 / ADR-16) | PASS | Create does not set a must-change flag (none exists) |
-| Test-first / coverage discipline (§14) | PASS | Contract + integration + UI state tests in quickstart |
-| No unjustified new packages/services | PASS | Reuse User model, users module, bcrypt from seed, introduce CrudModal as first consumer (like DataTable in KAN-45) |
+| Gate                                                                   | Status | Notes                                                                                                              |
+| ---------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------ |
+| Shared contracts in `packages/contracts/` for API + admin              | PASS   | Create request + created-person + envelopes designed in Phase 1 `contracts/`                                       |
+| Same-phase FE + BE (no FE-only or BE-only ship)                        | PASS   | Plan and quickstart require contract + API + admin together                                                        |
+| Secrets never in responses or logs (§13.2)                             | PASS   | Hash only; DTO reuses public list fields                                                                           |
+| Admin-only create (§5.2, §7.2); employees denied                       | PASS   | Same JwtGuard + RolesGuard as list                                                                                 |
+| Unique email among non-deleted (§4.1 / VAL-11); 409 on conflict (§6.6) | PASS   | Partial unique index + service mapping                                                                             |
+| 201 on create; 400 with VAL ids (§6.5 / §6.6 / §9.2)                   | PASS   | Encoded in research + contract                                                                                     |
+| No force-change-on-first-login (§5.2 / ADR-16)                         | PASS   | Create does not set a must-change flag (none exists)                                                               |
+| Test-first / coverage discipline (§14)                                 | PASS   | Contract + integration + UI state tests in quickstart                                                              |
+| No unjustified new packages/services                                   | PASS   | Reuse User model, users module, bcrypt from seed, introduce CrudModal as first consumer (like DataTable in KAN-45) |
 
 **Gate result**: PASS — proceed to Phase 0 / Phase 1.
 
 ### Post-design re-check (after Phase 1)
 
-| Gate | Status | Notes |
-| ---- | ------ | ----- |
-| Shared contracts designed | PASS | `contracts/users-create.md` → `@abra/contracts` |
-| Same-phase validation path | PASS | `quickstart.md` requires contract + API + admin |
-| Secrets / uniqueness / VAL ids | PASS | Encoded in `research.md` + `data-model.md` + contract |
-| No unjustified complexity | PASS | Complexity Tracking empty; reuses User model, list item DTO, users module |
+| Gate                           | Status | Notes                                                                     |
+| ------------------------------ | ------ | ------------------------------------------------------------------------- |
+| Shared contracts designed      | PASS   | `contracts/users-create.md` → `@abra/contracts`                           |
+| Same-phase validation path     | PASS   | `quickstart.md` requires contract + API + admin                           |
+| Secrets / uniqueness / VAL ids | PASS   | Encoded in `research.md` + `data-model.md` + contract                     |
+| No unjustified complexity      | PASS   | Complexity Tracking empty; reuses User model, list item DTO, users module |
 
 **Post-design gate result**: PASS.
 

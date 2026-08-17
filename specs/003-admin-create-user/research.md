@@ -65,13 +65,13 @@ Sign-in must match that stored form: trim + lowercase the typed email before loo
 
 **Decision**:
 
-| Outcome | API | Admin form |
-| ------- | --- | ---------- |
-| Field validation | `400` + `details[].rule` VAL-10 / VAL-02 / VAL-12 / VAL-13 / VAL-04 | Stay open; Hebrew field errors from `VAL_MESSAGES` |
-| Duplicate email | `409` + VAL-11 on `email` | Stay open; Hebrew uniqueness error that names VAL-11 |
-| Expired / missing session | `401` | Existing `apiFetch` → `/admin/login` |
-| Employee caller | `403` | Denied (no create control for employees; API still 403) |
-| Other failure (5xx, network) | non-401/400/409 | Stay open; Hebrew retry error; keep typed values; do not treat as expiry |
+| Outcome                      | API                                                                 | Admin form                                                               |
+| ---------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| Field validation             | `400` + `details[].rule` VAL-10 / VAL-02 / VAL-12 / VAL-13 / VAL-04 | Stay open; Hebrew field errors from `VAL_MESSAGES`                       |
+| Duplicate email              | `409` + VAL-11 on `email`                                           | Stay open; Hebrew uniqueness error that names VAL-11                     |
+| Expired / missing session    | `401`                                                               | Existing `apiFetch` → `/admin/login`                                     |
+| Employee caller              | `403`                                                               | Denied (no create control for employees; API still 403)                  |
+| Other failure (5xx, network) | non-401/400/409                                                     | Stay open; Hebrew retry error; keep typed values; do not treat as expiry |
 
 While the request is in flight: saving state, submit disabled (SC-010). Empty form default role = **employee** (רגיל); admin may change to אדמין. After **201**: close modal; **do not** reset page/search/filters/sort; re-fetch the current list path only. New person appears only if that page’s query would include them.
 

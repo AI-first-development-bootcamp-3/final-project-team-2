@@ -10,18 +10,18 @@ This feature **creates** `User` rows. No Prisma schema changes. The created pers
 
 ### User (existing — Prisma `User` / table `users`)
 
-| Field (DB) | Type | Create input | Response exposure | Notes |
-| ---------- | ---- | ------------ | ----------------- | ----- |
-| `id` | UUID | generated | Yes (`id`) | |
-| `email` | VARCHAR(255) | required | Yes (`email`) | Trim, then lowercase before store; unique among non-deleted |
-| `full_name` | VARCHAR(255) | required | Yes (`fullName`) | Trim; whitespace-only is missing (VAL-10) |
-| `password_hash` | VARCHAR(255) | from `password` | **Never** | bcrypt, 10 rounds; source password is not trimmed |
-| `role` | `employee` \| `admin` | required | Yes (`role`) | VAL-12 |
-| `is_active` | Boolean | default `true` | Yes (`isActive`) | Must be active on create |
-| `token_version` | Int | default `0` | **Never** | Unchanged so first sign-in can issue tokens |
-| `created_at` | DateTime | default now | No | |
-| `updated_at` | DateTime | default now | No | |
-| `deleted_at` | DateTime? | `null` | No | Must remain null (not deactivated/removed) |
+| Field (DB)      | Type                  | Create input    | Response exposure | Notes                                                       |
+| --------------- | --------------------- | --------------- | ----------------- | ----------------------------------------------------------- |
+| `id`            | UUID                  | generated       | Yes (`id`)        |                                                             |
+| `email`         | VARCHAR(255)          | required        | Yes (`email`)     | Trim, then lowercase before store; unique among non-deleted |
+| `full_name`     | VARCHAR(255)          | required        | Yes (`fullName`)  | Trim; whitespace-only is missing (VAL-10)                   |
+| `password_hash` | VARCHAR(255)          | from `password` | **Never**         | bcrypt, 10 rounds; source password is not trimmed           |
+| `role`          | `employee` \| `admin` | required        | Yes (`role`)      | VAL-12                                                      |
+| `is_active`     | Boolean               | default `true`  | Yes (`isActive`)  | Must be active on create                                    |
+| `token_version` | Int                   | default `0`     | **Never**         | Unchanged so first sign-in can issue tokens                 |
+| `created_at`    | DateTime              | default now     | No                |                                                             |
+| `updated_at`    | DateTime              | default now     | No                |                                                             |
+| `deleted_at`    | DateTime?             | `null`          | No                | Must remain null (not deactivated/removed)                  |
 
 **Relationships**: unused by create.
 
@@ -29,23 +29,23 @@ This feature **creates** `User` rows. No Prisma schema changes. The created pers
 
 Transient UI state on Users:
 
-| Field | UI label | Maps to |
-| ----- | -------- | ------- |
-| Full name | שם מלא | `fullName` |
-| Email | אימייל | `email` |
-| Initial password | סיסמה ראשונית | `password` (write-only) |
-| Role | תפקיד | `role` — options רגיל (`employee`), אדמין (`admin`); default **employee** |
+| Field            | UI label      | Maps to                                                                   |
+| ---------------- | ------------- | ------------------------------------------------------------------------- |
+| Full name        | שם מלא        | `fullName`                                                                |
+| Email            | אימייל        | `email`                                                                   |
+| Initial password | סיסמה ראשונית | `password` (write-only)                                                   |
+| Role             | תפקיד         | `role` — options רגיל (`employee`), אדמין (`admin`); default **employee** |
 
 ## Validation rules (create body)
 
-| Rule | Field | Behavior |
-| ---- | ----- | -------- |
-| VAL-10 | `fullName` | Required; trim; empty after trim → 400 |
-| VAL-02 | `email` | Required after trim; valid email format → else 400. Then store lowercase |
-| VAL-11 | `email` | Unique among non-deleted people, case-insensitive → else **409** (not 400) |
-| VAL-12 | `role` | Must be `employee` or `admin` → else 400 |
-| VAL-13 | `password` | Required (empty / missing) → 400. **Do not trim** |
-| VAL-04 | `password` | Length ≥ 8 (exactly 8 succeeds; 7 fails) → 400 |
+| Rule   | Field      | Behavior                                                                   |
+| ------ | ---------- | -------------------------------------------------------------------------- |
+| VAL-10 | `fullName` | Required; trim; empty after trim → 400                                     |
+| VAL-02 | `email`    | Required after trim; valid email format → else 400. Then store lowercase   |
+| VAL-11 | `email`    | Unique among non-deleted people, case-insensitive → else **409** (not 400) |
+| VAL-12 | `role`     | Must be `employee` or `admin` → else 400                                   |
+| VAL-13 | `password` | Required (empty / missing) → 400. **Do not trim**                          |
+| VAL-04 | `password` | Length ≥ 8 (exactly 8 succeeds; 7 fails) → 400                             |
 
 Email that is only spaces: missing/invalid (VAL-02 or empty-after-trim treated as invalid/required email), not a unique address.
 
@@ -75,9 +75,9 @@ No transition to “must change password”. Deactivate/restore is KAN-48. Edit 
 
 ## Sign-in matching (owned by login, required by this feature)
 
-| Stored | Typed at sign-in | Result |
-| ------ | ---------------- | ------ |
-| `nadav@org.com` | `Nadav@Org.com` | Match after login normalizes email (trim + lowercase) |
-| bcrypt hash | exact initial password, including any leading/trailing spaces | Match via bcrypt.compare |
+| Stored          | Typed at sign-in                                              | Result                                                |
+| --------------- | ------------------------------------------------------------- | ----------------------------------------------------- |
+| `nadav@org.com` | `Nadav@Org.com`                                               | Match after login normalizes email (trim + lowercase) |
+| bcrypt hash     | exact initial password, including any leading/trailing spaces | Match via bcrypt.compare                              |
 
 Employee vs admin product routing stays KAN-39 (employees do not use the admin console; admins do not use the employee app).

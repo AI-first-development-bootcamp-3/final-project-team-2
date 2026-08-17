@@ -1,10 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { z } from 'zod';
-import {
-  CreateUserBodySchema,
-  UserCreateSuccessSchema,
-  zodIssuesToDetails,
-} from '../index';
+import { CreateUserBodySchema, UserCreateSuccessSchema, zodIssuesToDetails } from '../index';
 
 const validBody = {
   fullName: 'Nadav Cohen',
