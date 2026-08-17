@@ -34,7 +34,9 @@ export class AuthService {
     }
 
     const accessToken = await this.signAccessToken(user.id, user.role);
-    const refreshMaxAgeMs = DAY_MS;
+    // ADR-16: remember-me unchecked = 1 day, checked = 30 days — enforced in
+    // both the cookie Max-Age and the token's own expiry claim.
+    const refreshMaxAgeMs = credentials.rememberMe ? 30 * DAY_MS : DAY_MS;
     const refreshToken = await this.jwt.signAsync(
       { userId: user.id, tokenVersion: user.token_version },
       { secret: this.env.JWT_REFRESH_SECRET, expiresIn: Math.floor(refreshMaxAgeMs / 1000) },
