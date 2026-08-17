@@ -73,6 +73,9 @@ export type LoginResponse = z.infer<typeof LoginResponse>;
 
 export const RefreshResponse = z.object({
   accessToken: z.string().min(1),
+  // The refresh already loads the full user row server-side; returning the
+  // summary lets clients bootstrap a session from the cookie alone.
+  user: AuthUser,
 });
 
 export type RefreshResponse = z.infer<typeof RefreshResponse>;

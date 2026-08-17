@@ -6,10 +6,9 @@ import {
   type ExecutionContext,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import type { Request } from 'express';
 import type { UserRole } from '@abra/contracts';
-import { IS_PUBLIC_KEY, ROLES_KEY } from './auth.decorators';
-import type { AuthenticatedUser } from './jwt.guard';
+import { ROLES_KEY, isPublicContext } from './auth.decorators';
+import type { AuthenticatedRequest } from './jwt.guard';
 
 /**
  * Runs after JwtGuard. Enforces @Roles(...) — a route with no roles metadata
@@ -21,12 +20,15 @@ export class RolesGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
-    if (isPublic) {
+    if (isPublicContext(this.reflector, context)) {
       return true;
+    }
+
+    const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
+    // Non-public routes must have passed JwtGuard; a missing user here means
+    // a guard-ordering bug, not a client error — fail closed either way.
+    if (!request.user) {
+      throw new UnauthorizedException();
     }
 
     const requiredRoles = this.reflector.getAllAndOverride<UserRole[] | undefined>(ROLES_KEY, [
@@ -34,12 +36,8 @@ export class RolesGuard implements CanActivate {
       context.getClass(),
     ]);
     if (!requiredRoles || requiredRoles.length === 0) {
+      // No @Roles restriction: any authenticated user (@Auth() or bare route).
       return true;
-    }
-
-    const request = context.switchToHttp().getRequest<Request & { user?: AuthenticatedUser }>();
-    if (!request.user) {
-      throw new UnauthorizedException();
     }
     if (!requiredRoles.includes(request.user.role)) {
       throw new ForbiddenException();

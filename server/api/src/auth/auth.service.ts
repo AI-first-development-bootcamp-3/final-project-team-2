@@ -76,7 +76,10 @@ export class AuthService {
     ) {
       throw new UnauthorizedException('Invalid refresh token');
     }
-    return { accessToken: await this.signAccessToken(user.id, user.role) };
+    return {
+      accessToken: await this.signAccessToken(user.id, user.role),
+      user: { id: user.id, email: user.email, fullName: user.full_name, role: user.role },
+    };
   }
 
   /**

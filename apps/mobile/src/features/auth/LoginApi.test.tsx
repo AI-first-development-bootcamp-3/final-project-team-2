@@ -100,7 +100,7 @@ describe('authFetch — 401 interceptor with refresh-then-redirect (KAN-41 4.4)'
       .spyOn(globalThis, 'fetch')
       .mockResolvedValueOnce(new Response(null, { status: 401 }))
       .mockResolvedValueOnce(
-        new Response(JSON.stringify({ accessToken: 'fresh-token' }), {
+        new Response(JSON.stringify({ accessToken: 'fresh-token', user: SESSION_USER }), {
           status: 200,
           headers: { 'Content-Type': 'application/json' },
         }),
