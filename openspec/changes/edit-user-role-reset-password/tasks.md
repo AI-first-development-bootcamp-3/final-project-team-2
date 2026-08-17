@@ -1,24 +1,15 @@
 # Task Breakdown: Edit User, Change Role, Reset Password (KAN-47)
 
-- [ ] **Task 1: Shared Contracts (`packages/contracts`)**
-  - [ ] Add `UpdateUserSchema` in `packages/contracts/src/users/update.ts` with `fullName`, `email`, `role`, and HR metadata fields (`employeeNumber`, `jobTitle`, `employmentType`, `employmentPercentage`, `orgUnit`). Exclude `isActive` to avoid KAN-48 overlap.
-  - [ ] Add `ResetPasswordSchema` in `packages/contracts/src/users/update.ts` (password min 8 chars).
-  - [ ] Export schemas and type definitions from `packages/contracts/src/index.ts`.
-  - [ ] Write unit tests for schema validation in `packages/contracts/src/users/update.spec.ts`.
+- [ ] **Feature 1: Edit User Profile & HR Metadata (End-to-End Workflow)**
+  - [ ] **Contract & Validation**: Add `UpdateUserSchema` in `packages/contracts/src/users/update.ts` containing `fullName`, `email`, `role`, and HR metadata fields (`employeeNumber`, `jobTitle`, `employmentType`, `employmentPercentage`, `orgUnit`). Exclude `isActive` to avoid KAN-48 overlap. Export schema and types from `index.ts` and write contract unit tests in `update.spec.ts`.
+  - [ ] **Backend API & Audit**: Implement `updateUser(id, payload)` in `UsersService` and `PATCH /api/v1/users/:id` in `UsersController` with `@Roles('admin')`. Handle duplicate email conflict (HTTP 409) and ensure Prisma automatically updates the `updated_at` timestamp for audit visibility. Write service & controller unit tests in `users.service.spec.ts`.
+  - [ ] **Frontend UI & Integration**: Build `EditUserModal` component in `apps/admin/src/features/users/` with inputs for core fields (`fullName`, `email`, `role`) and HR metadata fields (`employeeNumber`, `jobTitle`, `employmentType`, `employmentPercentage`, `orgUnit`). Wire edit action trigger in `users-columns.tsx`, connect to `apiFetch`, render Hebrew error messages on duplicate email or validation failure, and refresh Users table state on success. Write UI unit tests in `edit-user-modal.spec.tsx`.
 
-- [ ] **Task 2: Backend API (`server/api`)**
-  - [ ] Add `updateUser(id, payload)` method in `UsersService` with duplicate email check. Ensure Prisma updates `updated_at` timestamp for audit visibility.
-  - [ ] Add `resetPassword(id, payload)` method in `UsersService` with bcrypt password hashing and `token_version` increment. Ensure `updated_at` timestamp is updated.
-  - [ ] Add `PATCH /users/:id` and `POST /users/:id/reset-password` endpoints in `UsersController` with `@Roles('admin')`.
-  - [ ] Write unit tests for controller & service in `server/api/src/modules/users/users.service.spec.ts`.
+- [ ] **Feature 2: Reset User Password (End-to-End Workflow)**
+  - [ ] **Contract & Validation**: Add `ResetPasswordSchema` in `packages/contracts/src/users/update.ts` (password min 8 chars). Export schema and types from `index.ts` and write contract unit tests in `update.spec.ts`.
+  - [ ] **Backend API & Session Revocation**: Implement `resetPassword(id, payload)` in `UsersService` and `POST /api/v1/users/:id/reset-password` in `UsersController` with `@Roles('admin')`. Hash new password with bcrypt, update `updated_at` timestamp, and increment `token_version` to invalidate existing user JWT sessions. Write service & controller unit tests in `users.service.spec.ts`.
+  - [ ] **Frontend UI & Integration**: Build `ResetPasswordModal` component in `apps/admin/src/features/users/` with password & password confirmation inputs. Wire reset password trigger in `users-columns.tsx`, connect to `apiFetch`, handle Hebrew error messages & success banners, and refresh state. Write UI unit tests in `reset-password-modal.spec.tsx`.
 
-- [ ] **Task 3: Admin Console UI (`apps/admin`)**
-  - [ ] Add Edit action button & modal trigger in `users-columns.tsx`.
-  - [ ] Implement `EditUserModal` component with core fields (`fullName`, `email`, `role`) and HR metadata fields (`employeeNumber`, `jobTitle`, `employmentType`, `employmentPercentage`, `orgUnit`).
-  - [ ] Implement `ResetPasswordModal` component with password input & Hebrew validation messages.
-  - [ ] Wire API calls `apiFetch` in `UsersPage` with state refresh on success and error feedback.
-  - [ ] Write unit tests for `EditUserModal` and `ResetPasswordModal` in `apps/admin/src/features/users/`.
-
-- [ ] **Task 4: Verification & Code Formatting**
-  - [ ] Run `pnpm format:check` including Prettier code style compliance check across all workspace files before merging.
-  - [ ] Run `pnpm build && pnpm typecheck && pnpm test` across all monorepo workspaces.
+- [ ] **Feature 3: Monorepo Verification & Formatting**
+  - [ ] **Code Formatting**: Run `pnpm format:check` to ensure Prettier code style compliance across all workspace files before merging.
+  - [ ] **Full Monorepo Suite**: Run `pnpm build && pnpm typecheck && pnpm test` to verify that contracts, API, and admin console build cleanly and all unit tests pass with >70% coverage gate.
