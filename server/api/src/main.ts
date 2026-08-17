@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import cookieParser from 'cookie-parser';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
@@ -21,6 +22,8 @@ async function bootstrap() {
 
   const app = await NestFactory.create(AppModule);
   app.setGlobalPrefix('api/v1');
+  // The refresh token travels as an httpOnly cookie
+  app.use(cookieParser());
   // credentials: true is required for the spec's httpOnly refresh-cookie flow
   app.enableCors({ origin: env.CORS_ORIGINS, credentials: true });
 
