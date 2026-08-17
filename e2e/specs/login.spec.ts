@@ -15,7 +15,8 @@ test.describe('Login flow (KAN-42)', () => {
     await fillLoginForm(page, SEEDED_EMPLOYEE.email, SEEDED_EMPLOYEE.password);
 
     // Exact path — /\/$/ would also match /login/ and every other
-    // trailing-slash URL.
+    // trailing-slash URL. new URL('/', page.url()).href resolves to the
+    // origin root, e.g. http://localhost:5173/.
     await expect(page).toHaveURL(new URL('/', page.url()).href);
     await expect(page.getByRole('heading', { name: 'עמוד ראשי - דיווח יומי' })).toBeVisible();
   });
