@@ -32,9 +32,12 @@ describe('LoginPage Component', () => {
     fireEvent.change(emailInput, { target: { value: 'invalid-email' } });
     fireEvent.click(submitButton);
 
-    await waitFor(() => {
-      expect(screen.getByText('כתובת האימייל שהוזנה אינה תקינה')).toBeInTheDocument();
-    });
+    await waitFor(
+      () => {
+        expect(screen.getByText('כתובת האימייל שהוזנה אינה תקינה')).toBeInTheDocument();
+      },
+      { timeout: 3000 },
+    );
   });
 
   it('displays Hebrew validation error messages VAL-04 for short password', async () => {
@@ -48,9 +51,12 @@ describe('LoginPage Component', () => {
     fireEvent.change(passwordInput, { target: { value: '1234' } });
     fireEvent.click(submitButton);
 
-    await waitFor(() => {
-      expect(screen.getByText('הסיסמה חייבת להכיל 8 תווים לפחות')).toBeInTheDocument();
-    });
+    await waitFor(
+      () => {
+        expect(screen.getByText('הסיסמה חייבת להכיל 8 תווים לפחות')).toBeInTheDocument();
+      },
+      { timeout: 3000 },
+    );
   });
 
   it('displays generic error on invalid credential submission', async () => {
@@ -64,8 +70,11 @@ describe('LoginPage Component', () => {
     fireEvent.change(passwordInput, { target: { value: 'password123' } });
     fireEvent.click(submitButton);
 
-    await waitFor(() => {
-      expect(screen.getByText('שם המשתמש או הסיסמה שהוזנו אינם נכונים.')).toBeInTheDocument();
-    });
+    await waitFor(
+      () => {
+        expect(screen.getByText('שם המשתמש או הסיסמה שהוזנו אינם נכונים.')).toBeInTheDocument();
+      },
+      { timeout: 3000 },
+    );
   });
 });

@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from 'react-router-dom';
-import { LoginSchema, LoginFormData, VAL_MESSAGES } from '@abra/contracts';
+import { LoginSchema, LoginFormData, VAL_MESSAGES, ValCode } from '@abra/contracts';
 import { InputField } from '../../components/ui/InputField';
 import { LoginButton } from '../../components/ui/LoginButton';
+import { setAuthSession } from '../../lib/auth';
 
 interface LoginFormProps {
   onSuccess?: () => void;
@@ -41,6 +42,12 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
         throw new Error('INVALID_CREDENTIALS');
       }
 
+      // Store authenticated session
+      setAuthSession({
+        email: data.email,
+        token: 'mock-session-token-123',
+      });
+
       if (onSuccess) {
         onSuccess();
       } else {
@@ -56,13 +63,16 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
 
   const getErrorMessage = (errorKey?: { message?: string }) => {
     if (!errorKey?.message) return undefined;
-    return VAL_MESSAGES[errorKey.message] || errorKey.message;
+    if (errorKey.message in VAL_MESSAGES) {
+      return VAL_MESSAGES[errorKey.message as ValCode];
+    }
+    return errorKey.message;
   };
 
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="w-full flex flex-col gap-5 text-right dir-rtl"
+      className="w-full flex flex-col gap-5 text-right"
       noValidate
     >
       {serverError && (

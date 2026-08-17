@@ -26,7 +26,9 @@ export const LoginSchema = z.object({
 
 export type LoginFormData = z.infer<typeof LoginSchema>;
 
-export const VAL_MESSAGES: Record<string, string> = {
+export type ValCode = 'VAL-01' | 'VAL-02' | 'VAL-03' | 'VAL-04';
+
+export const VAL_MESSAGES: Record<ValCode, string> = {
   'VAL-01': 'כתובת האימייל היא שדה חובה',
   'VAL-02': 'כתובת האימייל שהוזנה אינה תקינה',
   'VAL-03': 'הסיסמה היא שדה חובה',

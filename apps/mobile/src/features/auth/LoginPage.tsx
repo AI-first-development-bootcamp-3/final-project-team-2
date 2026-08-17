@@ -4,7 +4,7 @@ import { LoginForm } from './LoginForm';
 
 export const LoginPage: React.FC = () => {
   return (
-    <div className="min-h-screen w-full bg-slate-900 flex justify-center items-center font-sans dir-rtl">
+    <div className="min-h-screen w-full bg-slate-900 flex justify-center items-center font-sans">
       {/* 393px Mobile Portrait Viewport Frame */}
       <main className="w-full max-w-[393px] min-h-screen md:min-h-[852px] md:h-[852px] relative overflow-hidden flex flex-col items-center justify-center p-4 bg-[url('/assets/login-bg.png')] bg-cover bg-center bg-no-repeat shadow-2xl rounded-none md:rounded-[40px]">
         {/* Decorative Gradient Blobs */}

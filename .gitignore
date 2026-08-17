@@ -10,4 +10,6 @@ coverage/
 # Vercel serverless function build output
 server/api/api/
 .agents/
+.DS_Store
+
 
