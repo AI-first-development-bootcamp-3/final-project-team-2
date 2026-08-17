@@ -10,7 +10,8 @@ import {
 import { AuthService } from './auth.service';
 import { REFRESH_COOKIE, refreshCookieOptions } from './auth.constants';
 import { ZodValidationPipe } from './zod-validation.pipe';
-import { Public } from './auth.decorators';
+import { Auth, Public } from './auth.decorators';
+import type { AuthenticatedRequest } from './jwt.guard';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -24,8 +25,8 @@ export class AuthController {
     summary: 'Log in with email and password',
     description:
       'Validates credentials (VAL-01–VAL-04), returns a short-lived access JWT and sets the ' +
-      'refresh token as an httpOnly, Secure, SameSite=Strict cookie. rememberMe is accepted ' +
-      'but not yet honored — the refresh lifetime is fixed at 1 day until KAN-40 lands.',
+      'refresh token as an httpOnly, Secure, SameSite=Strict cookie. rememberMe controls the ' +
+      'refresh lifetime: 1 day unchecked, 30 days checked (ADR-16).',
   })
   @ApiBody({
     schema: {
@@ -80,8 +81,22 @@ export class AuthController {
   })
   @ApiResponse({
     status: 200,
-    description: 'New access token.',
-    schema: { type: 'object', properties: { accessToken: { type: 'string' } } },
+    description: 'New access token plus the user summary (for session bootstrap).',
+    schema: {
+      type: 'object',
+      properties: {
+        accessToken: { type: 'string' },
+        user: {
+          type: 'object',
+          properties: {
+            id: { type: 'string', format: 'uuid' },
+            email: { type: 'string' },
+            fullName: { type: 'string' },
+            role: { type: 'string', enum: ['employee', 'admin'] },
+          },
+        },
+      },
+    },
   })
   @ApiResponse({ status: 401, description: 'Missing, invalid, expired, or revoked refresh token.' })
   refresh(@Req() req: Request): Promise<RefreshResponse> {
@@ -89,6 +104,7 @@ export class AuthController {
     return this.authService.refresh(cookies?.[REFRESH_COOKIE]);
   }
 
+  @Auth()
   @Post('logout')
   @HttpCode(204)
   @ApiOperation({
@@ -99,20 +115,16 @@ export class AuthController {
   })
   @ApiResponse({ status: 204, description: 'Logged out; refresh cookie cleared.' })
   @ApiResponse({ status: 401, description: 'Missing or invalid access token.' })
-  async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response): Promise<void> {
-    // Interim token check until KAN-41's global JwtGuard owns authentication.
-    const header = req.headers.authorization ?? '';
-    const token = header.startsWith('Bearer ') ? header.slice('Bearer '.length) : undefined;
-    if (!token) {
+  async logout(
+    @Req() req: AuthenticatedRequest,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<void> {
+    // The global JwtGuard authenticated this request and attached the user;
+    // a missing user here would be a guard-ordering bug — fail closed.
+    if (!req.user) {
       throw new UnauthorizedException();
     }
-    let payload: { userId: string };
-    try {
-      payload = await this.authService.verifyAccessToken(token);
-    } catch {
-      throw new UnauthorizedException();
-    }
-    await this.authService.logout(payload.userId);
+    await this.authService.logout(req.user.userId);
     res.clearCookie(REFRESH_COOKIE, refreshCookieOptions(0));
   }
 }

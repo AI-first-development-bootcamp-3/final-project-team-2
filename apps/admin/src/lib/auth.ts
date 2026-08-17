@@ -1,4 +1,4 @@
-import type { AuthUser } from '@abra/contracts';
+import { UserRole, type AuthUser } from '@abra/contracts';
 
 export interface AuthSession {
   accessToken: string;
@@ -44,5 +44,5 @@ export function clearAuthSession(): void {
 
 /** The only role the console admits (GENERAL_SPEC §5.5). */
 export function isAdmin(candidate: AuthSession | null): boolean {
-  return candidate?.user.role === 'admin';
+  return candidate?.user.role === UserRole.enum.admin;
 }
