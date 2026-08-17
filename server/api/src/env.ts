@@ -23,7 +23,6 @@ const envSchema = z.object({
       // browser origin — fail loudly instead.
       .refine((origins) => origins.length > 0, 'must contain at least one origin'),
   ),
-  // Optional until consumed: the Prisma change flips this to required.
   // Both postgresql:// and postgres:// are valid schemes (Neon issues both).
   DATABASE_URL: z
     .string()
@@ -31,8 +30,7 @@ const envSchema = z.object({
     .refine(
       (value) => value.startsWith('postgresql://') || value.startsWith('postgres://'),
       'must be a postgresql:// or postgres:// connection string',
-    )
-    .optional(),
+    ),
 });
 
 export type Env = z.infer<typeof envSchema>;
