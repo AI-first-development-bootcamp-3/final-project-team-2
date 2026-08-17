@@ -401,11 +401,12 @@ Legend: ──< means "one to many"
 
 ### 5.1 Auth Flow
 
-- **Login:** `POST /api/v1/auth/login { email, password }`
-- Returns: `{ accessToken }` + sets refreshToken as httpOnly cookie
+- **Login:** `POST /api/v1/auth/login { email, password, rememberMe }`
+- Returns: `{ accessToken, user }` (user summary: id, email, fullName, role) + sets refreshToken as httpOnly cookie
 - **Access token:** JWT, ~15 min expiry, stateless, contains `{ userId, role }`
 - **Refresh token:** httpOnly cookie, checked against `token_version` in User table
-- **Refresh:** `POST /api/v1/auth/refresh` (reads cookie, returns new accessToken)
+- **Refresh:** `POST /api/v1/auth/refresh` (reads cookie, returns `{ accessToken, user }` so clients can bootstrap a session from the cookie alone)
+- Refresh is a **fixed window**: the cookie's Max-Age is set at login and not extended on refresh — the session hard-expires at the original 1-/30-day mark (deliberate; no sliding sessions)
 - **Logout:** `POST /api/v1/auth/logout` (increments token_version, clears cookie)
 - SSO / Azure / Google: **out of scope** (Figma Azure button is a confirmed design mistake)
 
@@ -937,9 +938,11 @@ Every screen, its route, required role, and states. Detailed flows and acceptanc
 
 ### 11.2 Admin Console
 
+Routes are app-local: each app is its own deployment (separate Vercel project), so the admin console's login lives at `/login` on the admin domain rather than a literal `/admin/login` path. The `/admin/*` prefixes below describe the console's internal screens.
+
 | Screen           | Route                                  | Role   | States                                                             |
 | ---------------- | -------------------------------------- | ------ | ------------------------------------------------------------------ |
-| Admin Login      | `/admin/login`                         | Public | default, loading, error                                            |
+| Admin Login      | `/login` (admin deployment)            | Public | default, loading, error                                            |
 | Users            | `/admin/users`                         | Admin  | table, loading, empty, modal (create/edit)                         |
 | Clients          | `/admin/clients`                       | Admin  | table, loading, empty, modal                                       |
 | Projects         | `/admin/projects`                      | Admin  | table, loading, empty, modal                                       |
