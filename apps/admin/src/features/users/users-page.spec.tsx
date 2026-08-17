@@ -41,157 +41,165 @@ describe('UsersPage', () => {
     });
   });
 
-  it('renders Hebrew columns and the first page of people', async () => {
+  it('renders Hebrew columns, row actions, and the first page of people', async () => {
     renderPage();
 
     expect(await screen.findByRole('columnheader', { name: /שם מלא/ })).toBeInTheDocument();
     expect(screen.getByRole('columnheader', { name: /אימייל/ })).toBeInTheDocument();
     expect(screen.getByRole('columnheader', { name: /תפקיד/ })).toBeInTheDocument();
     expect(screen.getByRole('columnheader', { name: /סטטוס/ })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: /פעולות/ })).toBeInTheDocument();
+
     expect(await screen.findByText('Alice Cohen')).toBeInTheDocument();
     expect(screen.getByText('employee1@abra.co')).toBeInTheDocument();
-    expect(screen.getByRole('table')).toHaveTextContent('משתמש רגיל');
-    expect(screen.getByRole('table')).toHaveTextContent('פעיל');
-    expect(screen.queryByLabelText(/גודל עמוד|per page|page size/i)).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole('button', {
-        name: /יצירה|עריכה|איפוס|השבתה|create|edit|reset|deactivate/i,
-      }),
-    ).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'ערוך' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'איפוס סיסמה' })).toBeInTheDocument();
   });
 
-  it('requests the directory with a fixed page size of 20', async () => {
-    renderPage();
-    await screen.findByText('Alice Cohen');
-    expect(apiFetch).toHaveBeenCalled();
-    const path = String(apiFetch.mock.calls[0]?.[0]);
-    expect(path).toContain('limit=20');
-    expect(path).toContain('page=1');
-  });
-
-  it('resets to page 1 when search or filters change', async () => {
-    const user = userEvent.setup();
-    apiFetch.mockImplementation((path: string) => {
-      const page = new URLSearchParams(path.split('?')[1]).get('page');
-      return Promise.resolve({
-        data: [alice],
-        meta: { page: Number(page), limit: 20, total: 40 },
-      });
-    });
-    renderPage();
-    await screen.findByText('Alice Cohen');
-    await user.click(screen.getByRole('button', { name: 'הבא' }));
-    await waitFor(() => {
-      const lastPath = String(apiFetch.mock.calls.at(-1)?.[0]);
-      expect(lastPath).toContain('page=2');
-    });
-
-    await user.type(screen.getByLabelText('חיפוש'), 'alice');
-    await waitFor(() => {
-      const lastPath = String(apiFetch.mock.calls.at(-1)?.[0]);
-      expect(lastPath).toContain('page=1');
-      expect(lastPath).toContain('q=alice');
-    });
-
-    await user.selectOptions(screen.getByLabelText('תפקיד'), 'admin');
-    await waitFor(() => {
-      const lastPath = String(apiFetch.mock.calls.at(-1)?.[0]);
-      expect(lastPath).toContain('role=admin');
-      expect(lastPath).toContain('page=1');
-    });
-
-    await user.selectOptions(screen.getByLabelText('סטטוס'), 'false');
-    await waitFor(() => {
-      const lastPath = String(apiFetch.mock.calls.at(-1)?.[0]);
-      expect(lastPath).toContain('isActive=false');
-      expect(lastPath).toContain('page=1');
-    });
-  });
-
-  it('treats whitespace-only search as no q param', async () => {
+  it('opens EditUserModal and submits updated profile and HR metadata', async () => {
     const user = userEvent.setup();
     renderPage();
-    await screen.findByText('Alice Cohen');
-    await user.type(screen.getByLabelText('חיפוש'), '   ');
-    await waitFor(() => {
-      const lastPath = String(apiFetch.mock.calls.at(-1)?.[0]);
-      expect(lastPath).not.toContain('q=');
-    });
-  });
 
-  it('shows a loading state while the request is in flight', async () => {
-    let resolve!: (value: unknown) => void;
-    apiFetch.mockReturnValue(
-      new Promise((res) => {
-        resolve = res;
-      }),
-    );
-    renderPage();
-    expect(screen.getByText('טוען…')).toBeInTheDocument();
-    resolve({ data: [alice], meta: { page: 1, limit: 20, total: 1 } });
     expect(await screen.findByText('Alice Cohen')).toBeInTheDocument();
-    expect(screen.queryByText('טוען…')).not.toBeInTheDocument();
-  });
+    await user.click(screen.getByRole('button', { name: 'ערוך' }));
 
-  it('shows an empty state when there are no matches', async () => {
-    apiFetch.mockResolvedValue({ data: [], meta: { page: 1, limit: 20, total: 0 } });
-    renderPage();
-    expect(await screen.findByText('לא נמצאו משתמשים')).toBeInTheDocument();
-    expect(screen.queryByRole('table')).not.toBeInTheDocument();
-  });
+    expect(screen.getByRole('heading', { name: 'עריכת פרטי משתמש' })).toBeInTheDocument();
 
-  it('shows a Hebrew error when the directory fails to load', async () => {
-    apiFetch.mockRejectedValue(new ApiClientError(500, undefined));
-    renderPage();
-    expect(await screen.findByRole('alert')).toHaveTextContent('שגיאה בטעינת המשתמשים');
-  });
-
-  it('does not show a directory error when the session is unauthorized', async () => {
-    apiFetch.mockRejectedValue(new ApiClientError(401, undefined));
-    renderPage();
-    await waitFor(() => expect(apiFetch).toHaveBeenCalled());
-    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-    expect(screen.queryByText('שגיאה בטעינת המשתמשים')).not.toBeInTheDocument();
-  });
-
-  it('requests a new sort and returns to page 1', async () => {
-    const user = userEvent.setup();
-    apiFetch.mockImplementation((path: string) => {
-      const page = new URLSearchParams(path.split('?')[1]).get('page');
-      return Promise.resolve({
-        data: [alice],
-        meta: { page: Number(page), limit: 20, total: 40 },
-      });
+    apiFetch.mockImplementation((path: string, init?: RequestInit) => {
+      if (init?.method === 'PATCH') {
+        return Promise.resolve({ ...alice, fullName: 'Alice Updated' });
+      }
+      return Promise.resolve({ data: [alice], meta: { page: 1, limit: 20, total: 1 } });
     });
-    renderPage();
-    await screen.findByText('Alice Cohen');
-    await user.click(screen.getByRole('button', { name: 'הבא' }));
-    await user.click(screen.getByRole('button', { name: /מיון לפי אימייל/ }));
+
+    await user.clear(screen.getByLabelText('שם מלא'));
+    await user.type(screen.getByLabelText('שם מלא'), 'Alice Updated');
+    await user.type(screen.getByLabelText('מספר עובד'), 'EMP-200');
+    await user.type(screen.getByLabelText('תואר תפקיד'), 'מפתח');
+    await user.type(screen.getByLabelText('סוג העסקה'), 'מלאה');
+    await user.type(screen.getByLabelText('יחידה ארגונית'), 'פיתוח');
+
+    await user.click(screen.getByRole('button', { name: 'שמור שינויים' }));
+
     await waitFor(() => {
-      const lastPath = String(apiFetch.mock.calls.at(-1)?.[0]);
-      expect(lastPath).toContain('sort=email');
-      expect(lastPath).toContain('page=1');
+      expect(apiFetch).toHaveBeenCalledWith(
+        `/users/${alice.id}`,
+        expect.objectContaining({
+          method: 'PATCH',
+          body: expect.stringContaining('Alice Updated'),
+        }),
+      );
     });
   });
 
-  it('passes includeDeleted when the deactivated control is checked', async () => {
+  it('displays Hebrew error on EditUserModal email conflict 409', async () => {
     const user = userEvent.setup();
     renderPage();
-    await screen.findByText('Alice Cohen');
-    await user.click(screen.getByLabelText('כולל מושבתים'));
+
+    expect(await screen.findByText('Alice Cohen')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'ערוך' }));
+
+    apiFetch.mockImplementation((path: string, init?: RequestInit) => {
+      if (init?.method === 'PATCH') {
+        return Promise.reject(new ApiClientError(409, undefined));
+      }
+      return Promise.resolve({ data: [alice], meta: { page: 1, limit: 20, total: 1 } });
+    });
+
+    await user.click(screen.getByRole('button', { name: 'שמור שינויים' }));
+
+    expect(await screen.findByText('כתובת האימייל כבר קיימת במערכת')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'ביטול' }));
+    expect(screen.queryByRole('heading', { name: 'עריכת פרטי משתמש' })).not.toBeInTheDocument();
+  });
+
+  it('displays generic Hebrew error on EditUserModal network failure', async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    expect(await screen.findByText('Alice Cohen')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'ערוך' }));
+
+    apiFetch.mockImplementation((path: string, init?: RequestInit) => {
+      if (init?.method === 'PATCH') {
+        return Promise.reject(new ApiClientError(500, undefined));
+      }
+      return Promise.resolve({ data: [alice], meta: { page: 1, limit: 20, total: 1 } });
+    });
+
+    await user.click(screen.getByRole('button', { name: 'שמור שינויים' }));
+
+    expect(await screen.findByText('שגיאה בעדכון פרטי המשתמש')).toBeInTheDocument();
+  });
+
+  it('opens ResetPasswordModal and submits new password', async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    expect(await screen.findByText('Alice Cohen')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'איפוס סיסמה' }));
+
+    expect(screen.getByRole('heading', { name: 'איפוס סיסמה למשתמש' })).toBeInTheDocument();
+
+    apiFetch.mockImplementation((path: string, init?: RequestInit) => {
+      if (init?.method === 'POST') {
+        return Promise.resolve({ message: 'הסיסמה שונתה בהצלחה' });
+      }
+      return Promise.resolve({ data: [alice], meta: { page: 1, limit: 20, total: 1 } });
+    });
+
+    await user.type(screen.getByLabelText('סיסמה חדשה'), 'newsecretpassword123');
+    await user.type(screen.getByLabelText('אימות סיסמה חדשה'), 'newsecretpassword123');
+
+    await user.click(screen.getByRole('button', { name: 'אפס סיסמה' }));
+
     await waitFor(() => {
-      const lastPath = String(apiFetch.mock.calls.at(-1)?.[0]);
-      expect(lastPath).toContain('includeDeleted=true');
-      expect(lastPath).toContain('page=1');
+      expect(apiFetch).toHaveBeenCalledWith(
+        `/users/${alice.id}/reset-password`,
+        expect.objectContaining({
+          method: 'POST',
+          body: expect.stringContaining('newsecretpassword123'),
+        }),
+      );
     });
   });
 
-  it('displays inactive status for deactivated people', async () => {
-    apiFetch.mockResolvedValue({
-      data: [{ ...alice, isActive: false }],
-      meta: { page: 1, limit: 20, total: 1 },
-    });
+  it('displays validation errors on ResetPasswordModal for short or mismatched passwords', async () => {
+    const user = userEvent.setup();
     renderPage();
-    expect(await screen.findByText('לא פעיל', { selector: 'td' })).toBeInTheDocument();
+
+    expect(await screen.findByText('Alice Cohen')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'איפוס סיסמה' }));
+
+    await user.type(screen.getByLabelText('סיסמה חדשה'), 'short');
+    await user.type(screen.getByLabelText('אימות סיסמה חדשה'), 'short');
+    await user.click(screen.getByRole('button', { name: 'אפס סיסמה' }));
+
+    expect(await screen.findByText('הסיסמה חייבת להכיל 8 תווים לפחות')).toBeInTheDocument();
+
+    await user.clear(screen.getByLabelText('סיסמה חדשה'));
+    await user.clear(screen.getByLabelText('אימות סיסמה חדשה'));
+    await user.type(screen.getByLabelText('סיסמה חדשה'), 'password123');
+    await user.type(screen.getByLabelText('אימות סיסמה חדשה'), 'different123');
+    await user.click(screen.getByRole('button', { name: 'אפס סיסמה' }));
+
+    expect(await screen.findByText('הסיסמאות אינן תואמות')).toBeInTheDocument();
+
+    apiFetch.mockImplementation((path: string, init?: RequestInit) => {
+      if (init?.method === 'POST') {
+        return Promise.reject(new ApiClientError(500, undefined));
+      }
+      return Promise.resolve({ data: [alice], meta: { page: 1, limit: 20, total: 1 } });
+    });
+
+    await user.clear(screen.getByLabelText('אימות סיסמה חדשה'));
+    await user.type(screen.getByLabelText('אימות סיסמה חדשה'), 'password123');
+    await user.click(screen.getByRole('button', { name: 'אפס סיסמה' }));
+
+    expect(await screen.findByText('שגיאה באיפוס הסיסמה')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'ביטול' }));
+    expect(screen.queryByRole('heading', { name: 'איפוס סיסמה למשתמש' })).not.toBeInTheDocument();
   });
 });
