@@ -125,3 +125,48 @@ describe('JwtGuard — default-protected routes (KAN-41 4.1)', () => {
     expect(res.body).toEqual({ ok: 'any-user' });
   });
 });
+
+describe('RolesGuard — ADR-26 role matrix (KAN-41 4.2)', () => {
+  let app: INestApplication;
+
+  beforeAll(async () => {
+    ({ app } = await makeGuardedApp([
+      await makeFakeUser(),
+      await makeFakeUser({
+        id: '0a1b2c3d-4e5f-6789-abcd-ef0123456789',
+        email: 'admin@abra.co',
+        full_name: 'Admin User',
+        role: 'admin',
+      }),
+    ]));
+  });
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  it('returns 403 for an employee token on an admin-only route', async () => {
+    const token = await loginToken(app, 'employee1@abra.co', 'Employee123!');
+    await request(app.getHttpServer())
+      .get('/api/v1/probe/admin-only')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(403);
+  });
+
+  it('serves an admin token on an employee route (admin keeps regular-user abilities)', async () => {
+    const token = await loginToken(app, 'admin@abra.co', 'Employee123!');
+    await request(app.getHttpServer())
+      .get('/api/v1/probe/any-user')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+  });
+
+  it('serves an admin token on an admin-only route', async () => {
+    const token = await loginToken(app, 'admin@abra.co', 'Employee123!');
+    const res = await request(app.getHttpServer())
+      .get('/api/v1/probe/admin-only')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+    expect(res.body).toEqual({ ok: 'admin-only' });
+  });
+});
