@@ -21,6 +21,7 @@
 ### Task 1: Update Vercel configs and migration workflow
 
 **Files:**
+
 - Modify: `apps/mobile/vercel.json`
 - Modify: `apps/admin/vercel.json`
 - Modify: `server/api/vercel.json`
@@ -28,6 +29,7 @@
 - Modify: `.github/workflows/migrate.yml:5`
 
 **Interfaces:**
+
 - Consumes: nothing
 - Produces: Vercel-ready configuration files for all three projects; migration workflow targeting `dev` branch
 
@@ -88,17 +90,21 @@ Dockerfile
 - [ ] **Step 5: Update `.github/workflows/migrate.yml` — change trigger branch from `main` to `dev`**
 
 Change line 5 from:
+
 ```yaml
-    branches: [main]
+branches: [main]
 ```
+
 to:
+
 ```yaml
-    branches: [dev]
+branches: [dev]
 ```
 
 - [ ] **Step 6: Validate JSON files are valid**
 
 Run:
+
 ```bash
 node -e "JSON.parse(require('fs').readFileSync('apps/mobile/vercel.json','utf8')); console.log('mobile OK')"
 node -e "JSON.parse(require('fs').readFileSync('apps/admin/vercel.json','utf8')); console.log('admin OK')"
@@ -121,9 +127,11 @@ git commit -m "feat(cd): update vercel configs for monorepo and switch migrate t
 This task is a guided wizard. Each step requires the human to perform actions in the terminal or Vercel dashboard. The agent should guide step-by-step and verify after each.
 
 **Files:**
+
 - No file changes — infrastructure setup only
 
 **Interfaces:**
+
 - Consumes: vercel.json files from Task 1
 - Produces: three linked Vercel projects, ready for deployment
 
@@ -151,6 +159,7 @@ vercel link
 ```
 
 When prompted:
+
 - Set up and deploy? **Y**
 - Which scope? Select your account
 - Link to existing project? **N** (create new)
@@ -158,6 +167,7 @@ When prompted:
 - In which directory is your code located? **.** (current)
 
 Then go to Vercel dashboard → `timesheet-mobile` → Settings → Git:
+
 - Production branch: **dev**
 - Root directory: **apps/mobile**
 
@@ -171,6 +181,7 @@ vercel link
 Same prompts as Step 3, project name: **timesheet-admin**.
 
 Dashboard → `timesheet-admin` → Settings → Git:
+
 - Production branch: **dev**
 - Root directory: **apps/admin**
 
@@ -184,6 +195,7 @@ vercel link
 Same prompts as Step 3, project name: **timesheet-api**.
 
 Dashboard → `timesheet-api` → Settings → Git:
+
 - Production branch: **dev**
 - Root directory: **server/api**
 - Framework preset: **Other**
@@ -191,6 +203,7 @@ Dashboard → `timesheet-api` → Settings → Git:
 - [ ] **Step 6: Connect all three projects to the GitHub repo**
 
 For each project in the Vercel dashboard → Settings → Git:
+
 - Connect to GitHub repo: `AI-first-development-bootcamp-3/final-project-team-2`
 - Confirm the production branch is set to `dev`
 
@@ -207,9 +220,11 @@ echo ".vercel" >> .gitignore
 ### Task 3: Neon Postgres + Vercel Blob setup (manual — dashboard)
 
 **Files:**
+
 - No file changes — infrastructure setup only
 
 **Interfaces:**
+
 - Consumes: three Vercel projects from Task 2
 - Produces: `DATABASE_URL`, `DATABASE_URL_UNPOOLED`, and `BLOB_READ_WRITE_TOKEN` env vars injected into Vercel projects
 
@@ -246,9 +261,11 @@ Verify: `timesheet-api` project's Environment Variables page now shows `BLOB_REA
 ### Task 4: Environment variables and GitHub secrets (manual)
 
 **Files:**
+
 - No file changes — configuration only
 
 **Interfaces:**
+
 - Consumes: Neon connection strings from Task 3, Vercel project URLs
 - Produces: fully configured env vars for preview and production across all projects
 
@@ -256,10 +273,10 @@ Verify: `timesheet-api` project's Environment Variables page now shows `BLOB_REA
 
 Vercel dashboard → `timesheet-api` → Settings → Environment Variables:
 
-| Name | Environment | Value |
-|---|---|---|
-| `CORS_ORIGINS` | Production | `https://timesheet-mobile.vercel.app,https://timesheet-admin.vercel.app` |
-| `CORS_ORIGINS` | Preview | `https://*-timesheet-mobile.vercel.app,https://*-timesheet-admin.vercel.app` |
+| Name           | Environment | Value                                                                        |
+| -------------- | ----------- | ---------------------------------------------------------------------------- |
+| `CORS_ORIGINS` | Production  | `https://timesheet-mobile.vercel.app,https://timesheet-admin.vercel.app`     |
+| `CORS_ORIGINS` | Preview     | `https://*-timesheet-mobile.vercel.app,https://*-timesheet-admin.vercel.app` |
 
 Note: update the production URLs once you know the actual domains.
 
@@ -267,10 +284,10 @@ Note: update the production URLs once you know the actual domains.
 
 Vercel dashboard → `timesheet-mobile` → Settings → Environment Variables:
 
-| Name | Environment | Value |
-|---|---|---|
-| `VITE_API_URL` | Production | `https://timesheet-api.vercel.app/api/v1` |
-| `VITE_API_URL` | Preview | `https://timesheet-api-git-$VERCEL_GIT_COMMIT_REF.vercel.app/api/v1` |
+| Name           | Environment | Value                                                                |
+| -------------- | ----------- | -------------------------------------------------------------------- |
+| `VITE_API_URL` | Production  | `https://timesheet-api.vercel.app/api/v1`                            |
+| `VITE_API_URL` | Preview     | `https://timesheet-api-git-$VERCEL_GIT_COMMIT_REF.vercel.app/api/v1` |
 
 Note: preview URL pattern may vary. Alternatively, set a single preview value and update per-deployment if needed.
 
@@ -292,9 +309,11 @@ Verify: the existing `migrate.yml` workflow will now use this secret when prisma
 ### Task 5: Verification
 
 **Files:**
+
 - No file changes
 
 **Interfaces:**
+
 - Consumes: everything from Tasks 1-4
 - Produces: confirmed working CD pipeline
 
@@ -309,6 +328,7 @@ Create a PR targeting `dev`, merge it. This should trigger production deployment
 - [ ] **Step 2: Verify production deployments**
 
 Check Vercel dashboard for all three projects:
+
 - `timesheet-mobile`: loads in browser, shows the React app
 - `timesheet-admin`: loads in browser, shows the React app
 - `timesheet-api`: hitting `/api/v1/health` returns a response
@@ -320,6 +340,7 @@ Hit the production API health endpoint. If it includes a DB check, verify it pas
 - [ ] **Step 4: Open a test PR to verify preview deployments**
 
 Create a small test branch, open a PR against `dev`. Verify:
+
 - All three projects get preview deployment URLs (visible in PR checks/comments)
 - The preview API connects to a Neon branch database (not the production one)
 - Preview frontend apps load correctly

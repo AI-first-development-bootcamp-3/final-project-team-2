@@ -8,11 +8,11 @@ Set up continuous deployment for the Abra Timesheet monorepo using Vercel's nati
 
 Three projects, same GitHub repo, different root directories:
 
-| Project | Root Directory | Framework | Build Command | Output Dir |
-|---|---|---|---|---|
-| `timesheet-mobile` | `apps/mobile` | Vite | `cd ../.. && pnpm install && pnpm turbo run build --filter=@abra/mobile` | `dist` |
-| `timesheet-admin` | `apps/admin` | Vite | `cd ../.. && pnpm install && pnpm turbo run build --filter=@abra/admin` | `dist` |
-| `timesheet-api` | `server/api` | Other | `cd ../.. && pnpm install && pnpm turbo run build --filter=@abra/api` | `dist` |
+| Project            | Root Directory | Framework | Build Command                                                            | Output Dir |
+| ------------------ | -------------- | --------- | ------------------------------------------------------------------------ | ---------- |
+| `timesheet-mobile` | `apps/mobile`  | Vite      | `cd ../.. && pnpm install && pnpm turbo run build --filter=@abra/mobile` | `dist`     |
+| `timesheet-admin`  | `apps/admin`   | Vite      | `cd ../.. && pnpm install && pnpm turbo run build --filter=@abra/admin`  | `dist`     |
+| `timesheet-api`    | `server/api`   | Other     | `cd ../.. && pnpm install && pnpm turbo run build --filter=@abra/api`    | `dist`     |
 
 - **Production branch:** `dev`
 - **Preview:** every PR gets a deployment per project automatically
@@ -37,17 +37,17 @@ Three projects, same GitHub repo, different root directories:
 
 ### Runtime env (Vercel, per project)
 
-| Variable | Project(s) | Preview | Production |
-|---|---|---|---|
-| `DATABASE_URL` | api | auto (Neon branch) | auto (Neon main) |
-| `CORS_ORIGINS` | api | preview frontend URLs | production frontend URLs |
-| `VITE_API_URL` | mobile, admin | preview API URL | production API URL |
-| `BLOB_READ_WRITE_TOKEN` | api | auto (Blob store) | auto (Blob store) |
+| Variable                | Project(s)    | Preview               | Production               |
+| ----------------------- | ------------- | --------------------- | ------------------------ |
+| `DATABASE_URL`          | api           | auto (Neon branch)    | auto (Neon main)         |
+| `CORS_ORIGINS`          | api           | preview frontend URLs | production frontend URLs |
+| `VITE_API_URL`          | mobile, admin | preview API URL       | production API URL       |
+| `BLOB_READ_WRITE_TOKEN` | api           | auto (Blob store)     | auto (Blob store)        |
 
 ### Pipeline secrets (GitHub Actions)
 
-| Secret | Purpose |
-|---|---|
+| Secret         | Purpose                                                                                                                         |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------- |
 | `DATABASE_URL` | Used by `migrate.yml` for `prisma migrate deploy` on push to `dev`. Must be the **unpooled** production Neon connection string. |
 
 ## Migration Strategy
