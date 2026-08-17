@@ -45,6 +45,8 @@ export default defineConfig({
       env: {
         ...process.env,
         DATABASE_URL: process.env.DATABASE_URL || 'postgresql://test:test@localhost:5432/abra_test',
+        JWT_SECRET: process.env.JWT_SECRET || 'e2e-only-access-secret',
+        JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET || 'e2e-only-refresh-secret',
       },
     },
   ],

@@ -109,11 +109,11 @@ describe('POST /api/v1/auth/login (failures)', () => {
 
 describe('POST /api/v1/auth/refresh', () => {
   let app: INestApplication;
-  let users: Awaited<ReturnType<typeof makeFakeUser>>[];
+  let user: Awaited<ReturnType<typeof makeFakeUser>>;
 
   beforeAll(async () => {
-    users = [await makeFakeUser()];
-    ({ app } = await makeAuthApp(users));
+    user = await makeFakeUser();
+    ({ app } = await makeAuthApp([user]));
   });
 
   afterAll(async () => {
@@ -158,25 +158,25 @@ describe('POST /api/v1/auth/refresh', () => {
 
   it('rejects a refresh token whose version no longer matches the user', async () => {
     const cookie = await loginCookie();
-    users[0].token_version += 1;
+    user.token_version += 1;
     try {
       await request(app.getHttpServer())
         .post('/api/v1/auth/refresh')
         .set('Cookie', cookie)
         .expect(401);
     } finally {
-      users[0].token_version -= 1;
+      user.token_version -= 1;
     }
   });
 });
 
 describe('POST /api/v1/auth/logout', () => {
   let app: INestApplication;
-  let users: Awaited<ReturnType<typeof makeFakeUser>>[];
+  let user: Awaited<ReturnType<typeof makeFakeUser>>;
 
   beforeAll(async () => {
-    users = [await makeFakeUser()];
-    ({ app } = await makeAuthApp(users));
+    user = await makeFakeUser();
+    ({ app } = await makeAuthApp([user]));
   });
 
   afterAll(async () => {
@@ -189,14 +189,14 @@ describe('POST /api/v1/auth/logout', () => {
       .send({ email: 'employee1@abra.co', password: 'Employee123!' })
       .expect(200);
     const cookie = extractRefreshCookie(loginRes);
-    const versionBefore = users[0].token_version;
+    const versionBefore = user.token_version;
 
     const logoutRes = await request(app.getHttpServer())
       .post('/api/v1/auth/logout')
       .set('Authorization', `Bearer ${loginRes.body.accessToken as string}`)
       .expect(204);
 
-    expect(users[0].token_version).toBe(versionBefore + 1);
+    expect(user.token_version).toBe(versionBefore + 1);
 
     const clearCookie = (logoutRes.headers['set-cookie'] as unknown as string[])?.find((c) =>
       c.startsWith(`${REFRESH_COOKIE}=`),
