@@ -62,6 +62,9 @@ jobs:
       - name: Run migrations
         run: pnpm --filter @abra/api exec prisma migrate deploy
 
+      - name: Seed demo org
+        run: pnpm --filter @abra/api exec prisma db seed
+
       - name: Cache Playwright browsers
         uses: actions/cache@v4
         with:

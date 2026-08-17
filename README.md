@@ -50,20 +50,34 @@ Requires Node 22+ and pnpm 9 (`corepack enable`). Each service documents its own
 
 ## Running tests
 
-| Kind                       | Command                                | Status                                                       |
-| -------------------------- | -------------------------------------- | ------------------------------------------------------------ |
-| Unit tests                 | `pnpm test` (all workspaces via turbo) | active — vitest suites in every workspace                    |
-| Unit tests + coverage gate | `pnpm test:coverage` (what CI runs)    | active — fails below 70% lines/branches/functions/statements |
-| E2E (Playwright)           | `pnpm test:e2e`                        | active — smoke specs: app shell renders, health returns 200  |
+| Kind                       | Command                                | Status                                                                              |
+| -------------------------- | -------------------------------------- | ----------------------------------------------------------------------------------- |
+| Unit tests                 | `pnpm test` (all workspaces via turbo) | active — vitest suites in every workspace                                           |
+| Unit tests + coverage gate | `pnpm test:coverage` (what CI runs)    | active — fails below 70% lines/branches/functions/statements                        |
+| E2E (Playwright)           | `pnpm test:e2e`                        | active — four specs: app shell, health, create-then-login, deactivated-cannot-login |
 
 ### Running E2E tests locally
 
-Prerequisites: a running PostgreSQL instance (e.g. `docker compose up postgres`).
+Prerequisites: a running PostgreSQL instance (e.g. `docker compose up postgres`) with **migrations and seed** applied so the demo admin exists:
+
+```bash
+pnpm --filter @abra/api exec prisma migrate deploy
+pnpm --filter @abra/api exec prisma db seed
+```
+
+Playwright starts the API (3000), employee app (5173), and admin console (5174). Seed admin: `admin@abra.co` / `Admin123!`.
 
 ```bash
 pnpm install                 # installs all workspaces including e2e
-pnpm test:e2e                # starts mobile + API, runs Playwright specs
+pnpm test:e2e                # starts API + mobile + admin, runs Playwright specs
 ```
+
+The required check discovers four specs:
+
+1. `app-shell` — unsigned-in employee app shell
+2. `health` — API `GET /health` returns 200
+3. `create-then-login` — admin creates an employee → signs out → that employee signs into the employee app
+4. `deactivated-cannot-login` — admin deactivates a (new) employee → employee-app sign-in is refused
 
 Playwright browsers are installed automatically on first run. To install them manually:
 

@@ -8,7 +8,7 @@ description: 'Task list for Create User Then Login E2E (KAN-49)'
 
 **Prerequisites**: plan.md (required), spec.md (required for user stories), research.md, data-model.md, contracts/
 
-**Tests**: This feature *is* the required Playwright journeys. Spec files are the implementation (not a separate TDD layer on product code). Do **not** implement sign-in, create, or deactivate in `apps/` or `server/` (FR-011). If KAN-39 is still a stub/mock, the journeys must fail — do not bypass UIs.
+**Tests**: This feature _is_ the required Playwright journeys. Spec files are the implementation (not a separate TDD layer on product code). Do **not** implement sign-in, create, or deactivate in `apps/` or `server/` (FR-011). If KAN-39 is still a stub/mock, the journeys must fail — do not bypass UIs.
 
 **Organization**: Tasks are grouped by user story to enable independent implementation and testing of each story.
 
@@ -30,9 +30,9 @@ description: 'Task list for Create User Then Login E2E (KAN-49)'
 
 **Purpose**: Scaffold e2e helpers; confirm no new packages and no product-code changes
 
-- [ ] T001 Confirm `@playwright/test` is already in `e2e/package.json` and do **not** add npm packages; do **not** change `server/api/prisma/schema.prisma`, `apps/admin/src/`, or `apps/mobile/src/` product behavior
-- [ ] T002 [P] Create `e2e/helpers/credentials.ts` with seed admin defaults (`admin@abra.co` / `Admin123!`) overridable via `E2E_ADMIN_EMAIL` / `E2E_ADMIN_PASSWORD`, plus created-employee password `E2ePass12!`
-- [ ] T003 [P] Create `e2e/helpers/unique-email.ts` exporting `uniqueEmail()` that returns `e2e.{timestamp}.{random}@abra.co`
+- [x] T001 Confirm `@playwright/test` is already in `e2e/package.json` and do **not** add npm packages; do **not** change `server/api/prisma/schema.prisma`, `apps/admin/src/`, or `apps/mobile/src/` product behavior
+- [x] T002 [P] Create `e2e/helpers/credentials.ts` with seed admin defaults (`admin@abra.co` / `Admin123!`) overridable via `E2E_ADMIN_EMAIL` / `E2E_ADMIN_PASSWORD`, plus created-employee password `E2ePass12!`
+- [x] T003 [P] Create `e2e/helpers/unique-email.ts` exporting `uniqueEmail()` that returns `e2e.{timestamp}.{random}@abra.co`
 
 ---
 
@@ -42,9 +42,9 @@ description: 'Task list for Create User Then Login E2E (KAN-49)'
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T004 Export `ADMIN_BASE_URL` (default `http://localhost:5174`) from `e2e/playwright.config.ts`; keep `baseURL` as the employee app; add a third `webServer` for `pnpm --filter @abra/admin dev` on `ADMIN_PORT` with `VITE_API_URL=http://localhost:${API_PORT}/api/v1`
-- [ ] T005 Add `pnpm --filter @abra/api exec prisma db seed` after `prisma migrate deploy` in `.github/workflows/ci.yml` so the demo admin exists before `pnpm --filter @abra/e2e test`
-- [ ] T006 Confirm KAN-39 real admin sign-in/logout and employee API login exist in `apps/admin/src/features/auth/sign-in-page.tsx` and `apps/mobile/src/features/auth/LoginForm.tsx`; if they are still stub/mock, do **not** implement them here — journeys in later phases must fail on those screens instead of injecting tokens
+- [x] T004 Export `ADMIN_BASE_URL` (default `http://localhost:5174`) from `e2e/playwright.config.ts`; keep `baseURL` as the employee app; add a third `webServer` for `pnpm --filter @abra/admin dev` on `ADMIN_PORT` with `VITE_API_URL=http://localhost:${API_PORT}/api/v1`
+- [x] T005 Add `pnpm --filter @abra/api exec prisma db seed` after `prisma migrate deploy` in `.github/workflows/ci.yml` so the demo admin exists before `pnpm --filter @abra/e2e test`
+- [x] T006 Confirm KAN-39 real admin sign-in/logout and employee API login exist in `apps/admin/src/features/auth/sign-in-page.tsx` and `apps/mobile/src/features/auth/LoginForm.tsx`; if they are still stub/mock, do **not** implement them here — journeys in later phases must fail on those screens instead of injecting tokens
 
 **Checkpoint**: Foundation ready — Playwright starts API + mobile + admin; CI seeds; helpers exist; no product auth implemented in this feature
 
@@ -58,8 +58,8 @@ description: 'Task list for Create User Then Login E2E (KAN-49)'
 
 ### Implementation for User Story 1
 
-- [ ] T007 [US1] Implement the create-then-login journey in `e2e/specs/create-then-login.spec.ts` per `specs/005-create-user-login-e2e/contracts/user-lifecycle-e2e.md`: `test.setTimeout(180_000)`; one browser context; `goto(ADMIN_BASE_URL)` → admin sign-in with `e2e/helpers/credentials.ts` → Users heading `משתמשים` → `יצירת משתמש` with `uniqueEmail()` + `E2ePass12!` + role `רגיל` → `שמירה` → assert active employee row and password **absent** from the table
-- [ ] T008 [US1] Extend `e2e/specs/create-then-login.spec.ts`: admin signs out to `/admin/login`; open employee app `/login` (heading `ברוכים הבאים!`); submit the same email + initial password via `התחבר`; expect URL not `/login`, heading `עמוד ראשי - דיווח יומי`, and no password-change screen. Drive real UIs only (no `request.post` login/create)
+- [x] T007 [US1] Implement the create-then-login journey in `e2e/specs/create-then-login.spec.ts` per `specs/005-create-user-login-e2e/contracts/user-lifecycle-e2e.md`: `test.setTimeout(180_000)`; one browser context; `goto(ADMIN_BASE_URL)` → admin sign-in with `e2e/helpers/credentials.ts` → Users heading `משתמשים` → `יצירת משתמש` with `uniqueEmail()` + `E2ePass12!` + role `רגיל` → `שמירה` → assert active employee row and password **absent** from the table
+- [x] T008 [US1] Extend `e2e/specs/create-then-login.spec.ts`: admin signs out to `/admin/login`; open employee app `/login` (heading `ברוכים הבאים!`); submit the same email + initial password via `התחבר`; expect URL not `/login`, heading `עמוד ראשי - דיווח יומי`, and no password-change screen. Drive real UIs only (no `request.post` login/create)
 
 **Checkpoint**: User Story 1 is independently testable (MVP Epic 3 create-then-login proof)
 
@@ -73,7 +73,7 @@ description: 'Task list for Create User Then Login E2E (KAN-49)'
 
 ### Implementation for User Story 2
 
-- [ ] T009 [P] [US2] Implement `e2e/specs/deactivated-cannot-login.spec.ts` per `specs/005-create-user-login-e2e/contracts/user-lifecycle-e2e.md`: `test.setTimeout(180_000)`; own `uniqueEmail()` employee (do **not** reuse US1’s person or seed `employee1@abra.co`); create via Users UI; `השבת` → confirm `השבת משתמש`; then employee `/login` with that email+password stays on `/login`, shows a Hebrew error (`role=alert` or login error region), and does **not** show `עמוד ראשי - דיווח יומי`
+- [x] T009 [P] [US2] Implement `e2e/specs/deactivated-cannot-login.spec.ts` per `specs/005-create-user-login-e2e/contracts/user-lifecycle-e2e.md`: `test.setTimeout(180_000)`; own `uniqueEmail()` employee (do **not** reuse US1’s person or seed `employee1@abra.co`); create via Users UI; `השבת` → confirm `השבת משתמש`; then employee `/login` with that email+password stays on `/login`, shows a Hebrew error (`role=alert` or login error region), and does **not** show `עמוד ראשי - דיווח יומי`
 
 **Checkpoint**: User Stories 1 and 2 both work independently in separate spec files
 
@@ -87,9 +87,9 @@ description: 'Task list for Create User Then Login E2E (KAN-49)'
 
 ### Implementation for User Story 3
 
-- [ ] T010 [US3] Keep `e2e/specs/app-shell.spec.ts` and `e2e/specs/health.spec.ts` unchanged and still discovered by `testDir: './specs'` in `e2e/playwright.config.ts` (no `testIgnore` that drops smokes or the new journeys)
-- [ ] T011 [US3] Confirm `e2e/specs/create-then-login.spec.ts` and `e2e/specs/deactivated-cannot-login.spec.ts` have no `test.skip` / `test.fixme` / `test.fail` so a failure fails `pnpm --filter @abra/e2e test` (SC-003)
-- [ ] T012 [US3] Update the E2E section in `README.md` to list the four specs, the seed requirement (`prisma db seed`), and admin console on port 5174 alongside mobile 5173 / API 3000
+- [x] T010 [US3] Keep `e2e/specs/app-shell.spec.ts` and `e2e/specs/health.spec.ts` unchanged and still discovered by `testDir: './specs'` in `e2e/playwright.config.ts` (no `testIgnore` that drops smokes or the new journeys)
+- [x] T011 [US3] Confirm `e2e/specs/create-then-login.spec.ts` and `e2e/specs/deactivated-cannot-login.spec.ts` have no `test.skip` / `test.fixme` / `test.fail` so a failure fails `pnpm --filter @abra/e2e test` (SC-003)
+- [x] T012 [US3] Update the E2E section in `README.md` to list the four specs, the seed requirement (`prisma db seed`), and admin console on port 5174 alongside mobile 5173 / API 3000
 
 **Checkpoint**: Required check documents and discovers all four specs; reruns are unique-email safe via `e2e/helpers/unique-email.ts`
 
@@ -99,9 +99,9 @@ description: 'Task list for Create User Then Login E2E (KAN-49)'
 
 **Purpose**: Typecheck, docs, and quickstart validation across both journeys
 
-- [ ] T013 [P] Ensure `e2e/tsconfig.json` includes `helpers/**/*.ts` and `specs/**/*.ts` so `pnpm --filter @abra/e2e typecheck` passes
-- [ ] T014 Run the validation in `specs/005-create-user-login-e2e/quickstart.md` (`pnpm test:e2e`); if KAN-39 is incomplete, record the failing assertions rather than weakening the specs
-- [ ] T015 Confirm `git diff -- apps/admin apps/mobile server/api/src packages/contracts` is empty for this feature (FR-011) aside from any pre-existing unrelated work
+- [x] T013 [P] Ensure `e2e/tsconfig.json` includes `helpers/**/*.ts` and `specs/**/*.ts` so `pnpm --filter @abra/e2e typecheck` passes
+- [x] T014 Run the validation in `specs/005-create-user-login-e2e/quickstart.md` (`pnpm test:e2e`); if KAN-39 is incomplete, record the failing assertions rather than weakening the specs
+- [x] T015 Confirm `git diff -- apps/admin apps/mobile server/api/src packages/contracts` is empty for this feature (FR-011) aside from any pre-existing unrelated work
 
 ---
 

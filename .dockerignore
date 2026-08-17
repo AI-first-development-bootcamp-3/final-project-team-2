@@ -3,6 +3,8 @@ node_modules
 dist
 **/dist
 .git
+Dockerfile*
+.dockerignore
 .turbo
 **/.turbo
 coverage

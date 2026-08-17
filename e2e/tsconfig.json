@@ -8,5 +8,5 @@
     "esModuleInterop": true,
     "skipLibCheck": true
   },
-  "include": ["specs/**/*.ts", "playwright.config.ts"]
+  "include": ["helpers/**/*.ts", "specs/**/*.ts", "playwright.config.ts"]
 }
