@@ -136,4 +136,83 @@ describe('Admin LoginPage — submit to the auth API (KAN-70 3.2)', () => {
     expect(screen.queryByText('PORTAL HOME')).not.toBeInTheDocument();
     expect(getAuthSession()).toBeNull();
   });
+
+  it('persists the session in localStorage when remember-me is ticked', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ accessToken: 'header.payload.sig', user: SESSION_USER }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+
+    renderLogin();
+    fireEvent.change(screen.getByLabelText('אימייל'), { target: { value: 'admin@abra.co' } });
+    fireEvent.change(screen.getByLabelText('סיסמה'), { target: { value: 'Admin123!' } });
+    fireEvent.click(screen.getByLabelText('זכור אותי'));
+    fireEvent.click(screen.getByRole('button', { name: 'התחבר למערכת' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('PORTAL HOME')).toBeInTheDocument();
+    });
+
+    expect(localStorage.getItem('abra_admin_auth_session')).not.toBeNull();
+    expect(sessionStorage.getItem('abra_admin_auth_session')).toBeNull();
+  });
+
+  it('keeps the session in sessionStorage when remember-me is not ticked', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ accessToken: 'header.payload.sig', user: SESSION_USER }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+
+    renderLogin();
+    fireEvent.change(screen.getByLabelText('אימייל'), { target: { value: 'admin@abra.co' } });
+    fireEvent.change(screen.getByLabelText('סיסמה'), { target: { value: 'Admin123!' } });
+    fireEvent.click(screen.getByRole('button', { name: 'התחבר למערכת' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('PORTAL HOME')).toBeInTheDocument();
+    });
+
+    expect(sessionStorage.getItem('abra_admin_auth_session')).not.toBeNull();
+    expect(localStorage.getItem('abra_admin_auth_session')).toBeNull();
+  });
+
+  it('shows a system-error message — not the credentials one — when the API is unreachable', async () => {
+    vi.spyOn(globalThis, 'fetch').mockRejectedValue(new TypeError('Failed to fetch'));
+
+    renderLogin();
+    fireEvent.change(screen.getByLabelText('אימייל'), { target: { value: 'admin@abra.co' } });
+    fireEvent.change(screen.getByLabelText('סיסמה'), { target: { value: 'Admin123!' } });
+    fireEvent.click(screen.getByRole('button', { name: 'התחבר למערכת' }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        'ההתחברות נכשלה עקב תקלה במערכת. נסו שוב בעוד מספר רגעים.',
+      );
+    });
+    expect(screen.getByRole('alert')).not.toHaveTextContent(
+      'שם המשתמש או הסיסמה שהוזנו אינם נכונים.',
+    );
+  });
+
+  it('shows the system-error message for a 500 response, not the credentials one', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ message: 'Internal server error' }), { status: 500 }),
+    );
+
+    renderLogin();
+    fireEvent.change(screen.getByLabelText('אימייל'), { target: { value: 'admin@abra.co' } });
+    fireEvent.change(screen.getByLabelText('סיסמה'), { target: { value: 'Admin123!' } });
+    fireEvent.click(screen.getByRole('button', { name: 'התחבר למערכת' }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        'ההתחברות נכשלה עקב תקלה במערכת. נסו שוב בעוד מספר רגעים.',
+      );
+    });
+    expect(getAuthSession()).toBeNull();
+  });
 });

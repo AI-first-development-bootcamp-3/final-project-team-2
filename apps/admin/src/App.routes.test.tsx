@@ -1,9 +1,9 @@
 import React from 'react';
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { render, screen, cleanup } from '@testing-library/react';
+import { render, screen, cleanup, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { AppRoutes } from './App';
-import { clearAuthSession, setAuthSession } from './lib/auth';
+import { clearAuthSession, getAuthSession, setAuthSession } from './lib/auth';
 
 describe('Admin route protection (KAN-70 3.3)', () => {
   beforeEach(() => {
@@ -43,5 +43,52 @@ describe('Admin route protection (KAN-70 3.3)', () => {
     );
 
     expect(screen.getByText('Abra Timesheet - Admin Console')).toBeInTheDocument();
+  });
+
+  it('rejects an authenticated employee: session cleared, login screen shown', async () => {
+    setAuthSession({
+      accessToken: 'header.payload.sig',
+      user: {
+        id: '2b1c3d4e-5f6a-4b7c-8d9e-0f1a2b3c4d5e',
+        email: 'employee1@abra.co',
+        fullName: 'Alice Cohen',
+        role: 'employee',
+      },
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <AppRoutes />
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByRole('heading', { name: /ברוכים הבאים למערכת/ })).toBeInTheDocument();
+    expect(screen.queryByText('Abra Timesheet - Admin Console')).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(getAuthSession()).toBeNull();
+    });
+  });
+
+  it('treats a malformed stored session as logged out', () => {
+    sessionStorage.setItem('abra_admin_auth_session', '{"accessToken":"x"}');
+
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <AppRoutes />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole('heading', { name: /ברוכים הבאים למערכת/ })).toBeInTheDocument();
+    expect(screen.queryByText('Abra Timesheet - Admin Console')).not.toBeInTheDocument();
+  });
+
+  it('sends an unknown URL straight to the login screen when unauthenticated', () => {
+    render(
+      <MemoryRouter initialEntries={['/no-such-page']}>
+        <AppRoutes />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole('heading', { name: /ברוכים הבאים למערכת/ })).toBeInTheDocument();
   });
 });

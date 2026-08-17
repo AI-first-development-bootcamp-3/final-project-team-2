@@ -2,9 +2,12 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { LoginSchema, VAL_MESSAGES, type LoginFormData, type ValCode } from '@abra/contracts';
+import { InvalidCredentialsError } from '../../lib/api';
 
 interface LoginFormProps {
-  onSubmitCredentials?: (data: LoginFormData) => Promise<void>;
+  // Required on purpose: a login form with no submit handler is never a
+  // meaningful state, and an optional call would no-op silently.
+  onSubmitCredentials: (data: LoginFormData) => Promise<void>;
 }
 
 function fieldError(error?: { message?: string }): string | undefined {
@@ -14,12 +17,11 @@ function fieldError(error?: { message?: string }): string | undefined {
 
 export const LoginForm: React.FC<LoginFormProps> = ({ onSubmitCredentials }) => {
   const [serverError, setServerError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
 
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<LoginFormData>({
     resolver: zodResolver(LoginSchema),
     defaultValues: { email: '', password: '', rememberMe: false },
@@ -27,16 +29,22 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSubmitCredentials }) => 
 
   const onSubmit = async (data: LoginFormData) => {
     setServerError(null);
-    setIsLoading(true);
     try {
-      await onSubmitCredentials?.(data);
-    } catch {
-      // Generic message — never reveals whether the email exists.
-      setServerError('שם המשתמש או הסיסמה שהוזנו אינם נכונים.');
-    } finally {
-      setIsLoading(false);
+      await onSubmitCredentials(data);
+    } catch (error) {
+      setServerError(
+        error instanceof InvalidCredentialsError
+          ? // Generic message — never reveals whether the email exists.
+            'שם המשתמש או הסיסמה שהוזנו אינם נכונים.'
+          : // Anything else (network, 5xx, contract drift) is not the user's
+            // fault and must not be reported as a wrong password.
+            'ההתחברות נכשלה עקב תקלה במערכת. נסו שוב בעוד מספר רגעים.',
+      );
     }
   };
+
+  const emailError = fieldError(errors.email);
+  const passwordError = fieldError(errors.password);
 
   return (
     <form
@@ -62,12 +70,11 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSubmitCredentials }) => 
           type="email"
           placeholder="name@example.com"
           autoComplete="email"
+          aria-invalid={emailError ? true : undefined}
           className="rounded-lg border border-slate-300 px-3 py-2.5 text-right focus:border-navy focus:outline-none focus:ring-1 focus:ring-navy/30"
           {...register('email')}
         />
-        {fieldError(errors.email) && (
-          <p className="text-sm text-red-600">{fieldError(errors.email)}</p>
-        )}
+        {emailError && <p className="text-sm text-red-600">{emailError}</p>}
       </div>
 
       <div className="flex flex-col gap-1">
@@ -79,12 +86,11 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSubmitCredentials }) => 
           type="password"
           placeholder="••••••••"
           autoComplete="current-password"
+          aria-invalid={passwordError ? true : undefined}
           className="rounded-lg border border-slate-300 px-3 py-2.5 text-right focus:border-navy focus:outline-none focus:ring-1 focus:ring-navy/30"
           {...register('password')}
         />
-        {fieldError(errors.password) && (
-          <p className="text-sm text-red-600">{fieldError(errors.password)}</p>
-        )}
+        {passwordError && <p className="text-sm text-red-600">{passwordError}</p>}
       </div>
 
       <div className="my-1 flex select-none items-center justify-start gap-2">
@@ -101,10 +107,10 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSubmitCredentials }) => 
 
       <button
         type="submit"
-        disabled={isLoading}
+        disabled={isSubmitting}
         className="h-16 w-full rounded-lg bg-navy text-base font-semibold text-white transition hover:bg-navy/90 disabled:opacity-60"
       >
-        {isLoading ? 'מתחבר…' : 'התחבר למערכת'}
+        {isSubmitting ? 'מתחבר…' : 'התחבר למערכת'}
       </button>
     </form>
   );
