@@ -24,8 +24,8 @@ export class AuthController {
     summary: 'Log in with email and password',
     description:
       'Validates credentials (VAL-01–VAL-04), returns a short-lived access JWT and sets the ' +
-      'refresh token as an httpOnly, Secure, SameSite=Strict cookie. Remember-me controls the ' +
-      'refresh lifetime.',
+      'refresh token as an httpOnly, Secure, SameSite=Strict cookie. rememberMe is accepted ' +
+      'but not yet honored — the refresh lifetime is fixed at 1 day until KAN-40 lands.',
   })
   @ApiBody({
     schema: {

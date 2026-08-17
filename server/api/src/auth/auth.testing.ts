@@ -3,6 +3,7 @@ import type { INestApplication } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
 import type { Response } from 'supertest';
 import * as bcrypt from 'bcrypt';
+import type { UserRole } from '@abra/contracts';
 import { AuthModule } from './auth.module';
 import { REFRESH_COOKIE } from './auth.constants';
 import { PrismaService } from '../prisma/prisma.service';
@@ -21,7 +22,7 @@ export type FakeUser = {
   email: string;
   full_name: string;
   password_hash: string;
-  role: 'employee' | 'admin';
+  role: UserRole;
   is_active: boolean;
   token_version: number;
   deleted_at: Date | null;
@@ -44,19 +45,24 @@ export async function makeFakeUser(overrides: Partial<FakeUser> = {}): Promise<F
 // Fakes the Prisma boundary only — everything inward (controller, service,
 // JWT signing) is exercised for real through the HTTP seam. `calls` counts
 // DB touches so tests can assert stateless paths never reach the database.
+// findUnique deliberately does NOT filter deleted_at/is_active — that is the
+// service's job, and the fake must not mask a missing check.
 export function makeFakePrisma(users: FakeUser[]) {
   const calls = { user: 0 };
   const match = (where: { email?: string; id?: string }) =>
     users.find(
       (u) =>
         (where.email === undefined || u.email === where.email) &&
-        (where.id === undefined || u.id === where.id) &&
-        u.deleted_at === null,
+        (where.id === undefined || u.id === where.id),
     ) ?? null;
   return {
     calls,
     user: {
       findFirst: async ({ where }: { where: { email?: string; id?: string } }) => {
+        calls.user += 1;
+        return match(where);
+      },
+      findUnique: async ({ where }: { where: { id: string } }) => {
         calls.user += 1;
         return match(where);
       },

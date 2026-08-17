@@ -50,10 +50,10 @@ export class JwtGuard implements CanActivate {
       throw new UnauthorizedException();
     }
 
-    // Deliberate statefulness (spec): deactivation takes effect on the very
-    // next request, even while an access token is still unexpired.
-    const user = await this.prisma.user.findFirst({ where: { id: payload.userId } });
-    if (!user || !user.is_active) {
+    // Deliberate statefulness (spec): deactivation or soft-deletion takes
+    // effect on the very next request, even while a token is still unexpired.
+    const user = await this.prisma.user.findUnique({ where: { id: payload.userId } });
+    if (!user || user.deleted_at !== null || !user.is_active) {
       throw new UnauthorizedException();
     }
 
