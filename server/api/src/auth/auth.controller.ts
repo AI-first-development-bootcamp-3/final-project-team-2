@@ -1,4 +1,12 @@
-import { Body, Controller, HttpCode, Post, Req, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  Post,
+  Req,
+  Res,
+  UnauthorizedException,
+} from '@nestjs/common';
 import type { Request, Response } from 'express';
 import {
   LoginSchema,
@@ -30,5 +38,24 @@ export class AuthController {
   refresh(@Req() req: Request): Promise<RefreshResponse> {
     const cookies = req.cookies as Record<string, string> | undefined;
     return this.authService.refresh(cookies?.[REFRESH_COOKIE]);
+  }
+
+  @Post('logout')
+  @HttpCode(204)
+  async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response): Promise<void> {
+    // Interim token check until KAN-41's global JwtGuard owns authentication.
+    const header = req.headers.authorization ?? '';
+    const token = header.startsWith('Bearer ') ? header.slice('Bearer '.length) : undefined;
+    if (!token) {
+      throw new UnauthorizedException();
+    }
+    let payload: { userId: string };
+    try {
+      payload = await this.authService.verifyAccessToken(token);
+    } catch {
+      throw new UnauthorizedException();
+    }
+    await this.authService.logout(payload.userId);
+    res.clearCookie(REFRESH_COOKIE, refreshCookieOptions(0));
   }
 }

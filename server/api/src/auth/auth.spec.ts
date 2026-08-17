@@ -266,6 +266,55 @@ describe('POST /api/v1/auth/refresh', () => {
   });
 });
 
+describe('POST /api/v1/auth/logout', () => {
+  let app: INestApplication;
+  let users: Awaited<ReturnType<typeof makeFakeUser>>[];
+
+  beforeAll(async () => {
+    users = [await makeFakeUser()];
+    ({ app } = await makeAuthApp(users));
+  });
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  it('increments token_version, clears the cookie, and kills prior refresh tokens', async () => {
+    const loginRes = await request(app.getHttpServer())
+      .post('/api/v1/auth/login')
+      .send({ email: 'employee1@abra.co', password: 'Employee123!' })
+      .expect(200);
+    const cookie = extractRefreshCookie(loginRes);
+    const versionBefore = users[0].token_version;
+
+    const logoutRes = await request(app.getHttpServer())
+      .post('/api/v1/auth/logout')
+      .set('Authorization', `Bearer ${loginRes.body.accessToken as string}`)
+      .expect(204);
+
+    expect(users[0].token_version).toBe(versionBefore + 1);
+
+    const clearCookie = (logoutRes.headers['set-cookie'] as unknown as string[])?.find((c) =>
+      c.startsWith(`${REFRESH_COOKIE}=`),
+    );
+    expect(clearCookie).toBeDefined();
+    expect(clearCookie).toMatch(/Expires=Thu, 01 Jan 1970|Max-Age=0/i);
+
+    await request(app.getHttpServer())
+      .post('/api/v1/auth/refresh')
+      .set('Cookie', cookie)
+      .expect(401);
+  });
+
+  it('rejects a logout without a valid access token', async () => {
+    await request(app.getHttpServer()).post('/api/v1/auth/logout').expect(401);
+    await request(app.getHttpServer())
+      .post('/api/v1/auth/logout')
+      .set('Authorization', 'Bearer not-a-token')
+      .expect(401);
+  });
+});
+
 function decodeJwtPayload(token: string): Record<string, unknown> {
   return JSON.parse(Buffer.from(token.split('.')[1], 'base64url').toString()) as Record<
     string,

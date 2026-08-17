@@ -69,6 +69,17 @@ export class AuthService {
     return { accessToken: await this.signAccessToken(user.id, user.role) };
   }
 
+  /**
+   * Revokes every outstanding refresh token for the user by bumping
+   * token_version. Access tokens die at their natural (~15 min) expiry.
+   */
+  async logout(userId: string): Promise<void> {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { token_version: { increment: 1 } },
+    });
+  }
+
   /** Stateless check — signature + expiry only, never touches the database. */
   verifyAccessToken(token: string): Promise<{ userId: string; role: 'employee' | 'admin' }> {
     return this.jwt.verifyAsync(token, { secret: this.env.JWT_SECRET });
