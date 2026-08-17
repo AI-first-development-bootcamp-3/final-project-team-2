@@ -188,11 +188,11 @@ describe('RolesGuard — defensive unauthenticated branch', () => {
 
 describe('Deactivated users are rejected on every request (KAN-41 4.3)', () => {
   let app: INestApplication;
-  let users: FakeUser[];
+  let user: FakeUser;
 
   beforeAll(async () => {
-    users = [await makeFakeUser()];
-    ({ app } = await makeGuardedApp(users));
+    user = await makeFakeUser();
+    ({ app } = await makeGuardedApp([user]));
   });
 
   afterAll(async () => {
@@ -214,7 +214,7 @@ describe('Deactivated users are rejected on every request (KAN-41 4.3)', () => {
       .set('Authorization', `Bearer ${token}`)
       .expect(200);
 
-    users[0].is_active = false;
+    user.is_active = false;
     try {
       await request(app.getHttpServer())
         .get('/api/v1/probe/any-user')
@@ -232,7 +232,7 @@ describe('Deactivated users are rejected on every request (KAN-41 4.3)', () => {
         .expect(401);
       expect(reLogin.body.message).toBe('Invalid credentials');
     } finally {
-      users[0].is_active = true;
+      user.is_active = true;
     }
   });
 });
