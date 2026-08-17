@@ -56,6 +56,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
 
+      - name: Build workspace packages
+        run: pnpm --filter @abra/contracts build
+
       - name: Run migrations
         run: pnpm --filter @abra/api exec prisma migrate deploy
 
