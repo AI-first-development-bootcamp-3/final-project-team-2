@@ -1,10 +1,7 @@
-name: Prisma Migrate (Production)
+name: Prisma Migrate (Manual)
 
 on:
-  push:
-    branches: [dev]
-    paths:
-      - "server/api/prisma/**"
+  workflow_dispatch:
 
 jobs:
   migrate:
