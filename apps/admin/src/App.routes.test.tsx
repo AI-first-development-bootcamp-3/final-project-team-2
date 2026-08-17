@@ -21,7 +21,7 @@ describe('Admin route protection (KAN-70 3.3)', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByText(/ברוכים הבאים למערכת הניהול של אברא/)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /ברוכים הבאים למערכת/ })).toBeInTheDocument();
     expect(screen.queryByText('Abra Timesheet - Admin Console')).not.toBeInTheDocument();
   });
 
