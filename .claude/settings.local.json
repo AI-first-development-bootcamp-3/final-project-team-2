@@ -8,7 +8,11 @@
       "Bash(pnpm remove:*)",
       "Bash(pnpm add:*)",
       "Bash(pnpm --filter @abra/contracts test)",
-      "Bash(find /c/Users/User.DESKTOP-CMKJMMA/Abra_Project/Final_project -name *.prisma -o -name .env*)"
+      "Bash(find /c/Users/User.DESKTOP-CMKJMMA/Abra_Project/Final_project -name *.prisma -o -name .env*)",
+      "Skill(opsx:explore)",
+      "PowerShell(npx openspec list --json)",
+      "mcp__atlassian__searchConfluenceUsingCql",
+      "mcp__atlassian__lookupJiraAccountId"
     ]
   }
 }

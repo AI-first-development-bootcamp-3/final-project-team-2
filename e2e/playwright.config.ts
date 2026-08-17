@@ -33,6 +33,10 @@ export default defineConfig({
       port: MOBILE_PORT,
       reuseExistingServer: !isCI,
       cwd: '..',
+      env: {
+        ...process.env,
+        VITE_API_URL: process.env.VITE_API_URL || API_BASE_URL,
+      },
     },
     {
       command: isCI
