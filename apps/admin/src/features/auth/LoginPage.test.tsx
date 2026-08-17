@@ -33,7 +33,7 @@ describe('Admin LoginPage — form and client-side validation (KAN-70 3.1)', () 
   it('renders the greeting and email + password + remember-me fields, RTL', () => {
     renderLogin();
 
-    expect(screen.getByText(/ברוכים הבאים למערכת הניהול של אברא/)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /ברוכים הבאים למערכת/ })).toBeInTheDocument();
     expect(screen.getByLabelText('אימייל')).toBeInTheDocument();
     expect(screen.getByLabelText('סיסמה')).toBeInTheDocument();
     expect(screen.getByLabelText('זכור אותי')).toBeInTheDocument();
