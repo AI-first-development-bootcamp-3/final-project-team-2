@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { UserListItem, UsersListQuery, UsersListSuccess } from '@abra/contracts';
 import { DataTable, type SortOrder } from '@/components/ui/data-table';
-import { apiFetch } from '@/lib/api/client';
+import { apiFetch, clearAccessToken } from '@/lib/api/client';
 import { DeactivateUserModal } from './deactivate-user-modal';
 import { EditUserModal } from './edit-user-modal';
 import { ResetPasswordModal } from './reset-password-modal';
@@ -105,13 +105,25 @@ export function UsersPage() {
     <section>
       <div className="mb-4 flex items-center justify-between gap-3">
         <h2 className="text-xl font-semibold">משתמשים</h2>
-        <button
-          type="button"
-          className="rounded border bg-neutral-900 px-3 py-1 text-white"
-          onClick={() => setCreateOpen(true)}
-        >
-          יצירת משתמש
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            className="rounded border px-3 py-1"
+            onClick={() => {
+              clearAccessToken();
+              window.location.assign('/admin/login');
+            }}
+          >
+            התנתק
+          </button>
+          <button
+            type="button"
+            className="rounded border bg-neutral-900 px-3 py-1 text-white"
+            onClick={() => setCreateOpen(true)}
+          >
+            יצירת משתמש
+          </button>
+        </div>
       </div>
 
       {successMessage ? (

@@ -23,6 +23,7 @@ const envSchema = z.object({
       // browser origin — fail loudly instead.
       .refine((origins) => origins.length > 0, 'must contain at least one origin'),
   ),
+  JWT_SECRET: z.preprocess(emptyToUndefined, z.string().min(1)),
   // Both postgresql:// and postgres:// are valid schemes (Neon issues both).
   DATABASE_URL: z
     .string()

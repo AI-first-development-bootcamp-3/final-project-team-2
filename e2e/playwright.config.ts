@@ -35,6 +35,10 @@ export default defineConfig({
       port: MOBILE_PORT,
       reuseExistingServer: !isCI,
       cwd: '..',
+      env: {
+        ...process.env,
+        VITE_API_URL: `http://localhost:${API_PORT}/api/v1`,
+      },
     },
     {
       command: 'pnpm --filter @abra/admin dev',
@@ -58,6 +62,7 @@ export default defineConfig({
       env: {
         ...process.env,
         DATABASE_URL: process.env.DATABASE_URL || 'postgresql://test:test@localhost:5432/abra_test',
+        JWT_SECRET: process.env.JWT_SECRET || 'ci-e2e-jwt-signing-key',
       },
     },
   ],

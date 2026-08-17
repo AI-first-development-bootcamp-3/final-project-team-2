@@ -52,6 +52,7 @@ jobs:
           --health-retries=5
     env:
       DATABASE_URL: postgresql://test:test@localhost:5432/abra_test
+      JWT_SECRET: ci-e2e-jwt-signing-key
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup

@@ -55,13 +55,13 @@ US2 **creates its own employee** on Users, then deactivates that row, then tries
 
 **Decision**: Prefer role + accessible name already in the UIs:
 
-| Step | Target |
-| ---- | ------ |
-| Admin Users | heading `משתמשים`, button `יצירת משתמש` |
-| Create form | dialog `יצירת משתמש`; labels `שם מלא`, `אימייל`, `סיסמה ראשונית`, `תפקיד`; submit `שמירה`; default role `רגיל` |
-| Deactivate | row button `השבת` → dialog `השבתת משתמש` → `השבת משתמש`; success status `המשתמש הושבת בהצלחה` |
-| Employee login | heading `ברוכים הבאים!`; labels `אימייל`, `סיסמה`; button `התחבר` |
-| Employee success | leave `/login`; heading `עמוד ראשי - דיווח יומי` (current authenticated placeholder) |
+| Step                | Target                                                                                                                   |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Admin Users         | heading `משתמשים`, button `יצירת משתמש`                                                                                  |
+| Create form         | dialog `יצירת משתמש`; labels `שם מלא`, `אימייל`, `סיסמה ראשונית`, `תפקיד`; submit `שמירה`; default role `רגיל`           |
+| Deactivate          | row button `השבת` → dialog `השבתת משתמש` → `השבת משתמש`; success status `המשתמש הושבת בהצלחה`                            |
+| Employee login      | heading `ברוכים הבאים!`; labels `אימייל`, `סיסמה`; button `התחבר`                                                        |
+| Employee success    | leave `/login`; heading `עמוד ראשי - דיווח יומי` (current authenticated placeholder)                                     |
 | Deactivated failure | still on `/login`; Hebrew error visible (`role=alert` or the login form error region); **not** the authenticated heading |
 
 Admin sign-in and logout copy is owned by KAN-39. Helpers should use whatever accessible names that story ships (email/password fields + a logout control that returns the admin to `/admin/login`). If those names are missing, the journey fails — do not add `data-testid` in product code from this feature unless a control is otherwise untargetable (last resort, still not a behavior change).

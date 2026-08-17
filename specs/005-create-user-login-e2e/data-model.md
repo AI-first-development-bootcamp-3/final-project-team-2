@@ -12,12 +12,12 @@ This feature **does not change** the Prisma schema. It observes existing `User` 
 
 Observed through the UIs only. Schema details: [002-admin-users-table/data-model.md](../002-admin-users-table/data-model.md).
 
-| Field (public) | Create-then-login | Deactivated-cannot-sign-in |
-| -------------- | ----------------- | -------------------------- |
-| `fullName`     | Set on create     | Set on create              |
-| `email`        | Unique per run    | Unique per run             |
-| `role`         | `employee`        | `employee`                 |
-| `isActive`     | `true` after create | `false` after deactivate |
+| Field (public) | Create-then-login                                                              | Deactivated-cannot-sign-in |
+| -------------- | ------------------------------------------------------------------------------ | -------------------------- |
+| `fullName`     | Set on create                                                                  | Set on create              |
+| `email`        | Unique per run                                                                 | Unique per run             |
+| `role`         | `employee`                                                                     | `employee`                 |
+| `isActive`     | `true` after create                                                            | `false` after deactivate   |
 | `password`     | Initial secret typed on create and on employee login; **never** shown in Users |
 
 `password_hash`, `token_version`, and `deleted_at` are never asserted in the directory.
@@ -26,12 +26,12 @@ Observed through the UIs only. Schema details: [002-admin-users-table/data-model
 
 Not created by the journeys. Must exist before either spec runs.
 
-| Field     | Value (KAN-32 seed; overridable) |
-| --------- | -------------------------------- |
-| email     | `admin@abra.co`                  |
-| password  | `Admin123!`                      |
-| role      | `admin`                          |
-| isActive  | `true`                           |
+| Field    | Value (KAN-32 seed; overridable) |
+| -------- | -------------------------------- |
+| email    | `admin@abra.co`                  |
+| password | `Admin123!`                      |
+| role     | `admin`                          |
+| isActive | `true`                           |
 
 If this row is missing, the check must fail fast (FR-012), not hang on admin sign-in.
 
@@ -39,24 +39,24 @@ If this row is missing, the check must fail fast (FR-012), not hang on admin sig
 
 Produced by the create form during a run. Not cleaned up (demo DB is CI-ephemeral; local reruns rely on unique emails).
 
-| Field            | Rule                                      |
-| ---------------- | ----------------------------------------- |
-| email            | `e2e.{timestamp}.{random}@abra.co`        |
-| fullName         | Distinct display name including the unique suffix |
-| password         | Valid initial password (≥ 8 characters)   |
-| role             | employee (`רגיל`)                         |
-| isActive         | true until US2 deactivates its own person |
+| Field    | Rule                                              |
+| -------- | ------------------------------------------------- |
+| email    | `e2e.{timestamp}.{random}@abra.co`                |
+| fullName | Distinct display name including the unique suffix |
+| password | Valid initial password (≥ 8 characters)           |
+| role     | employee (`רגיל`)                                 |
+| isActive | true until US2 deactivates its own person         |
 
 US1 and US2 each create **their own** employee.
 
 ## Validation rules (journey input)
 
-| Rule | Behavior |
-| ---- | -------- |
-| Unique email | Generated per run; valid email format so create is not rejected as VAL-02 / VAL-11 |
-| Initial password | ≥ 8 characters; not trimmed by the product (KAN-46) |
-| Role | Always employee for these journeys |
-| Admin credentials | Seed defaults unless `E2E_ADMIN_EMAIL` / `E2E_ADMIN_PASSWORD` are set |
+| Rule              | Behavior                                                                           |
+| ----------------- | ---------------------------------------------------------------------------------- |
+| Unique email      | Generated per run; valid email format so create is not rejected as VAL-02 / VAL-11 |
+| Initial password  | ≥ 8 characters; not trimmed by the product (KAN-46)                                |
+| Role              | Always employee for these journeys                                                 |
+| Admin credentials | Seed defaults unless `E2E_ADMIN_EMAIL` / `E2E_ADMIN_PASSWORD` are set              |
 
 ## State transitions (observed)
 

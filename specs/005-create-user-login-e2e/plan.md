@@ -36,26 +36,26 @@ _GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
 Project `.specify/memory/constitution.md` is still a template (not ratified). Gates below are taken from **GENERAL_SPEC** + this feature’s FR-011 until a real constitution is adopted.
 
-| Gate | Status | Notes |
-| ---- | ------ | ----- |
-| No new product API / no change to user-management rules (FR-011) | PASS | Plan only adds e2e specs + harness; login/create/deactivate stay KAN-39/46/48 |
-| Secrets never in directory or person records (§13.2 / FR-014) | PASS | Journeys assert password is absent from Users rows |
-| Admin-only Users; employee signs into employee app (§5.2 / §7.2) | PASS | Journey 1 creates role=employee and signs in on mobile |
-| Unique email among non-deleted (§4.1) | PASS | Unique suffix per run; not a new uniqueness rule |
-| Required automated check (KAN-34 e2e job) | PASS | New specs run in existing CI `e2e` job; failure fails the job |
-| No unjustified new packages/services | PASS | Reuse `@abra/e2e`, Playwright Chromium, seed from KAN-32 |
-| Test-first / coverage discipline (§14) | PASS | These *are* the tests; unit 70% gate unchanged |
+| Gate                                                             | Status | Notes                                                                         |
+| ---------------------------------------------------------------- | ------ | ----------------------------------------------------------------------------- |
+| No new product API / no change to user-management rules (FR-011) | PASS   | Plan only adds e2e specs + harness; login/create/deactivate stay KAN-39/46/48 |
+| Secrets never in directory or person records (§13.2 / FR-014)    | PASS   | Journeys assert password is absent from Users rows                            |
+| Admin-only Users; employee signs into employee app (§5.2 / §7.2) | PASS   | Journey 1 creates role=employee and signs in on mobile                        |
+| Unique email among non-deleted (§4.1)                            | PASS   | Unique suffix per run; not a new uniqueness rule                              |
+| Required automated check (KAN-34 e2e job)                        | PASS   | New specs run in existing CI `e2e` job; failure fails the job                 |
+| No unjustified new packages/services                             | PASS   | Reuse `@abra/e2e`, Playwright Chromium, seed from KAN-32                      |
+| Test-first / coverage discipline (§14)                           | PASS   | These _are_ the tests; unit 70% gate unchanged                                |
 
 **Gate result**: PASS — proceed to Phase 0 / Phase 1.
 
 ### Post-design re-check (after Phase 1)
 
-| Gate | Status | Notes |
-| ---- | ------ | ----- |
-| No product-behavior change in design | PASS | `research.md` treats KAN-39/46/48 as hard prerequisites |
-| Journey contract is UI/CI, not a new Zod API | PASS | `contracts/user-lifecycle-e2e.md` |
-| Secrets / unique email / independence | PASS | Encoded in data-model + contract + quickstart |
-| No unjustified complexity | PASS | Complexity Tracking empty; no new app or auth module |
+| Gate                                         | Status | Notes                                                   |
+| -------------------------------------------- | ------ | ------------------------------------------------------- |
+| No product-behavior change in design         | PASS   | `research.md` treats KAN-39/46/48 as hard prerequisites |
+| Journey contract is UI/CI, not a new Zod API | PASS   | `contracts/user-lifecycle-e2e.md`                       |
+| Secrets / unique email / independence        | PASS   | Encoded in data-model + contract + quickstart           |
+| No unjustified complexity                    | PASS   | Complexity Tracking empty; no new app or auth module    |
 
 **Post-design gate result**: PASS.
 

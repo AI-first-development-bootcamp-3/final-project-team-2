@@ -29,6 +29,7 @@ services:
       PORT: 3000
       DATABASE_URL: postgresql://${POSTGRES_USER:-abra}:${POSTGRES_PASSWORD:-abra_dev_password}@postgres:5432/${POSTGRES_DB:-timesheet}
       CORS_ORIGINS: http://localhost:${MOBILE_PORT:-5173},http://localhost:${ADMIN_PORT:-5174}
+      JWT_SECRET: ${JWT_SECRET:-local-dev-jwt-signing-key}
     ports:
       - '${API_PORT:-3000}:3000'
     depends_on:

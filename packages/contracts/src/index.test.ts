@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { UserRole, WorkLocation, LoginSchema } from './index';
+import { UserRole, WorkLocation, LoginSchema, LoginResponse } from './index';
 
 describe('Contracts Smoke Test', () => {
   it('should validate roles correctly', () => {
@@ -66,5 +66,18 @@ describe('Contracts Smoke Test', () => {
     if (!whitespaceEmail.success) {
       expect(whitespaceEmail.error?.issues[0]?.message).toBe('VAL-01');
     }
+  });
+
+  it('parses a login response with an access token and user', () => {
+    const parsed = LoginResponse.safeParse({
+      accessToken: 'tok',
+      user: {
+        id: '550e8400-e29b-41d4-a716-446655440000',
+        email: 'admin@abra.co',
+        fullName: 'Admin',
+        role: 'admin',
+      },
+    });
+    expect(parsed.success).toBe(true);
   });
 });

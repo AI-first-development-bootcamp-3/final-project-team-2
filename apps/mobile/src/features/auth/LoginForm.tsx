@@ -34,18 +34,24 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
     setIsLoading(true);
 
     try {
-      // Simulate API login authentication call (POST /api/v1/auth/login)
-      await new Promise((resolve) => setTimeout(resolve, 800));
-
-      // Mock validation check for demo purposes (e.g. invalid credentials)
-      if (data.email === 'error@example.com') {
+      // Store authenticated session
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1';
+      const response = await fetch(`${apiUrl}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: data.email, password: data.password }),
+      });
+      if (!response.ok) {
+        throw new Error('INVALID_CREDENTIALS');
+      }
+      const body = (await response.json()) as { accessToken?: string };
+      if (!body.accessToken) {
         throw new Error('INVALID_CREDENTIALS');
       }
 
-      // Store authenticated session
       setAuthSession({
         email: data.email,
-        token: 'mock-session-token-123',
+        token: body.accessToken,
       });
 
       if (onSuccess) {
@@ -76,7 +82,10 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
       noValidate
     >
       {serverError && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm text-right font-medium animate-fadeIn">
+        <div
+          role="alert"
+          className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm text-right font-medium animate-fadeIn"
+        >
           {serverError}
         </div>
       )}

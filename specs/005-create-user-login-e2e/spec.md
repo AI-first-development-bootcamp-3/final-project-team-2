@@ -8,7 +8,7 @@
 
 **Input**: User description: "Jira KAN-49 (Epic KAN-43 — User Management). Playwright e2e: admin creates a user who then logs in. Acceptance: (1) admin logs into the console → creates a user with an initial password → logs out → the new user logs into the employee app successfully; (2) deactivated user cannot log in; (3) runs in CI as part of the required e2e check. Confluence Epic 3 spec and Figma time-report file provided as context."
 
-## User Scenarios & Testing *(mandatory)*
+## User Scenarios & Testing _(mandatory)_
 
 ### User Story 1 - Prove create-then-login (Priority: P1)
 
@@ -76,7 +76,7 @@ The two journeys above run as part of the project’s required automated end-to-
 - Employee app still on the login welcome screen after a “successful” create: the journey MUST fail (that is the bug this check exists to catch).
 - Restore after deactivate is not part of this check.
 
-## Requirements *(mandatory)*
+## Requirements _(mandatory)_
 
 ### Functional Requirements
 
@@ -102,7 +102,7 @@ The two journeys above run as part of the project’s required automated end-to-
 - **Demo admin**: The known administrator in the demo organization who can open Users and create or deactivate people.
 - **Created employee**: The new active employee produced by the create-then-login journey, identified by a unique email and an initial password that is never shown again in the directory.
 
-## Success Criteria *(mandatory)*
+## Success Criteria _(mandatory)_
 
 ### Measurable Outcomes
 

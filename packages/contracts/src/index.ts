@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { UserRole } from './enums.js';
 
 export * from './enums.js';
 
@@ -56,6 +57,22 @@ export const LoginSchema = z.object({
 });
 
 export type LoginFormData = z.infer<typeof LoginSchema>;
+
+export const AuthUser = z.object({
+  id: z.string().uuid(),
+  email: z.string().email(),
+  fullName: z.string().min(1),
+  role: UserRole,
+});
+
+export type AuthUser = z.infer<typeof AuthUser>;
+
+export const LoginResponse = z.object({
+  accessToken: z.string().min(1),
+  user: AuthUser,
+});
+
+export type LoginResponse = z.infer<typeof LoginResponse>;
 
 export type ValCode =
   'VAL-01' | 'VAL-02' | 'VAL-03' | 'VAL-04' | 'VAL-10' | 'VAL-11' | 'VAL-12' | 'VAL-13';
