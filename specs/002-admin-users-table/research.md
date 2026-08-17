@@ -9,6 +9,7 @@
 **Rationale**: Spec FR-010 / SC-006 and GENERAL_SPEC §5 / §7.2 already assign auth to the auth epic. Duplicating login here would violate FR-015 scope and FR-014’s “directory only” boundary.
 
 **Alternatives considered**:
+
 - Stub public list endpoint for early UI → rejected (fails admin-only AC).
 - Inline minimal JWT in this story → rejected (duplicates KAN-39, risks inconsistent session behavior).
 
@@ -19,6 +20,7 @@
 **Rationale**: Matches GENERAL_SPEC §6.10 / §8.3 and existing `applySoftDeleteMiddleware` behavior in `server/api/src/prisma/prisma.service.ts`. Aligns with FR-005 / FR-008 and clarification on inactive-vs-removed.
 
 **Alternatives considered**:
+
 - Separate “deactivated” table or flag only → rejected (`deleted_at` is the product convention).
 - Always return deleted rows and filter in the UI → rejected (leaks removed people; breaks default hide rule).
 
@@ -29,6 +31,7 @@
 **Rationale**: GENERAL_SPEC §6.4 / §6.8 already use camelCase in examples (`createdAt`, `isActive`). Contracts package is enums-only today; this feature is the first list consumer and must establish the pattern for later admin tables.
 
 **Alternatives considered**:
+
 - snake_case JSON matching Prisma → rejected (inconsistent with GENERAL_SPEC examples and typical Nest DTOs).
 - OpenAPI-only without Zod → rejected (GENERAL_SPEC requires Zod in `packages/contracts/`).
 

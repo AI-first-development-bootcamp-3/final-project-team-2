@@ -32,30 +32,30 @@ Deliver Jira KAN-45 (Epic KAN-43): an admin-only Users directory that lists peop
 
 ## Constitution Check
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+_GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
 Project `.specify/memory/constitution.md` is still a template (not ratified). Gates below are taken from **GENERAL_SPEC** + this feature’s FR-014 until a real constitution is adopted.
 
-| Gate | Status | Notes |
-|------|--------|-------|
-| Shared contracts in `packages/contracts/` for API + admin | PASS | List query + item + envelopes designed in Phase 1 `contracts/` |
-| Same-phase FE + BE (no FE-only or BE-only ship) | PASS | Plan and quickstart require both sides verifiable together |
-| Soft-delete + pagination conventions (§6.4, §6.7, §6.10, §8.3) | PASS | Documented in research + data-model |
-| Secrets never in list responses (§13.2) | PASS | DTO excludes `password_hash`, `token_version` |
-| Admin-only Users (§7.2, §11.2); employees denied | PASS | Requires JwtGuard + RolesGuard from KAN-39 |
-| Test-first / coverage discipline (§14) | PASS | Contract + integration + UI state tests in quickstart |
-| No unjustified new packages/services | PASS | Reuse Prisma User, Nest module layout, shadcn DataTable |
+| Gate                                                           | Status | Notes                                                          |
+| -------------------------------------------------------------- | ------ | -------------------------------------------------------------- |
+| Shared contracts in `packages/contracts/` for API + admin      | PASS   | List query + item + envelopes designed in Phase 1 `contracts/` |
+| Same-phase FE + BE (no FE-only or BE-only ship)                | PASS   | Plan and quickstart require both sides verifiable together     |
+| Soft-delete + pagination conventions (§6.4, §6.7, §6.10, §8.3) | PASS   | Documented in research + data-model                            |
+| Secrets never in list responses (§13.2)                        | PASS   | DTO excludes `password_hash`, `token_version`                  |
+| Admin-only Users (§7.2, §11.2); employees denied               | PASS   | Requires JwtGuard + RolesGuard from KAN-39                     |
+| Test-first / coverage discipline (§14)                         | PASS   | Contract + integration + UI state tests in quickstart          |
+| No unjustified new packages/services                           | PASS   | Reuse Prisma User, Nest module layout, shadcn DataTable        |
 
 **Gate result**: PASS — proceed to Phase 0 / Phase 1.
 
 ### Post-design re-check (after Phase 1)
 
-| Gate | Status | Notes |
-|------|--------|-------|
-| Shared contracts designed | PASS | `contracts/users-list.md` → `@abra/contracts` |
-| Same-phase validation path | PASS | `quickstart.md` requires contract + API + admin |
-| Soft-delete / pagination / secrets | PASS | Encoded in `research.md` + `data-model.md` |
-| No unjustified complexity | PASS | Complexity Tracking empty; reuses User model & monorepo layout |
+| Gate                               | Status | Notes                                                          |
+| ---------------------------------- | ------ | -------------------------------------------------------------- |
+| Shared contracts designed          | PASS   | `contracts/users-list.md` → `@abra/contracts`                  |
+| Same-phase validation path         | PASS   | `quickstart.md` requires contract + API + admin                |
+| Soft-delete / pagination / secrets | PASS   | Encoded in `research.md` + `data-model.md`                     |
+| No unjustified complexity          | PASS   | Complexity Tracking empty; reuses User model & monorepo layout |
 
 **Post-design gate result**: PASS.
 

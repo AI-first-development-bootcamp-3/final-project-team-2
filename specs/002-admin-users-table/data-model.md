@@ -10,18 +10,18 @@ This feature **reads** existing `User` rows. No Prisma schema changes. Directory
 
 ### User (existing — Prisma `User` / table `users`)
 
-| Field (DB) | Type | List exposure | Notes |
-|------------|------|---------------|--------|
-| `id` | UUID | Yes (`id`) | Row key |
-| `email` | VARCHAR(255) | Yes (`email`) | Partial unique among non-deleted |
-| `full_name` | VARCHAR(255) | Yes (`fullName`) | Default sort |
-| `password_hash` | VARCHAR(255) | **Never** | FR-011 |
-| `role` | `employee` \| `admin` | Yes (`role`) | `UserRole` enum |
-| `is_active` | Boolean | Yes (`isActive`) | Table “status” |
-| `token_version` | Int | **Never** | Session revocation internal |
-| `created_at` | DateTime | No (this feature) | Available later if needed |
-| `updated_at` | DateTime | No | |
-| `deleted_at` | DateTime? | No (control only) | Soft-delete marker; gated by include-deactivated |
+| Field (DB)      | Type                  | List exposure     | Notes                                            |
+| --------------- | --------------------- | ----------------- | ------------------------------------------------ |
+| `id`            | UUID                  | Yes (`id`)        | Row key                                          |
+| `email`         | VARCHAR(255)          | Yes (`email`)     | Partial unique among non-deleted                 |
+| `full_name`     | VARCHAR(255)          | Yes (`fullName`)  | Default sort                                     |
+| `password_hash` | VARCHAR(255)          | **Never**         | FR-011                                           |
+| `role`          | `employee` \| `admin` | Yes (`role`)      | `UserRole` enum                                  |
+| `is_active`     | Boolean               | Yes (`isActive`)  | Table “status”                                   |
+| `token_version` | Int                   | **Never**         | Session revocation internal                      |
+| `created_at`    | DateTime              | No (this feature) | Available later if needed                        |
+| `updated_at`    | DateTime              | No                |                                                  |
+| `deleted_at`    | DateTime?             | No (control only) | Soft-delete marker; gated by include-deactivated |
 
 **Relationships**: Task assignments, time entries, etc. are unused by the directory list.
 
@@ -29,25 +29,25 @@ This feature **reads** existing `User` rows. No Prisma schema changes. Directory
 
 Not stored. Composed per request:
 
-| Field | Meaning |
-|-------|---------|
-| `data[]` | Matching `UserListItem` rows for the page |
-| `meta.page` | Requested page (≥ 1) |
-| `meta.limit` | Page size (UI always 20; API max 100) |
+| Field        | Meaning                                                              |
+| ------------ | -------------------------------------------------------------------- |
+| `data[]`     | Matching `UserListItem` rows for the page                            |
+| `meta.page`  | Requested page (≥ 1)                                                 |
+| `meta.limit` | Page size (UI always 20; API max 100)                                |
 | `meta.total` | Total matches under current filters (including when `data` is empty) |
 
 ## Validation rules (list query)
 
-| Rule | Behavior |
-|------|----------|
-| `page` | Integer ≥ 1; default 1; invalid → 400 |
-| `limit` | Integer 1–100; default 20; UI always 20; out of range → 400 |
-| `q` | Optional string; trim; empty after trim → no text filter; case-insensitive partial match on `full_name` **or** `email` |
-| `role` | Optional `employee` \| `admin` |
-| `isActive` | Optional boolean (`true` / `false`) |
-| `includeDeleted` | Optional boolean; default `false`; when `true`, include rows with `deleted_at` set |
-| `sort` | Optional enum: `fullName` \| `email` \| `role` \| `isActive`; default `fullName` |
-| `order` | Optional `asc` \| `desc`; default `asc` |
+| Rule             | Behavior                                                                                                               |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `page`           | Integer ≥ 1; default 1; invalid → 400                                                                                  |
+| `limit`          | Integer 1–100; default 20; UI always 20; out of range → 400                                                            |
+| `q`              | Optional string; trim; empty after trim → no text filter; case-insensitive partial match on `full_name` **or** `email` |
+| `role`           | Optional `employee` \| `admin`                                                                                         |
+| `isActive`       | Optional boolean (`true` / `false`)                                                                                    |
+| `includeDeleted` | Optional boolean; default `false`; when `true`, include rows with `deleted_at` set                                     |
+| `sort`           | Optional enum: `fullName` \| `email` \| `role` \| `isActive`; default `fullName`                                       |
+| `order`          | Optional `asc` \| `desc`; default `asc`                                                                                |
 
 ## Filter semantics
 

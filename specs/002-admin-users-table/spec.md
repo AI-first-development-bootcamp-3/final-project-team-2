@@ -18,7 +18,7 @@
 - Q: If the admin’s sign-in expires while the Users table is open, what should they see next? → A: Send the admin to the sign-in screen
 - Q: Can the admin choose how many people appear per page on the Users screen, or is the page size always 20 there? → A: Users screen always shows 20 per page; sizes above 100 are rejected
 
-## User Scenarios & Testing *(mandatory)*
+## User Scenarios & Testing _(mandatory)_
 
 ### User Story 1 - Browse the organization directory (Priority: P1)
 
@@ -104,7 +104,7 @@ The Users screen must not look broken while data is loading, when there are no r
 - Missing optional display data: all required directory fields exist on User today; every row can show full name, email, role, and status.
 - Password material and session-revocation internals are never shown in the table.
 
-## Requirements *(mandatory)*
+## Requirements _(mandatory)_
 
 ### Functional Requirements
 
@@ -131,7 +131,7 @@ The Users screen must not look broken while data is loading, when there are no r
 - **User**: A person in the organization with a full name, email, role (employee or admin), active/inactive flag, and optional deactivated/removed marker. The directory lists Users; it does not create or change them.
 - **User directory page**: A page of matching Users plus paging metadata (page, page size, total matches) for the current search and filters.
 
-## Success Criteria *(mandatory)*
+## Success Criteria _(mandatory)_
 
 ### Measurable Outcomes
 

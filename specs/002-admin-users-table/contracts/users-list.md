@@ -7,16 +7,16 @@
 
 ## Query parameters
 
-| Param | Type | Required | Default | Description |
-|-------|------|----------|---------|-------------|
-| `page` | integer | no | `1` | 1-based page index |
-| `limit` | integer | no | `20` | Page size; max `100` |
-| `q` | string | no | — | Trimmed; case-insensitive partial match on full name or email |
-| `role` | `employee` \| `admin` | no | — | Exact role filter |
-| `isActive` | boolean | no | — | Filter by active flag |
-| `includeDeleted` | boolean | no | `false` | When true, include soft-deleted users |
-| `sort` | `fullName` \| `email` \| `role` \| `isActive` | no | `fullName` | Sort field |
-| `order` | `asc` \| `desc` | no | `asc` | Sort direction |
+| Param            | Type                                          | Required | Default    | Description                                                   |
+| ---------------- | --------------------------------------------- | -------- | ---------- | ------------------------------------------------------------- |
+| `page`           | integer                                       | no       | `1`        | 1-based page index                                            |
+| `limit`          | integer                                       | no       | `20`       | Page size; max `100`                                          |
+| `q`              | string                                        | no       | —          | Trimmed; case-insensitive partial match on full name or email |
+| `role`           | `employee` \| `admin`                         | no       | —          | Exact role filter                                             |
+| `isActive`       | boolean                                       | no       | —          | Filter by active flag                                         |
+| `includeDeleted` | boolean                                       | no       | `false`    | When true, include soft-deleted users                         |
+| `sort`           | `fullName` \| `email` \| `role` \| `isActive` | no       | `fullName` | Sort field                                                    |
+| `order`          | `asc` \| `desc`                               | no       | `asc`      | Sort direction                                                |
 
 ### Query validation failures → `400`
 
@@ -45,13 +45,13 @@ Use standard error envelope (§6.5) with `details[].field` / `details[].rule` wh
 
 ### `UserListItem` fields
 
-| Field | Type | Notes |
-|-------|------|--------|
-| `id` | uuid string | |
-| `fullName` | string | From `full_name` |
-| `email` | string | |
-| `role` | `employee` \| `admin` | |
-| `isActive` | boolean | UI status label: active / inactive |
+| Field      | Type                  | Notes                              |
+| ---------- | --------------------- | ---------------------------------- |
+| `id`       | uuid string           |                                    |
+| `fullName` | string                | From `full_name`                   |
+| `email`    | string                |                                    |
+| `role`     | `employee` \| `admin` |                                    |
+| `isActive` | boolean               | UI status label: active / inactive |
 
 **Forbidden fields**: `passwordHash`, `password_hash`, `tokenVersion`, `token_version`, `deletedAt` (not exposed; includeDeleted only affects membership).
 
@@ -61,11 +61,11 @@ If `page` is beyond the last page but otherwise valid: `200` with `data: []` and
 
 ## Error responses
 
-| Status | When |
-|--------|------|
-| `401` | Missing/invalid token |
-| `403` | Authenticated non-admin |
-| `400` | Invalid query (page/limit/sort/order/enums) |
+| Status | When                                        |
+| ------ | ------------------------------------------- |
+| `401`  | Missing/invalid token                       |
+| `403`  | Authenticated non-admin                     |
+| `400`  | Invalid query (page/limit/sort/order/enums) |
 
 Error body shape (GENERAL_SPEC §6.5):
 

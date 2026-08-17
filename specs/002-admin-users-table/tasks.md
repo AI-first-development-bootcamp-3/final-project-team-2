@@ -1,5 +1,5 @@
 ---
-description: "Task list for Admin Users Table (KAN-45)"
+description: 'Task list for Admin Users Table (KAN-45)'
 ---
 
 # Tasks: Admin Users Table
@@ -28,10 +28,10 @@ description: "Task list for Admin Users Table (KAN-45)"
 
 **Purpose**: Wire workspace dependencies and scaffold directories for the users list feature
 
-- [X] T001 Add `@abra/contracts` workspace dependency to `server/api/package.json` and `apps/admin/package.json`
-- [X] T002 [P] Create contracts source folders `packages/contracts/src/common/` and `packages/contracts/src/users/`
-- [X] T003 [P] Create Nest users module folder `server/api/src/modules/users/`
-- [X] T004 [P] Create admin folders `apps/admin/src/components/ui/`, `apps/admin/src/features/users/`, and `apps/admin/src/lib/api/`
+- [x] T001 Add `@abra/contracts` workspace dependency to `server/api/package.json` and `apps/admin/package.json`
+- [x] T002 [P] Create contracts source folders `packages/contracts/src/common/` and `packages/contracts/src/users/`
+- [x] T003 [P] Create Nest users module folder `server/api/src/modules/users/`
+- [x] T004 [P] Create admin folders `apps/admin/src/components/ui/`, `apps/admin/src/features/users/`, and `apps/admin/src/lib/api/`
 
 ---
 
@@ -41,14 +41,14 @@ description: "Task list for Admin Users Table (KAN-45)"
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [X] T005 Implement shared list `meta` and API error envelope Zod schemas in `packages/contracts/src/common/list-envelope.ts` and `packages/contracts/src/common/api-error.ts` per `specs/002-admin-users-table/contracts/users-list.md`
-- [X] T006 [P] Implement `UsersListQuerySchema` and `UserListItemSchema` in `packages/contracts/src/users/list.ts` (page/limit/q/role/isActive/includeDeleted/sort/order; camelCase; no secrets)
-- [X] T007 Export new contracts from `packages/contracts/src/index.ts` and ensure `pnpm --filter @abra/contracts build` succeeds
-- [X] T008 [P] Confirm KAN-39 JwtGuard/RolesGuard (or equivalent) exist under `server/api/src/common/`; if missing, document blocker and stop until auth is available before story endpoints
-- [X] T009 Register empty `UsersModule` in `server/api/src/modules/users/users.module.ts` and import it from `server/api/src/app.module.ts`
-- [X] T010 Add admin routing (react-router) with `/admin/users` placeholder and Hebrew RTL shell wiring in `apps/admin/src/App.tsx` (and route module under `apps/admin/src/` as needed)
-- [X] T011 [P] Implement authenticated API client with 401 → admin sign-in redirect in `apps/admin/src/lib/api/client.ts`
-- [X] T012 Implement shared config-driven `DataTable` (columns, pagination controls, sort headers) in `apps/admin/src/components/ui/data-table.tsx` per GENERAL_SPEC §10.2
+- [x] T005 Implement shared list `meta` and API error envelope Zod schemas in `packages/contracts/src/common/list-envelope.ts` and `packages/contracts/src/common/api-error.ts` per `specs/002-admin-users-table/contracts/users-list.md`
+- [x] T006 [P] Implement `UsersListQuerySchema` and `UserListItemSchema` in `packages/contracts/src/users/list.ts` (page/limit/q/role/isActive/includeDeleted/sort/order; camelCase; no secrets)
+- [x] T007 Export new contracts from `packages/contracts/src/index.ts` and ensure `pnpm --filter @abra/contracts build` succeeds
+- [x] T008 [P] Confirm KAN-39 JwtGuard/RolesGuard (or equivalent) exist under `server/api/src/common/`; if missing, document blocker and stop until auth is available before story endpoints
+- [x] T009 Register empty `UsersModule` in `server/api/src/modules/users/users.module.ts` and import it from `server/api/src/app.module.ts`
+- [x] T010 Add admin routing (react-router) with `/admin/users` placeholder and Hebrew RTL shell wiring in `apps/admin/src/App.tsx` (and route module under `apps/admin/src/` as needed)
+- [x] T011 [P] Implement authenticated API client with 401 → admin sign-in redirect in `apps/admin/src/lib/api/client.ts`
+- [x] T012 Implement shared config-driven `DataTable` (columns, pagination controls, sort headers) in `apps/admin/src/components/ui/data-table.tsx` per GENERAL_SPEC §10.2
 
 **Checkpoint**: Foundation ready — contracts build, users module registered, admin can route to `/admin/users` and call API with auth redirect
 
@@ -64,18 +64,18 @@ description: "Task list for Admin Users Table (KAN-45)"
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [X] T013 [P] [US1] Add contract tests for `UsersListQuerySchema` / `UserListItemSchema` / list success envelope in `packages/contracts/src/users/list.spec.ts`
-- [X] T014 [P] [US1] Add API integration tests for `GET /api/v1/users` happy path, 401, 403, default page size 20, past-last page empty+total, limit>100 → 400, secrets absent in `server/api/src/modules/users/users.controller.spec.ts` (or co-located integration spec)
-- [X] T015 [P] [US1] Add admin RTL test for Users table columns and default browse rendering in `apps/admin/src/features/users/users-page.spec.tsx`
+- [x] T013 [P] [US1] Add contract tests for `UsersListQuerySchema` / `UserListItemSchema` / list success envelope in `packages/contracts/src/users/list.spec.ts`
+- [x] T014 [P] [US1] Add API integration tests for `GET /api/v1/users` happy path, 401, 403, default page size 20, past-last page empty+total, limit>100 → 400, secrets absent in `server/api/src/modules/users/users.controller.spec.ts` (or co-located integration spec)
+- [x] T015 [P] [US1] Add admin RTL test for Users table columns and default browse rendering in `apps/admin/src/features/users/users-page.spec.tsx`
 
 ### Implementation for User Story 1
 
-- [X] T016 [US1] Implement `UsersService.list` in `server/api/src/modules/users/users.service.ts` (Prisma select without `password_hash`/`token_version`; default exclude soft-deleted; offset pagination; map `full_name` → `fullName`; default sort `fullName` asc; past-last page returns `[]` + real total)
-- [X] T017 [US1] Implement `GET /api/v1/users` in `server/api/src/modules/users/users.controller.ts` with admin-only guards, Zod query validation, and `{ data, meta }` response
-- [X] T018 [US1] Implement Users page table wired to list API (fixed `limit=20`, no page-size control, Hebrew labels for role/status) in `apps/admin/src/features/users/users-page.tsx`
-- [X] T019 [US1] Define DataTable column config (fullName, email, role, isActive→status) and page navigation in `apps/admin/src/features/users/users-columns.tsx`
-- [X] T020 [US1] Wire column-header sort (`sort`/`order` query; reset to page 1 on sort change) in `apps/admin/src/features/users/users-page.tsx` and ensure API accepts `fullName|email|role|isActive`
-- [X] T021 [US1] Ensure employee and unauthenticated access are rejected in API guards and admin route protection for `/admin/users`
+- [x] T016 [US1] Implement `UsersService.list` in `server/api/src/modules/users/users.service.ts` (Prisma select without `password_hash`/`token_version`; default exclude soft-deleted; offset pagination; map `full_name` → `fullName`; default sort `fullName` asc; past-last page returns `[]` + real total)
+- [x] T017 [US1] Implement `GET /api/v1/users` in `server/api/src/modules/users/users.controller.ts` with admin-only guards, Zod query validation, and `{ data, meta }` response
+- [x] T018 [US1] Implement Users page table wired to list API (fixed `limit=20`, no page-size control, Hebrew labels for role/status) in `apps/admin/src/features/users/users-page.tsx`
+- [x] T019 [US1] Define DataTable column config (fullName, email, role, isActive→status) and page navigation in `apps/admin/src/features/users/users-columns.tsx`
+- [x] T020 [US1] Wire column-header sort (`sort`/`order` query; reset to page 1 on sort change) in `apps/admin/src/features/users/users-page.tsx` and ensure API accepts `fullName|email|role|isActive`
+- [x] T021 [US1] Ensure employee and unauthenticated access are rejected in API guards and admin route protection for `/admin/users`
 
 **Checkpoint**: User Story 1 fully functional and independently testable (MVP directory)
 
@@ -89,14 +89,14 @@ description: "Task list for Admin Users Table (KAN-45)"
 
 ### Tests for User Story 2
 
-- [X] T022 [P] [US2] Extend API integration tests for `q`, `role`, `isActive`, AND combination, whitespace-only `q`, and page reset behavior in `server/api/src/modules/users/users.controller.spec.ts`
-- [X] T023 [P] [US2] Add admin RTL tests for search/filter controls and page reset in `apps/admin/src/features/users/users-page.spec.tsx`
+- [x] T022 [P] [US2] Extend API integration tests for `q`, `role`, `isActive`, AND combination, whitespace-only `q`, and page reset behavior in `server/api/src/modules/users/users.controller.spec.ts`
+- [x] T023 [P] [US2] Add admin RTL tests for search/filter controls and page reset in `apps/admin/src/features/users/users-page.spec.tsx`
 
 ### Implementation for User Story 2
 
-- [X] T024 [US2] Extend `UsersService.list` in `server/api/src/modules/users/users.service.ts` to apply trimmed `q` (OR on full_name/email), `role`, and `isActive` filters
-- [X] T025 [US2] Add search input and role/status filter controls on `apps/admin/src/features/users/users-page.tsx` (or `apps/admin/src/features/users/users-filters.tsx`) that pass query params and reset `page` to 1 on change
-- [X] T026 [US2] Ensure whitespace-only search is trimmed client-side and accepted as empty `q` server-side per FR-006
+- [x] T024 [US2] Extend `UsersService.list` in `server/api/src/modules/users/users.service.ts` to apply trimmed `q` (OR on full_name/email), `role`, and `isActive` filters
+- [x] T025 [US2] Add search input and role/status filter controls on `apps/admin/src/features/users/users-page.tsx` (or `apps/admin/src/features/users/users-filters.tsx`) that pass query params and reset `page` to 1 on change
+- [x] T026 [US2] Ensure whitespace-only search is trimmed client-side and accepted as empty `q` server-side per FR-006
 
 **Checkpoint**: User Stories 1 and 2 both work independently
 
@@ -110,13 +110,13 @@ description: "Task list for Admin Users Table (KAN-45)"
 
 ### Tests for User Story 4
 
-- [X] T027 [P] [US4] Add admin RTL tests for loading, empty, Hebrew error, and 401→sign-in redirect in `apps/admin/src/features/users/users-page.spec.tsx`
+- [x] T027 [P] [US4] Add admin RTL tests for loading, empty, Hebrew error, and 401→sign-in redirect in `apps/admin/src/features/users/users-page.spec.tsx`
 
 ### Implementation for User Story 4
 
-- [X] T028 [US4] Add loading state UI while directory request is in flight in `apps/admin/src/features/users/users-page.tsx` (do not show stale table as final)
-- [X] T029 [US4] Add empty state when `data` is empty and request succeeded in `apps/admin/src/features/users/users-page.tsx`
-- [X] T030 [US4] Surface non-auth failures as Hebrew error messages in `apps/admin/src/features/users/users-page.tsx`; keep 401 handling via `apps/admin/src/lib/api/client.ts` redirect to sign-in
+- [x] T028 [US4] Add loading state UI while directory request is in flight in `apps/admin/src/features/users/users-page.tsx` (do not show stale table as final)
+- [x] T029 [US4] Add empty state when `data` is empty and request succeeded in `apps/admin/src/features/users/users-page.tsx`
+- [x] T030 [US4] Surface non-auth failures as Hebrew error messages in `apps/admin/src/features/users/users-page.tsx`; keep 401 handling via `apps/admin/src/lib/api/client.ts` redirect to sign-in
 
 **Checkpoint**: Browse/search flows show correct feedback states; expired session goes to sign-in
 
@@ -130,14 +130,14 @@ description: "Task list for Admin Users Table (KAN-45)"
 
 ### Tests for User Story 3
 
-- [X] T031 [P] [US3] Add API integration tests for `includeDeleted` on/off, status inactive when included, and includeDeleted+isActive=true in `server/api/src/modules/users/users.controller.spec.ts`
-- [X] T032 [P] [US3] Add admin RTL test for include-deactivated toggle in `apps/admin/src/features/users/users-page.spec.tsx`
+- [x] T031 [P] [US3] Add API integration tests for `includeDeleted` on/off, status inactive when included, and includeDeleted+isActive=true in `server/api/src/modules/users/users.controller.spec.ts`
+- [x] T032 [P] [US3] Add admin RTL test for include-deactivated toggle in `apps/admin/src/features/users/users-page.spec.tsx`
 
 ### Implementation for User Story 3
 
-- [X] T033 [US3] Extend `UsersService.list` in `server/api/src/modules/users/users.service.ts` to honor `includeDeleted` via explicit `deleted_at` predicate (bypass soft-delete middleware default) per research.md
-- [X] T034 [US3] Add include-deactivated control on `apps/admin/src/features/users/users-page.tsx` (or filters component) passing `includeDeleted=true` and resetting to page 1
-- [X] T035 [US3] Confirm soft-deleted rows display status inactive in column mapping in `apps/admin/src/features/users/users-columns.tsx`
+- [x] T033 [US3] Extend `UsersService.list` in `server/api/src/modules/users/users.service.ts` to honor `includeDeleted` via explicit `deleted_at` predicate (bypass soft-delete middleware default) per research.md
+- [x] T034 [US3] Add include-deactivated control on `apps/admin/src/features/users/users-page.tsx` (or filters component) passing `includeDeleted=true` and resetting to page 1
+- [x] T035 [US3] Confirm soft-deleted rows display status inactive in column mapping in `apps/admin/src/features/users/users-columns.tsx`
 
 **Checkpoint**: All four user stories independently functional
 
@@ -147,11 +147,11 @@ description: "Task list for Admin Users Table (KAN-45)"
 
 **Purpose**: Same-phase verification and cleanup across stories
 
-- [X] T036 [P] Run and fix failures for `pnpm --filter @abra/contracts test`, `pnpm --filter @abra/api test`, and `pnpm --filter @abra/admin test`
-- [X] T037 Verify list responses never include `password_hash`/`token_version` across API tests in `server/api/src/modules/users/`
-- [X] T038 Confirm out-of-scope UI absent (no create/edit/reset/deactivate actions) on `apps/admin/src/features/users/users-page.tsx`
-- [X] T039 Execute manual scenarios in `specs/002-admin-users-table/quickstart.md` against seeded DB
-- [X] T040 [P] Run `pnpm test:coverage` and address coverage gaps to meet ≥70% gate for touched packages
+- [x] T036 [P] Run and fix failures for `pnpm --filter @abra/contracts test`, `pnpm --filter @abra/api test`, and `pnpm --filter @abra/admin test`
+- [x] T037 Verify list responses never include `password_hash`/`token_version` across API tests in `server/api/src/modules/users/`
+- [x] T038 Confirm out-of-scope UI absent (no create/edit/reset/deactivate actions) on `apps/admin/src/features/users/users-page.tsx`
+- [x] T039 Execute manual scenarios in `specs/002-admin-users-table/quickstart.md` against seeded DB
+- [x] T040 [P] Run `pnpm test:coverage` and address coverage gaps to meet ≥70% gate for touched packages
 
 ---
 
