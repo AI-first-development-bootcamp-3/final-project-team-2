@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -75,5 +76,18 @@ export class UsersController {
       });
     }
     return this.usersService.resetPassword(id, parsed.data);
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Deactivate user & revoke active sessions instantly (admin only)' })
+  async deactivateUser(@Param('id') id: string) {
+    return this.usersService.deactivateUser(id);
+  }
+
+  @Post(':id/restore')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Reactivate soft-deleted user (admin only)' })
+  async restoreUser(@Param('id') id: string) {
+    return this.usersService.restoreUser(id);
   }
 }

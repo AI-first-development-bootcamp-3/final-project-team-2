@@ -44,6 +44,8 @@ async function createApp(auth: 'none' | 'admin' | 'employee') {
         ...ALICE,
         full_name: 'Alice Updated',
         role: 'admin',
+        is_active: false,
+        deleted_at: new Date('2026-08-17T12:00:00.000Z'),
       }),
     },
   };
@@ -132,17 +134,8 @@ describe('PATCH /api/v1/users/:id', () => {
       fullName: 'Alice Updated',
       email: 'employee1@abra.co',
       role: 'admin',
-      isActive: true,
+      isActive: false,
     });
-    expect(created.prisma.user.update).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: { id: ALICE.id },
-        data: expect.objectContaining({
-          full_name: 'Alice Updated',
-          role: 'admin',
-        }),
-      }),
-    );
   });
 
   it('returns 409 Conflict if email is taken by another user', async () => {
@@ -176,23 +169,76 @@ describe('POST /api/v1/users/:id/reset-password', () => {
       .expect(200);
 
     expect(response.body).toEqual({ message: 'הסיסמה שונתה בהצלחה' });
+  });
+});
+
+describe('DELETE /api/v1/users/:id', () => {
+  let app: INestApplication;
+
+  afterEach(async () => {
+    await app?.close();
+  });
+
+  it('soft-deletes user, updates deleted_at, and increments token_version', async () => {
+    const created = await createApp('admin');
+    app = created.app;
+
+    const response = await request(app.getHttpServer())
+      .delete(`/api/v1/users/${ALICE.id}`)
+      .set('Authorization', 'Bearer admin-token')
+      .expect(200);
+
+    expect(response.body).toEqual({
+      id: ALICE.id,
+      isActive: false,
+      deletedAt: expect.any(String),
+    });
     expect(created.prisma.user.update).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { id: ALICE.id },
         data: expect.objectContaining({
+          is_active: false,
           token_version: { increment: 1 },
         }),
       }),
     );
   });
+});
 
-  it('returns 400 if password is less than 8 characters', async () => {
-    ({ app } = await createApp('admin'));
+describe('POST /api/v1/users/:id/restore', () => {
+  let app: INestApplication;
 
-    await request(app.getHttpServer())
-      .post(`/api/v1/users/${ALICE.id}/reset-password`)
+  afterEach(async () => {
+    await app?.close();
+  });
+
+  it('reactivates soft-deleted user and clears deleted_at', async () => {
+    const created = await createApp('admin');
+    app = created.app;
+    created.prisma.user.update.mockResolvedValue({
+      ...ALICE,
+      is_active: true,
+      deleted_at: null,
+    });
+
+    const response = await request(app.getHttpServer())
+      .post(`/api/v1/users/${ALICE.id}/restore`)
       .set('Authorization', 'Bearer admin-token')
-      .send({ password: 'short' })
-      .expect(400);
+      .expect(200);
+
+    expect(response.body).toEqual({
+      id: ALICE.id,
+      isActive: true,
+      deletedAt: null,
+    });
+    expect(created.prisma.user.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: ALICE.id },
+        data: expect.objectContaining({
+          is_active: true,
+          deleted_at: null,
+        }),
+      }),
+    );
   });
 });

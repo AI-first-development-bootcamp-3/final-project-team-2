@@ -13,6 +13,8 @@ export function statusLabel(user: UserListItem): string {
 export function createUsersColumns(params: {
   onEdit: (user: UserListItem) => void;
   onResetPassword: (user: UserListItem) => void;
+  onDeactivate: (user: UserListItem) => void;
+  onRestore: (user: UserListItem) => void;
 }): DataTableColumn<UserListItem>[] {
   return [
     {
@@ -59,6 +61,23 @@ export function createUsersColumns(params: {
           >
             איפוס סיסמה
           </button>
+          {row.isActive ? (
+            <button
+              type="button"
+              onClick={() => params.onDeactivate(row)}
+              className="rounded border border-red-300 bg-red-50 px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-100"
+            >
+              השבת
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => params.onRestore(row)}
+              className="rounded border border-green-300 bg-green-50 px-2 py-1 text-xs font-medium text-green-700 hover:bg-green-100"
+            >
+              הפעל מחדש
+            </button>
+          )}
         </div>
       ),
     },
@@ -68,4 +87,6 @@ export function createUsersColumns(params: {
 export const usersColumns: DataTableColumn<UserListItem>[] = createUsersColumns({
   onEdit: () => {},
   onResetPassword: () => {},
+  onDeactivate: () => {},
+  onRestore: () => {},
 });

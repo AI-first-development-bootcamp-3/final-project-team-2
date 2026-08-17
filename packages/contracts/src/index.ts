@@ -35,6 +35,9 @@ export type { UsersListQuery, UserListItem, UsersListSuccess } from './users/lis
 export { UpdateUserSchema, ResetPasswordSchema } from './users/update.js';
 export type { UpdateUserPayload, ResetPasswordPayload } from './users/update.js';
 
+export { DeactivateUserResponseSchema, RestoreUserResponseSchema } from './users/deactivate.js';
+export type { DeactivateUserResponse, RestoreUserResponse } from './users/deactivate.js';
+
 export const LoginSchema = z.object({
   email: z.string().min(1, { message: 'VAL-01' }).email({ message: 'VAL-02' }),
   password: z.string().min(1, { message: 'VAL-03' }).min(8, { message: 'VAL-04' }),
