@@ -16,10 +16,10 @@ GitHub Actions CD workflow (`.github/workflows/cd.yml`) deploys all three projec
 
 Three projects, same GitHub repo, different root directories (set via Vercel API):
 
-| Project            | Root Directory | Framework | Build                                  |
-| ------------------ | -------------- | --------- | -------------------------------------- |
-| `timesheet-mobile` | `apps/mobile`  | Vite      | auto-detected by Vercel                |
-| `timesheet-admin`  | `apps/admin`   | Vite      | auto-detected by Vercel                |
+| Project            | Root Directory | Framework | Build                                                                                        |
+| ------------------ | -------------- | --------- | -------------------------------------------------------------------------------------------- |
+| `timesheet-mobile` | `apps/mobile`  | Vite      | auto-detected by Vercel                                                                      |
+| `timesheet-admin`  | `apps/admin`   | Vite      | auto-detected by Vercel                                                                      |
 | `timesheet-api`    | `server/api`   | Node.js   | `vercel-build` script runs `nest build`, `api/index.js` auto-detected as serverless function |
 
 ## Neon Postgres (Vercel Marketplace)
@@ -50,14 +50,14 @@ Three projects, same GitHub repo, different root directories (set via Vercel API
 
 ### GitHub Actions secrets
 
-| Secret                       | Purpose                                            |
-| ---------------------------- | -------------------------------------------------- |
-| `VERCEL_TOKEN`               | Auth for `vercel deploy` in CD workflow             |
-| `VERCEL_ORG_ID`              | Vercel team/org identifier                          |
-| `VERCEL_MOBILE_PROJECT_ID`   | Project ID for timesheet-mobile                     |
-| `VERCEL_ADMIN_PROJECT_ID`    | Project ID for timesheet-admin                      |
-| `VERCEL_API_PROJECT_ID`      | Project ID for timesheet-api                        |
-| `DATABASE_URL`               | Unpooled Neon string for `prisma migrate deploy`    |
+| Secret                     | Purpose                                          |
+| -------------------------- | ------------------------------------------------ |
+| `VERCEL_TOKEN`             | Auth for `vercel deploy` in CD workflow          |
+| `VERCEL_ORG_ID`            | Vercel team/org identifier                       |
+| `VERCEL_MOBILE_PROJECT_ID` | Project ID for timesheet-mobile                  |
+| `VERCEL_ADMIN_PROJECT_ID`  | Project ID for timesheet-admin                   |
+| `VERCEL_API_PROJECT_ID`    | Project ID for timesheet-api                     |
+| `DATABASE_URL`             | Unpooled Neon string for `prisma migrate deploy` |
 
 ## Migration Strategy
 
