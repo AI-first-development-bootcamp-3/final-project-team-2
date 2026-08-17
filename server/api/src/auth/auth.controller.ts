@@ -10,12 +10,14 @@ import {
 import { AuthService } from './auth.service';
 import { REFRESH_COOKIE, refreshCookieOptions } from './auth.constants';
 import { ZodValidationPipe } from './zod-validation.pipe';
+import { Public } from './auth.decorators';
 
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @Public()
   @Post('login')
   @HttpCode(200)
   @ApiOperation({
@@ -66,6 +68,7 @@ export class AuthController {
     return result.response;
   }
 
+  @Public()
   @Post('refresh')
   @HttpCode(200)
   @ApiCookieAuth(REFRESH_COOKIE)
