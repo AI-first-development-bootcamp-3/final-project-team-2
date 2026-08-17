@@ -1,6 +1,14 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import type { UserListItem, UsersListQuery } from '@abra/contracts';
+import * as bcrypt from 'bcrypt';
+import {
+  VAL_MESSAGES,
+  type CreateUserBody,
+  type ResetPasswordPayload,
+  type UpdateUserPayload,
+  type UserListItem,
+  type UsersListQuery,
+} from '@abra/contracts';
 import { PrismaService } from '../../prisma/prisma.service';
 
 const SORT_COLUMN: Record<UsersListQuery['sort'], keyof Prisma.UserOrderByWithRelationInput> = {
@@ -17,6 +25,24 @@ const USER_LIST_SELECT = {
   role: true,
   is_active: true,
 } as const;
+
+const BCRYPT_SALT_ROUNDS = 10;
+
+function toListItem(row: {
+  id: string;
+  full_name: string;
+  email: string;
+  role: UserListItem['role'];
+  is_active: boolean;
+}): UserListItem {
+  return {
+    id: row.id,
+    fullName: row.full_name,
+    email: row.email,
+    role: row.role,
+    isActive: row.is_active,
+  };
+}
 
 @Injectable()
 export class UsersService {
@@ -42,19 +68,117 @@ export class UsersService {
     ]);
 
     return {
-      data: rows.map((row) => ({
-        id: row.id,
-        fullName: row.full_name,
-        email: row.email,
-        role: row.role,
-        isActive: row.is_active,
-      })),
+      data: rows.map(toListItem),
       meta: {
         page: query.page,
         limit: query.limit,
         total,
       },
     };
+  }
+
+  async create(input: CreateUserBody): Promise<UserListItem> {
+    const fullName = input.fullName.trim();
+    const email = input.email.trim().toLowerCase();
+
+    const existing = await this.prisma.user.findFirst({
+      where: { email: { equals: email, mode: 'insensitive' } },
+    });
+    if (existing) {
+      this.throwEmailConflict();
+    }
+
+    const passwordHash = await bcrypt.hash(input.password, BCRYPT_SALT_ROUNDS);
+
+    try {
+      const row = await this.prisma.user.create({
+        data: {
+          full_name: fullName,
+          email,
+          password_hash: passwordHash,
+          role: input.role,
+        },
+        select: USER_LIST_SELECT,
+      });
+      return toListItem(row);
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        this.throwEmailConflict();
+      }
+      throw error;
+    }
+  }
+
+  private throwEmailConflict(): never {
+    throw new ConflictException({
+      statusCode: 409,
+      message: 'Conflict',
+      error: 'Conflict',
+      details: [
+        {
+          field: 'email',
+          rule: 'VAL-11',
+          message: VAL_MESSAGES['VAL-11'],
+        },
+      ],
+    });
+  }
+
+  async updateUser(id: string, payload: UpdateUserPayload): Promise<UserListItem> {
+    const existing = await this.prisma.user.findUnique({ where: { id } });
+    if (!existing || existing.deleted_at) {
+      throw new NotFoundException('משתמש לא נמצא');
+    }
+
+    if (payload.email && payload.email.toLowerCase() !== existing.email.toLowerCase()) {
+      const emailConflict = await this.prisma.user.findFirst({
+        where: {
+          email: { equals: payload.email, mode: 'insensitive' },
+          id: { not: id },
+          deleted_at: null,
+        },
+      });
+      if (emailConflict) {
+        throw new ConflictException('כתובת האימייל כבר קיימת במערכת');
+      }
+    }
+
+    const updated = await this.prisma.user.update({
+      where: { id },
+      data: {
+        ...(payload.fullName ? { full_name: payload.fullName } : {}),
+        ...(payload.email ? { email: payload.email } : {}),
+        ...(payload.role ? { role: payload.role } : {}),
+      },
+      select: USER_LIST_SELECT,
+    });
+
+    return {
+      id: updated.id,
+      fullName: updated.full_name,
+      email: updated.email,
+      role: updated.role,
+      isActive: updated.is_active,
+    };
+  }
+
+  async resetPassword(id: string, payload: ResetPasswordPayload): Promise<{ message: string }> {
+    const existing = await this.prisma.user.findUnique({ where: { id } });
+    if (!existing || existing.deleted_at) {
+      throw new NotFoundException('משתמש לא נמצא');
+    }
+
+    const hashedPassword = await bcrypt.hash(payload.password, 10);
+
+    await this.prisma.user.update({
+      where: { id },
+      data: {
+        password_hash: hashedPassword,
+        token_version: { increment: 1 },
+      },
+    });
+
+    return { message: 'הסיסמה שונתה בהצלחה' };
   }
 
   private buildWhere(query: UsersListQuery): Prisma.UserWhereInput {
