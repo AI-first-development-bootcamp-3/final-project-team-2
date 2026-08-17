@@ -62,7 +62,7 @@ describe('Admin route protection (KAN-70 3.3)', () => {
       </MemoryRouter>,
     );
 
-    expect(await screen.findByText(/ברוכים הבאים למערכת הניהול של אברא/)).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /ברוכים הבאים למערכת/ })).toBeInTheDocument();
     expect(screen.queryByText('Abra Timesheet - Admin Console')).not.toBeInTheDocument();
     await waitFor(() => {
       expect(getAuthSession()).toBeNull();
@@ -78,7 +78,7 @@ describe('Admin route protection (KAN-70 3.3)', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByText(/ברוכים הבאים למערכת הניהול של אברא/)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /ברוכים הבאים למערכת/ })).toBeInTheDocument();
     expect(screen.queryByText('Abra Timesheet - Admin Console')).not.toBeInTheDocument();
   });
 
@@ -89,6 +89,6 @@ describe('Admin route protection (KAN-70 3.3)', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByText(/ברוכים הבאים למערכת הניהול של אברא/)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /ברוכים הבאים למערכת/ })).toBeInTheDocument();
   });
 });
