@@ -31,3 +31,20 @@ export {
   UsersListSuccessSchema,
 } from './users/list.js';
 export type { UsersListQuery, UserListItem, UsersListSuccess } from './users/list.js';
+
+export const LoginSchema = z.object({
+  email: z.string().min(1, { message: 'VAL-01' }).email({ message: 'VAL-02' }),
+  password: z.string().min(1, { message: 'VAL-03' }).min(8, { message: 'VAL-04' }),
+  rememberMe: z.boolean().optional().default(false),
+});
+
+export type LoginFormData = z.infer<typeof LoginSchema>;
+
+export type ValCode = 'VAL-01' | 'VAL-02' | 'VAL-03' | 'VAL-04';
+
+export const VAL_MESSAGES: Record<ValCode, string> = {
+  'VAL-01': 'כתובת האימייל היא שדה חובה',
+  'VAL-02': 'כתובת האימייל שהוזנה אינה תקינה',
+  'VAL-03': 'הסיסמה היא שדה חובה',
+  'VAL-04': 'הסיסמה חייבת להכיל 8 תווים לפחות',
+};
