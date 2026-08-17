@@ -39,9 +39,9 @@ Working agreements (apply to every task below):
 
 ## 5. KAN-42 — Playwright e2e login flow (PR `feat/kan-42-login-e2e`)
 
-- [ ] 5.1 Red — new `e2e/specs/login.spec.ts`: seeded employee + valid password lands on daily-report home (assert URL/heading); green — wire seeded credentials, stable selectors/test-ids coordinated with the KAN-38 UI. Commit.
-- [ ] 5.2 Red — wrong password shows the Hebrew error and stays on the login screen; green. Commit.
-- [ ] 5.3 CI: ensure the spec runs in the required e2e check (update the workflow/seed if needed) and passes against the compose stack. Commit, open PR for KAN-42, move Jira to In Review.
+- [x] 5.1 Red — new `e2e/specs/login.spec.ts`: seeded employee + valid password lands on daily-report home (assert URL/heading); green — wire seeded credentials, stable selectors/test-ids coordinated with the KAN-38 UI. Commit.
+- [x] 5.2 Red — wrong password shows the Hebrew error and stays on the login screen; green. Commit.
+- [x] 5.3 CI: ensure the spec runs in the required e2e check (update the workflow/seed if needed) and passes against the compose stack. Commit, open PR for KAN-42, move Jira to In Review.
 
 ## 6. Wrap-up
 
