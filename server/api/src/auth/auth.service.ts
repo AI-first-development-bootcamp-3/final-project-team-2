@@ -50,6 +50,11 @@ export class AuthService {
     };
   }
 
+  /** Stateless check — signature + expiry only, never touches the database. */
+  verifyAccessToken(token: string): Promise<{ userId: string; role: 'employee' | 'admin' }> {
+    return this.jwt.verifyAsync(token, { secret: this.env.JWT_SECRET });
+  }
+
   private signAccessToken(userId: string, role: 'employee' | 'admin'): Promise<string> {
     return this.jwt.signAsync(
       { userId, role },
