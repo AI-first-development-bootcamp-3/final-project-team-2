@@ -8,8 +8,10 @@ describe('App', () => {
     clearAuthSession();
   });
 
-  it('lands an unauthenticated visitor on the login screen', () => {
+  it('lands an unauthenticated visitor on the login screen', async () => {
+    // App gates routing on the session bootstrap (one /auth/refresh
+    // round-trip), so the login screen appears once that settles.
     render(<App />);
-    expect(screen.getByRole('heading', { name: /ברוכים הבאים למערכת/ })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /ברוכים הבאים למערכת/ })).toBeInTheDocument();
   });
 });

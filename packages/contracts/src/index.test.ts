@@ -112,11 +112,22 @@ describe('Auth response contracts', () => {
     ).toBe(false);
   });
 
-  it('should validate a refresh response with a non-empty access token only', () => {
+  it('should validate a refresh response carrying the token and user summary', () => {
+    const user = {
+      id: '7d9d2c8e-8f9a-4b6e-9d3e-2f1a5b8c9d0e',
+      email: 'user@example.com',
+      fullName: 'ישראל ישראלי',
+      role: 'employee',
+    };
+    expect(
+      RefreshResponse.safeParse({ accessToken: 'header.payload.signature', user }).success,
+    ).toBe(true);
+    // Clients bootstrap sessions from this response, so the user summary is
+    // required — a token alone is not a valid refresh payload.
     expect(RefreshResponse.safeParse({ accessToken: 'header.payload.signature' }).success).toBe(
-      true,
+      false,
     );
-    expect(RefreshResponse.safeParse({ accessToken: '' }).success).toBe(false);
+    expect(RefreshResponse.safeParse({ accessToken: '', user }).success).toBe(false);
     expect(RefreshResponse.safeParse({}).success).toBe(false);
   });
 });

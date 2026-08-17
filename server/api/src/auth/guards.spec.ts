@@ -40,6 +40,23 @@ class ProbeController {
   }
 }
 
+// @Auth() must beat a class-level @Public(): a lone protected handler inside
+// an otherwise-public controller stays protected.
+@Public()
+@Controller('probe-public')
+class PublicProbeController {
+  @Get('open')
+  open() {
+    return { ok: 'public-open' };
+  }
+
+  @Auth()
+  @Get('secured')
+  secured() {
+    return { ok: 'public-secured' };
+  }
+}
+
 async function makeGuardedApp(users: FakeUser[]): Promise<{
   app: INestApplication;
   prisma: ReturnType<typeof makeFakePrisma>;
@@ -47,7 +64,7 @@ async function makeGuardedApp(users: FakeUser[]): Promise<{
   const prisma = makeFakePrisma(users);
   const moduleRef = await Test.createTestingModule({
     imports: [AuthModule],
-    controllers: [ProbeController],
+    controllers: [ProbeController, PublicProbeController],
     providers: [
       Reflector,
       { provide: APP_GUARD, useClass: JwtGuard },
@@ -123,6 +140,23 @@ describe('JwtGuard — default-protected routes (KAN-41 4.1)', () => {
       .set('Authorization', `Bearer ${token}`)
       .expect(200);
     expect(res.body).toEqual({ ok: 'any-user' });
+  });
+
+  it('keeps a class-level @Public() route open', async () => {
+    await request(app.getHttpServer()).get('/api/v1/probe-public/open').expect(200);
+  });
+
+  it('rejects an anonymous request when @Auth() overrides a class-level @Public()', async () => {
+    await request(app.getHttpServer()).get('/api/v1/probe-public/secured').expect(401);
+  });
+
+  it('serves any authenticated user on an @Auth()-over-@Public() route', async () => {
+    const token = await loginToken(app, 'employee1@abra.co', 'Employee123!');
+    const res = await request(app.getHttpServer())
+      .get('/api/v1/probe-public/secured')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+    expect(res.body).toEqual({ ok: 'public-secured' });
   });
 });
 

@@ -6,14 +6,18 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
+import type { UserRole } from '@abra/contracts';
 import { AuthService } from './auth.service';
-import { IS_PUBLIC_KEY } from './auth.decorators';
+import { isPublicContext } from './auth.decorators';
 import { PrismaService } from '../prisma/prisma.service';
 
 export interface AuthenticatedUser {
   userId: string;
-  role: 'employee' | 'admin';
+  role: UserRole;
 }
+
+/** The request shape both guards share once JwtGuard has attached the user. */
+export type AuthenticatedRequest = Request & { user?: AuthenticatedUser };
 
 /**
  * Global guard: every route requires a valid access token unless marked
@@ -28,15 +32,11 @@ export class JwtGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
-    if (isPublic) {
+    if (isPublicContext(this.reflector, context)) {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest<Request & { user?: AuthenticatedUser }>();
+    const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
     const header = request.headers.authorization ?? '';
     const token = header.startsWith('Bearer ') ? header.slice('Bearer '.length) : undefined;
     if (!token) {
