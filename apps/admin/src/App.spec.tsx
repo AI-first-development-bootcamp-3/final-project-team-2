@@ -1,10 +1,15 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import App from './App';
+import { clearAuthSession } from './lib/auth';
 
 describe('App', () => {
-  it('renders the admin console shell', () => {
+  beforeEach(() => {
+    clearAuthSession();
+  });
+
+  it('lands an unauthenticated visitor on the login screen', () => {
     render(<App />);
-    expect(screen.getByText('Abra Timesheet - Admin Console')).toBeInTheDocument();
+    expect(screen.getByText(/ברוכים הבאים למערכת הניהול של אברא/)).toBeInTheDocument();
   });
 });

@@ -117,4 +117,23 @@ describe('Admin LoginPage — submit to the auth API (KAN-70 3.2)', () => {
 
     expect(getAuthSession()).toEqual({ accessToken: 'header.payload.sig', user: SESSION_USER });
   });
+
+  it('shows the generic Hebrew error on 401 and stays on the login screen', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ message: 'Invalid credentials' }), { status: 401 }),
+    );
+
+    renderLogin();
+    fireEvent.change(screen.getByLabelText('אימייל'), { target: { value: 'admin@abra.co' } });
+    fireEvent.change(screen.getByLabelText('סיסמה'), { target: { value: 'WrongPass1!' } });
+    fireEvent.click(screen.getByRole('button', { name: 'התחבר למערכת' }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        'שם המשתמש או הסיסמה שהוזנו אינם נכונים.',
+      );
+    });
+    expect(screen.queryByText('PORTAL HOME')).not.toBeInTheDocument();
+    expect(getAuthSession()).toBeNull();
+  });
 });
