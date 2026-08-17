@@ -1,7 +1,6 @@
 import { z } from 'zod';
 
-export const UserRole = z.enum(['employee', 'admin']);
-export type UserRole = z.infer<typeof UserRole>;
+export * from './enums.js';
 
 export const WorkLocation = z.enum(['office', 'client_site', 'home']);
 export type WorkLocation = z.infer<typeof WorkLocation>;
@@ -17,6 +16,21 @@ export type TaskStatus = z.infer<typeof TaskStatus>;
 
 export const AuditAction = z.enum(['create', 'update', 'delete', 'lock_month', 'unlock_month']);
 export type AuditAction = z.infer<typeof AuditAction>;
+
+export { ListMetaSchema, listSuccessSchema } from './common/list-envelope.js';
+export type { ListMeta } from './common/list-envelope.js';
+
+export { ApiErrorSchema, ApiErrorDetailSchema, zodIssuesToDetails } from './common/api-error.js';
+export type { ApiError, ApiErrorDetail } from './common/api-error.js';
+
+export {
+  UsersListQuerySchema,
+  UsersListSortSchema,
+  UsersListOrderSchema,
+  UserListItemSchema,
+  UsersListSuccessSchema,
+} from './users/list.js';
+export type { UsersListQuery, UserListItem, UsersListSuccess } from './users/list.js';
 
 export const LoginSchema = z.object({
   email: z.string().min(1, { message: 'VAL-01' }).email({ message: 'VAL-02' }),
