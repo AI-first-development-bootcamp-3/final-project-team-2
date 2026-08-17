@@ -26,6 +26,28 @@ export const LoginSchema = z.object({
 
 export type LoginFormData = z.infer<typeof LoginSchema>;
 
+export const AuthUser = z.object({
+  id: z.string().uuid(),
+  email: z.string().email(),
+  fullName: z.string().min(1),
+  role: UserRole,
+});
+
+export type AuthUser = z.infer<typeof AuthUser>;
+
+export const LoginResponse = z.object({
+  accessToken: z.string().min(1),
+  user: AuthUser,
+});
+
+export type LoginResponse = z.infer<typeof LoginResponse>;
+
+export const RefreshResponse = z.object({
+  accessToken: z.string().min(1),
+});
+
+export type RefreshResponse = z.infer<typeof RefreshResponse>;
+
 export type ValCode = 'VAL-01' | 'VAL-02' | 'VAL-03' | 'VAL-04';
 
 export const VAL_MESSAGES: Record<ValCode, string> = {
