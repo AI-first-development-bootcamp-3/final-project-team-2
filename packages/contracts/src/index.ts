@@ -35,6 +35,9 @@ export type { UsersListQuery, UserListItem, UsersListSuccess } from './users/lis
 export { CreateUserBodySchema, UserCreateSuccessSchema } from './users/create.js';
 export type { CreateUserBody, UserCreateSuccess } from './users/create.js';
 
+export { UpdateUserSchema, ResetPasswordSchema } from './users/update.js';
+export type { UpdateUserPayload, ResetPasswordPayload } from './users/update.js';
+
 // KAN-46 / US3: login consumers (KAN-39) must query with this normalized email.
 // No auth login service exists under server/api/src/modules/ yet — do not add a
 // login screen here. Playwright create-then-login remains KAN-49.

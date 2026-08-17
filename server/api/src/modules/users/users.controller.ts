@@ -1,7 +1,21 @@
-import { BadRequestException, Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import {
   CreateUserBodySchema,
+  ResetPasswordSchema,
+  UpdateUserSchema,
   UsersListQuerySchema,
   VAL_MESSAGES,
   zodIssuesToDetails,
@@ -56,5 +70,36 @@ export class UsersController {
     }
     const data = await this.usersService.create(parsed.data);
     return { data };
+  }
+
+  @Patch(':id')
+  @ApiOperation({ summary: 'Update user profile, role & HR metadata (admin only)' })
+  async updateUser(@Param('id') id: string, @Body() body: unknown) {
+    const parsed = UpdateUserSchema.safeParse(body);
+    if (!parsed.success) {
+      throw new BadRequestException({
+        statusCode: 400,
+        message: 'Validation failed',
+        error: 'Bad Request',
+        details: zodIssuesToDetails(parsed.error.issues),
+      });
+    }
+    return this.usersService.updateUser(id, parsed.data);
+  }
+
+  @Post(':id/reset-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Reset user password & revoke active sessions (admin only)' })
+  async resetPassword(@Param('id') id: string, @Body() body: unknown) {
+    const parsed = ResetPasswordSchema.safeParse(body);
+    if (!parsed.success) {
+      throw new BadRequestException({
+        statusCode: 400,
+        message: 'Validation failed',
+        error: 'Bad Request',
+        details: zodIssuesToDetails(parsed.error.issues),
+      });
+    }
+    return this.usersService.resetPassword(id, parsed.data);
   }
 }

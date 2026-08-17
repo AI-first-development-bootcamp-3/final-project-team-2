@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { UsersListQuery, UsersListSuccess } from '@abra/contracts';
+import type { UserListItem, UsersListQuery, UsersListSuccess } from '@abra/contracts';
 import { DataTable, type SortOrder } from '@/components/ui/data-table';
 import { apiFetch } from '@/lib/api/client';
+import { EditUserModal } from './edit-user-modal';
+import { ResetPasswordModal } from './reset-password-modal';
 import { UsersCreateForm } from './users-create-form';
-import { usersColumns } from './users-columns';
+import { createUsersColumns } from './users-columns';
 
 const PAGE_SIZE = 20;
 
@@ -41,39 +43,37 @@ export function UsersPage() {
   const [result, setResult] = useState<UsersListSuccess | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [editingUser, setEditingUser] = useState<UserListItem | null>(null);
+  const [resettingPasswordUser, setResettingPasswordUser] = useState<UserListItem | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
-  const [reloadToken, setReloadToken] = useState(0);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const path = useMemo(
     () => buildUsersPath({ page, sort, order, q, role, isActive, includeDeleted }),
     [page, sort, order, q, role, isActive, includeDeleted],
   );
 
-  useEffect(() => {
-    let cancelled = false;
+  const fetchUsers = useCallback(() => {
     setLoading(true);
     setError(null);
-    if (reloadToken === 0) {
-      setResult(null);
-    }
     apiFetch<UsersListSuccess>(path)
       .then((data) => {
-        if (!cancelled) setResult(data);
+        setResult(data);
       })
       .catch((err: unknown) => {
-        if (cancelled) return;
         if (err && typeof err === 'object' && 'status' in err && err.status === 401) {
           return;
         }
         setError('שגיאה בטעינת המשתמשים');
       })
       .finally(() => {
-        if (!cancelled) setLoading(false);
+        setLoading(false);
       });
-    return () => {
-      cancelled = true;
-    };
-  }, [path, reloadToken]);
+  }, [path]);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
   const onSortChange = useCallback((nextSort: string, nextOrder: SortOrder) => {
     setSort(nextSort as UsersListQuery['sort']);
@@ -85,6 +85,15 @@ export function UsersPage() {
     setQ(value);
     setPage(1);
   }, []);
+
+  const columns = useMemo(
+    () =>
+      createUsersColumns({
+        onEdit: (user) => setEditingUser(user),
+        onResetPassword: (user) => setResettingPasswordUser(user),
+      }),
+    [],
+  );
 
   return (
     <section>
@@ -98,6 +107,23 @@ export function UsersPage() {
           יצירת משתמש
         </button>
       </div>
+
+      {successMessage ? (
+        <div
+          role="status"
+          className="mb-4 flex items-center justify-between rounded bg-green-100 p-3 text-sm text-green-800"
+        >
+          <span>{successMessage}</span>
+          <button
+            type="button"
+            onClick={() => setSuccessMessage(null)}
+            className="text-xs font-bold"
+          >
+            ✕
+          </button>
+        </div>
+      ) : null}
+
       <div className="mb-4 flex flex-wrap items-end gap-3">
         <label className="flex flex-col text-sm">
           חיפוש
@@ -150,12 +176,13 @@ export function UsersPage() {
           כולל מושבתים
         </label>
       </div>
+
       {loading ? <p>טוען…</p> : null}
       {error ? <p role="alert">{error}</p> : null}
       {!loading && !error && result && result.data.length === 0 ? <p>לא נמצאו משתמשים</p> : null}
       {!loading && !error && result && result.data.length > 0 ? (
         <DataTable
-          columns={usersColumns}
+          columns={columns}
           data={result.data}
           getRowId={(row) => row.id}
           page={result.meta.page}
@@ -167,12 +194,35 @@ export function UsersPage() {
           onSortChange={onSortChange}
         />
       ) : null}
+
+      {editingUser ? (
+        <EditUserModal
+          user={editingUser}
+          onClose={() => setEditingUser(null)}
+          onSuccess={() => {
+            setSuccessMessage('פרטי המשתמש עודכנו בהצלחה');
+            fetchUsers();
+          }}
+        />
+      ) : null}
+
+      {resettingPasswordUser ? (
+        <ResetPasswordModal
+          user={resettingPasswordUser}
+          onClose={() => setResettingPasswordUser(null)}
+          onSuccess={() => {
+            setSuccessMessage('הסיסמה שונתה בהצלחה');
+            fetchUsers();
+          }}
+        />
+      ) : null}
+
       <UsersCreateForm
         open={createOpen}
         onClose={() => setCreateOpen(false)}
         onCreated={() => {
           setCreateOpen(false);
-          setReloadToken((token) => token + 1);
+          fetchUsers();
         }}
       />
     </section>

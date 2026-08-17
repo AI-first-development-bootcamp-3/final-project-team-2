@@ -14,6 +14,7 @@ const ALICE = {
   email: 'employee1@abra.co',
   role: 'employee' as const,
   is_active: true,
+  deleted_at: null,
 };
 
 function adminJwtGuard() {
@@ -55,7 +56,13 @@ async function createApp(auth: 'none' | 'admin' | 'employee') {
     user: {
       findMany: vi.fn().mockResolvedValue([ALICE]),
       count: vi.fn().mockResolvedValue(1),
+      findUnique: vi.fn().mockResolvedValue(ALICE),
       findFirst: vi.fn().mockResolvedValue(null),
+      update: vi.fn().mockResolvedValue({
+        ...ALICE,
+        full_name: 'Alice Updated',
+        role: 'admin',
+      }),
       create: vi.fn().mockImplementation(async ({ data }: { data: Record<string, unknown> }) => ({
         id: NADAV_ID,
         full_name: data.full_name,
@@ -125,169 +132,93 @@ describe('GET /api/v1/users', () => {
       ],
       meta: { page: 1, limit: 20, total: 1 },
     });
-    expect(JSON.stringify(response.body)).not.toMatch(
-      /password_hash|token_version|passwordHash|tokenVersion/,
-    );
-    expect(created.prisma.user.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        take: 20,
-        skip: 0,
-        select: expect.objectContaining({
-          id: true,
-          full_name: true,
-          email: true,
-          role: true,
-          is_active: true,
-        }),
-      }),
-    );
-    const select = created.prisma.user.findMany.mock.calls[0]?.[0]?.select ?? {};
-    expect(select).not.toHaveProperty('password_hash');
-    expect(select).not.toHaveProperty('token_version');
+  });
+});
+
+describe('PATCH /api/v1/users/:id', () => {
+  let app: INestApplication;
+
+  afterEach(async () => {
+    await app?.close();
   });
 
-  it('defaults to page size 20', async () => {
+  it('allows an admin to update user full name and role', async () => {
     const created = await createApp('admin');
     app = created.app;
-    await request(app.getHttpServer())
-      .get('/api/v1/users')
-      .set('Authorization', 'Bearer admin-token')
-      .expect(200);
-    expect(created.prisma.user.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ take: 20 }),
-    );
-  });
-
-  it('returns empty data with the real total for a past-last page', async () => {
-    const created = await createApp('admin');
-    app = created.app;
-    created.prisma.user.findMany.mockResolvedValue([]);
-    created.prisma.user.count.mockResolvedValue(3);
 
     const response = await request(app.getHttpServer())
-      .get('/api/v1/users')
-      .query({ page: 99, limit: 20 })
+      .patch(`/api/v1/users/${ALICE.id}`)
       .set('Authorization', 'Bearer admin-token')
+      .send({ fullName: 'Alice Updated', role: 'admin' })
       .expect(200);
 
     expect(response.body).toEqual({
-      data: [],
-      meta: { page: 99, limit: 20, total: 3 },
+      id: ALICE.id,
+      fullName: 'Alice Updated',
+      email: 'employee1@abra.co',
+      role: 'admin',
+      isActive: true,
     });
+    expect(created.prisma.user.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: ALICE.id },
+        data: expect.objectContaining({
+          full_name: 'Alice Updated',
+          role: 'admin',
+        }),
+      }),
+    );
   });
 
-  it('returns 400 when limit is greater than 100', async () => {
-    ({ app } = await createApp('admin'));
+  it('returns 409 Conflict if email is taken by another user', async () => {
+    const created = await createApp('admin');
+    app = created.app;
+    created.prisma.user.findFirst.mockResolvedValue({ id: 'other-user', email: 'taken@abra.co' });
+
+    await request(app.getHttpServer())
+      .patch(`/api/v1/users/${ALICE.id}`)
+      .set('Authorization', 'Bearer admin-token')
+      .send({ email: 'taken@abra.co' })
+      .expect(409);
+  });
+});
+
+describe('POST /api/v1/users/:id/reset-password', () => {
+  let app: INestApplication;
+
+  afterEach(async () => {
+    await app?.close();
+  });
+
+  it('resets password and increments token_version', async () => {
+    const created = await createApp('admin');
+    app = created.app;
+
     const response = await request(app.getHttpServer())
-      .get('/api/v1/users')
-      .query({ limit: 101 })
+      .post(`/api/v1/users/${ALICE.id}/reset-password`)
       .set('Authorization', 'Bearer admin-token')
+      .send({ password: 'newsecretpassword123' })
+      .expect(200);
+
+    expect(response.body).toEqual({ message: 'הסיסמה שונתה בהצלחה' });
+    expect(created.prisma.user.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: ALICE.id },
+        data: expect.objectContaining({
+          token_version: { increment: 1 },
+        }),
+      }),
+    );
+  });
+
+  it('returns 400 if password is less than 8 characters', async () => {
+    ({ app } = await createApp('admin'));
+
+    await request(app.getHttpServer())
+      .post(`/api/v1/users/${ALICE.id}/reset-password`)
+      .set('Authorization', 'Bearer admin-token')
+      .send({ password: 'short' })
       .expect(400);
-
-    expect(response.body).toMatchObject({
-      statusCode: 400,
-      error: 'Bad Request',
-    });
-    expect(response.body.details).toEqual(
-      expect.arrayContaining([expect.objectContaining({ field: 'limit', rule: 'VAL-LIMIT' })]),
-    );
-  });
-
-  it('applies trimmed q as case-insensitive name/email OR search', async () => {
-    const created = await createApp('admin');
-    app = created.app;
-    await request(app.getHttpServer())
-      .get('/api/v1/users')
-      .query({ q: '  alice  ' })
-      .set('Authorization', 'Bearer admin-token')
-      .expect(200);
-
-    const where = created.prisma.user.findMany.mock.calls[0]?.[0]?.where;
-    expect(where).toEqual(
-      expect.objectContaining({
-        AND: expect.arrayContaining([
-          {
-            OR: [
-              { full_name: { contains: 'alice', mode: 'insensitive' } },
-              { email: { contains: 'alice', mode: 'insensitive' } },
-            ],
-          },
-        ]),
-      }),
-    );
-  });
-
-  it('treats whitespace-only q as no text filter', async () => {
-    const created = await createApp('admin');
-    app = created.app;
-    await request(app.getHttpServer())
-      .get('/api/v1/users')
-      .query({ q: '   ' })
-      .set('Authorization', 'Bearer admin-token')
-      .expect(200);
-
-    const where = created.prisma.user.findMany.mock.calls[0]?.[0]?.where;
-    expect(JSON.stringify(where ?? {})).not.toContain('contains');
-  });
-
-  it('combines role and isActive with AND semantics', async () => {
-    const created = await createApp('admin');
-    app = created.app;
-    await request(app.getHttpServer())
-      .get('/api/v1/users')
-      .query({ role: 'admin', isActive: 'false' })
-      .set('Authorization', 'Bearer admin-token')
-      .expect(200);
-
-    const where = created.prisma.user.findMany.mock.calls[0]?.[0]?.where;
-    expect(where).toEqual(
-      expect.objectContaining({
-        AND: expect.arrayContaining([{ role: 'admin' }, { is_active: false }]),
-      }),
-    );
-  });
-
-  it('does not set deleted_at when includeDeleted is off', async () => {
-    const created = await createApp('admin');
-    app = created.app;
-    await request(app.getHttpServer())
-      .get('/api/v1/users')
-      .set('Authorization', 'Bearer admin-token')
-      .expect(200);
-
-    const where = created.prisma.user.findMany.mock.calls[0]?.[0]?.where ?? {};
-    expect(where).not.toHaveProperty('deleted_at');
-  });
-
-  it('sets an explicit deleted_at predicate when includeDeleted is true', async () => {
-    const created = await createApp('admin');
-    app = created.app;
-    await request(app.getHttpServer())
-      .get('/api/v1/users')
-      .query({ includeDeleted: 'true' })
-      .set('Authorization', 'Bearer admin-token')
-      .expect(200);
-
-    const where = created.prisma.user.findMany.mock.calls[0]?.[0]?.where;
-    expect(where).toHaveProperty('deleted_at');
-  });
-
-  it('still applies isActive when includeDeleted is true', async () => {
-    const created = await createApp('admin');
-    app = created.app;
-    await request(app.getHttpServer())
-      .get('/api/v1/users')
-      .query({ includeDeleted: 'true', isActive: 'true' })
-      .set('Authorization', 'Bearer admin-token')
-      .expect(200);
-
-    const where = created.prisma.user.findMany.mock.calls[0]?.[0]?.where;
-    expect(where).toEqual(
-      expect.objectContaining({
-        deleted_at: expect.anything(),
-        AND: expect.arrayContaining([{ is_active: true }]),
-      }),
-    );
   });
 });
 

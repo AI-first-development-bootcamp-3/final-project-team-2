@@ -1,9 +1,11 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import {
   VAL_MESSAGES,
   type CreateUserBody,
+  type ResetPasswordPayload,
+  type UpdateUserPayload,
   type UserListItem,
   type UsersListQuery,
 } from '@abra/contracts';
@@ -120,6 +122,63 @@ export class UsersService {
         },
       ],
     });
+  }
+
+  async updateUser(id: string, payload: UpdateUserPayload): Promise<UserListItem> {
+    const existing = await this.prisma.user.findUnique({ where: { id } });
+    if (!existing || existing.deleted_at) {
+      throw new NotFoundException('משתמש לא נמצא');
+    }
+
+    if (payload.email && payload.email.toLowerCase() !== existing.email.toLowerCase()) {
+      const emailConflict = await this.prisma.user.findFirst({
+        where: {
+          email: { equals: payload.email, mode: 'insensitive' },
+          id: { not: id },
+          deleted_at: null,
+        },
+      });
+      if (emailConflict) {
+        throw new ConflictException('כתובת האימייל כבר קיימת במערכת');
+      }
+    }
+
+    const updated = await this.prisma.user.update({
+      where: { id },
+      data: {
+        ...(payload.fullName ? { full_name: payload.fullName } : {}),
+        ...(payload.email ? { email: payload.email } : {}),
+        ...(payload.role ? { role: payload.role } : {}),
+      },
+      select: USER_LIST_SELECT,
+    });
+
+    return {
+      id: updated.id,
+      fullName: updated.full_name,
+      email: updated.email,
+      role: updated.role,
+      isActive: updated.is_active,
+    };
+  }
+
+  async resetPassword(id: string, payload: ResetPasswordPayload): Promise<{ message: string }> {
+    const existing = await this.prisma.user.findUnique({ where: { id } });
+    if (!existing || existing.deleted_at) {
+      throw new NotFoundException('משתמש לא נמצא');
+    }
+
+    const hashedPassword = await bcrypt.hash(payload.password, 10);
+
+    await this.prisma.user.update({
+      where: { id },
+      data: {
+        password_hash: hashedPassword,
+        token_version: { increment: 1 },
+      },
+    });
+
+    return { message: 'הסיסמה שונתה בהצלחה' };
   }
 
   private buildWhere(query: UsersListQuery): Prisma.UserWhereInput {
