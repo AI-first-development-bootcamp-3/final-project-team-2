@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { UserRole } from '../enums';
-import { listSuccessSchema } from '../common/list-envelope';
+import { UserRole } from '../enums.js';
+import { listSuccessSchema } from '../common/list-envelope.js';
 
 const queryBoolean = z.preprocess((value) => {
   if (value === undefined || value === '') return undefined;
