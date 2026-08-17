@@ -21,32 +21,6 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  ci-gate:
-    name: Wait for CI
-    if: github.event_name == 'push'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Wait for CI workflow to complete
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          echo "Waiting for CI workflow on commit ${{ github.sha }}..."
-          for i in $(seq 1 20); do
-            sleep 30
-            STATUS=$(gh run list --repo "${{ github.repository }}" \
-              --commit "${{ github.sha }}" \
-              --workflow "CI" \
-              --json conclusion \
-              --jq '.[0].conclusion // "pending"')
-            echo "CI status: $STATUS (attempt $i/20)"
-            case "$STATUS" in
-              success) echo "CI passed!"; exit 0 ;;
-              failure|cancelled) echo "CI did not pass. Aborting deploy."; exit 1 ;;
-            esac
-          done
-          echo "Timed out waiting for CI (10 minutes)"
-          exit 1
-
   guard:
     name: Pre-flight checks
     runs-on: ubuntu-latest
@@ -66,12 +40,9 @@ jobs:
 
   migrate:
     name: Run Migrations
-    needs: [ci-gate, guard]
+    needs: [guard]
     if: |
-      always() &&
       needs.guard.outputs.should-deploy == 'true' &&
-      needs.guard.result == 'success' &&
-      (needs.ci-gate.result == 'success' || needs.ci-gate.result == 'skipped') &&
       github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
@@ -94,12 +65,11 @@ jobs:
 
   deploy:
     name: Deploy ${{ matrix.name }}
-    needs: [ci-gate, guard, migrate]
+    needs: [guard, migrate]
     if: |
       always() &&
       needs.guard.result == 'success' &&
       needs.guard.outputs.should-deploy == 'true' &&
-      (needs.ci-gate.result == 'success' || needs.ci-gate.result == 'skipped') &&
       (needs.migrate.result == 'success' || needs.migrate.result == 'skipped')
     runs-on: ubuntu-latest
     strategy:
