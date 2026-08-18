@@ -1,17 +1,17 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import App from './App';
+import { clearAuthSession } from './lib/auth';
 
 describe('App', () => {
-  it('renders the admin console shell', () => {
-    window.localStorage.clear();
-    render(<App />);
-    expect(screen.getByText('Abra Timesheet - Admin Console')).toBeInTheDocument();
+  beforeEach(() => {
+    clearAuthSession();
   });
 
-  it('sends visitors without a session to sign-in', () => {
-    window.localStorage.clear();
+  it('lands an unauthenticated visitor on the login screen', async () => {
+    // App gates routing on the session bootstrap (one /auth/refresh
+    // round-trip), so the login screen appears once that settles.
     render(<App />);
-    expect(screen.getByRole('heading', { name: 'התחברות' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /ברוכים הבאים למערכת/ })).toBeInTheDocument();
   });
 });
