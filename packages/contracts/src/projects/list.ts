@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { listSuccessSchema } from '../common/list-envelope.js';
+import { ReportType } from '../enums.js';
 
 const queryBoolean = z.preprocess((value) => {
   if (value === undefined || value === '') return undefined;
@@ -43,6 +44,7 @@ export const ProjectListItemSchema = z.object({
   clientName: z.string(),
   isActive: z.boolean(),
   isDeleted: z.boolean(),
+  reportType: ReportType.default('TOTAL_HOURS'),
 });
 
 export const ProjectsListSuccessSchema = listSuccessSchema(ProjectListItemSchema);

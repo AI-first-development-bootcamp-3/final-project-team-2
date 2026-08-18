@@ -5,6 +5,7 @@ import { AdminLayout } from './components/layout/admin-layout';
 import { UsersPage } from './features/users/users-page';
 import { ClientsPage } from './features/clients/clients-page';
 import { ProjectsPage } from './features/projects/projects-page';
+import { ReportingSettingsPage } from './features/projects/reporting-settings-page';
 import { TasksPage } from './features/tasks/tasks-page';
 import { AssignmentsPage } from './features/assignments/assignments-page';
 import { clearAuthSession, getAuthSession, isAdmin, subscribeToAuthChanges } from './lib/auth';
@@ -67,6 +68,7 @@ export function AppRoutes() {
         <Route path="/admin/users" element={<UsersPage />} />
         <Route path="/admin/clients" element={<ClientsPage />} />
         <Route path="/admin/projects" element={<ProjectsPage />} />
+        <Route path="/admin/reporting-settings" element={<ReportingSettingsPage />} />
         <Route path="/admin/tasks" element={<TasksPage />} />
         <Route path="/admin/assignments" element={<AssignmentsPage />} />
       </Route>

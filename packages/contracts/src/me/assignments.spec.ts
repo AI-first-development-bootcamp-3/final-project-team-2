@@ -8,6 +8,7 @@ const validAssignment = {
   projectName: 'Project Alpha',
   clientId: '770e8400-e29b-41d4-a716-446655440000',
   clientName: 'Acme Corp',
+  reportType: 'TOTAL_HOURS' as const,
 };
 
 describe('MyAssignmentSchema', () => {

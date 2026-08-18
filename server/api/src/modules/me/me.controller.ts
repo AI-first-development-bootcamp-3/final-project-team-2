@@ -42,6 +42,7 @@ export class MeController {
               select: {
                 id: true,
                 name: true,
+                report_type: true,
                 client: {
                   select: {
                     id: true,
@@ -62,6 +63,7 @@ export class MeController {
       projectName: row.task.project.name,
       clientId: row.task.project.client.id,
       clientName: row.task.project.client.name,
+      reportType: row.task.project.report_type,
     }));
 
     return { data };

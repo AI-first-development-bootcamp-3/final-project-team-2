@@ -23,6 +23,7 @@ const project = {
   clientName: 'Acme Corp',
   isActive: true,
   isDeleted: false,
+  reportType: 'TOTAL_HOURS' as const,
 };
 
 const activeClient = {

@@ -32,6 +32,11 @@ enum TaskStatus {
   closed
 }
 
+enum ReportType {
+  TOTAL_HOURS
+  CLOCK_IN_OUT
+}
+
 enum HalfDayPeriod {
   morning
   afternoon
@@ -85,13 +90,14 @@ model Client {
 }
 
 model Project {
-  id         String   @id @default(uuid()) @db.Uuid
-  client_id  String   @db.Uuid
-  name       String   @db.VarChar(255)
-  is_active  Boolean  @default(true)
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-  deleted_at DateTime?
+  id          String     @id @default(uuid()) @db.Uuid
+  client_id   String     @db.Uuid
+  name        String     @db.VarChar(255)
+  report_type ReportType @default(TOTAL_HOURS)
+  is_active   Boolean    @default(true)
+  created_at  DateTime   @default(now())
+  updated_at  DateTime   @updatedAt
+  deleted_at  DateTime?
 
   client Client @relation(fields: [client_id], references: [id])
   tasks  Task[]
