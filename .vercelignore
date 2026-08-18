@@ -1,0 +1,10 @@
+# Test & dev files — not needed in Vercel builds
+e2e/
+docs/
+openspec/
+.github/
+docker-compose.yml
+Dockerfile
+.dockerignore
+*.md
+!README.md
