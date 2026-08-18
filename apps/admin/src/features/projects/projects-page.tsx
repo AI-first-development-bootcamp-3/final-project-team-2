@@ -9,6 +9,7 @@ import type {
 } from '@abra/contracts';
 import { DataTable, type SortOrder } from '@/components/ui/data-table';
 import { apiFetch } from '@/lib/api/client';
+import { TaskCreateForm } from '@/features/tasks/task-create-form';
 import { ProjectCreateForm } from './project-create-form';
 import { ProjectEditModal } from './project-edit-modal';
 import { createProjectsColumns } from './projects-columns';
@@ -55,6 +56,7 @@ export function ProjectsPage() {
   const [editingProject, setEditingProject] = useState<ProjectListItem | null>(null);
   const [removingProject, setRemovingProject] = useState<ProjectListItem | null>(null);
   const [removing, setRemoving] = useState(false);
+  const [addingTaskProject, setAddingTaskProject] = useState<ProjectListItem | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const removingRef = useRef(false);
 
@@ -128,6 +130,7 @@ export function ProjectsPage() {
         onEdit: (project) => setEditingProject(project),
         onRemove: (project) => setRemovingProject(project),
         onViewTasks: (project) => navigate(`/admin/tasks?projectId=${project.id}`),
+        onAddTask: (project) => setAddingTaskProject(project),
       }),
     [navigate],
   );
@@ -252,6 +255,19 @@ export function ProjectsPage() {
           onSuccess={() => {
             setEditingProject(null);
             setSuccessMessage('פרטי הפרויקט עודכנו בהצלחה');
+            fetchProjects();
+          }}
+        />
+      ) : null}
+
+      {addingTaskProject ? (
+        <TaskCreateForm
+          open={true}
+          defaultProjectId={addingTaskProject.id}
+          onClose={() => setAddingTaskProject(null)}
+          onCreated={() => {
+            setAddingTaskProject(null);
+            setSuccessMessage('המשימה נוצרה בהצלחה');
             fetchProjects();
           }}
         />
