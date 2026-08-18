@@ -36,74 +36,74 @@ All enums live in `packages/contracts/` and are consumed by both frontends and t
 
 ### 2.1 Roles (UserRole)
 
-| Value | English | Hebrew |
-|-------|---------|--------|
+| Value      | English  | Hebrew            |
+| ---------- | -------- | ----------------- |
 | `employee` | Employee | משתמש רגיל (עובד) |
-| `admin` | Admin | אדמין |
+| `admin`    | Admin    | אדמין             |
 
 ### 2.2 Work Location (WorkLocation)
 
-| Value | English | Hebrew |
-|-------|---------|--------|
-| `office` | Office | משרד |
-| `client_site` | Client Site | לקוח |
-| `home` | Home | בית |
+| Value         | English     | Hebrew |
+| ------------- | ----------- | ------ |
+| `office`      | Office      | משרד   |
+| `client_site` | Client Site | לקוח   |
+| `home`        | Home        | בית    |
 
 ### 2.3 Absence Type (AbsenceType)
 
-| Value | English | Hebrew |
-|-------|---------|--------|
-| `vacation` | Vacation | חופשה |
-| `sick` | Sick Leave | מחלה |
+| Value      | English          | Hebrew  |
+| ---------- | ---------------- | ------- |
+| `vacation` | Vacation         | חופשה   |
+| `sick`     | Sick Leave       | מחלה    |
 | `military` | Military Reserve | מילואים |
-| `other` | Other | אחר |
+| `other`    | Other            | אחר     |
 
 ### 2.4 Day Status (DayStatus) — calculated, not stored
 
-| Value | English | Hebrew | Rule |
-|-------|---------|--------|------|
-| `full` | Full | מלא | reported hours >= 9 |
-| `partial` | Partial | חסר | 0 < reported hours < 9 |
-| `excess` | Excess | חריג | reported hours > 9 |
-| `empty` | Empty | — | no entries |
-| `absence` | Absence | — | day covered by absence |
+| Value     | English | Hebrew | Rule                   |
+| --------- | ------- | ------ | ---------------------- |
+| `full`    | Full    | מלא    | reported hours >= 9    |
+| `partial` | Partial | חסר    | 0 < reported hours < 9 |
+| `excess`  | Excess  | חריג   | reported hours > 9     |
+| `empty`   | Empty   | —      | no entries             |
+| `absence` | Absence | —      | day covered by absence |
 
 ### 2.5 Half Day Period (HalfDayPeriod)
 
-| Value | English | Hebrew |
-|-------|---------|--------|
-| `morning` | Morning | בוקר |
+| Value       | English   | Hebrew |
+| ----------- | --------- | ------ |
+| `morning`   | Morning   | בוקר   |
 | `afternoon` | Afternoon | צהריים |
 
 ### 2.6 Task Status (TaskStatus)
 
-| Value | English | Hebrew |
-|-------|---------|--------|
-| `open` | Open | פתוחה |
-| `closed` | Closed | סגורה |
+| Value    | English | Hebrew |
+| -------- | ------- | ------ |
+| `open`   | Open    | פתוחה  |
+| `closed` | Closed  | סגורה  |
 
 ### 2.7 Entity Status (EntityStatus) — for User, Client, Project
 
-| Value | English | Hebrew |
-|-------|---------|--------|
-| `active` | Active | פעיל |
+| Value      | English  | Hebrew  |
+| ---------- | -------- | ------- |
+| `active`   | Active   | פעיל    |
 | `inactive` | Inactive | לא פעיל |
 
 ### 2.8 Month Lock Status (MonthLockStatus)
 
-| Value | English |
-|-------|---------|
-| `open` | Month is open for reporting |
-| `locked` | Month is locked by admin |
+| Value    | English                     |
+| -------- | --------------------------- |
+| `open`   | Month is open for reporting |
+| `locked` | Month is locked by admin    |
 
 ### 2.9 Audit Action (AuditAction)
 
-| Value | English |
-|-------|---------|
-| `create` | Record created |
-| `update` | Record updated |
-| `delete` | Record deleted |
-| `lock_month` | Month locked |
+| Value          | English        |
+| -------------- | -------------- |
+| `create`       | Record created |
+| `update`       | Record updated |
+| `delete`       | Record deleted |
+| `lock_month`   | Month locked   |
 | `unlock_month` | Month unlocked |
 
 ---
@@ -206,14 +206,14 @@ timesheet-abra/
 
 ### 3.3 Deployment
 
-| Target | Platform | Method |
-|--------|----------|--------|
-| apps/mobile | Vercel Static | git push |
-| apps/admin | Vercel Static (web, min 1024px) | git push |
-| server/api | Vercel Serverless Function | git push |
-| PostgreSQL | Neon (via Vercel Marketplace, pooled) | managed |
-| Blob storage | Vercel Blob | managed |
-| Local dev | docker-compose | `docker-compose up` |
+| Target       | Platform                              | Method              |
+| ------------ | ------------------------------------- | ------------------- |
+| apps/mobile  | Vercel Static                         | git push            |
+| apps/admin   | Vercel Static (web, min 1024px)       | git push            |
+| server/api   | Vercel Serverless Function            | git push            |
+| PostgreSQL   | Neon (via Vercel Marketplace, pooled) | managed             |
+| Blob storage | Vercel Blob                           | managed             |
+| Local dev    | docker-compose                        | `docker-compose up` |
 
 ### 3.4 Excluded Technologies
 
@@ -227,84 +227,84 @@ All tables use UUID primary keys. All timestamps stored in UTC. Soft-delete: `de
 
 ### 4.1 User
 
-| Column | Type | Notes |
-|--------|------|-------|
-| id | UUID PK | auto-generated |
-| email | VARCHAR(255) | unique, not null |
-| full_name | VARCHAR(255) | not null |
-| password_hash | VARCHAR(255) | not null |
-| role | ENUM | UserRole (employee \| admin) |
-| is_active | BOOLEAN | default true |
-| token_version | INTEGER | default 0, for refresh token revocation |
-| created_at | TIMESTAMP | auto |
-| updated_at | TIMESTAMP | auto |
-| deleted_at | TIMESTAMP | nullable, soft delete |
+| Column        | Type         | Notes                                   |
+| ------------- | ------------ | --------------------------------------- |
+| id            | UUID PK      | auto-generated                          |
+| email         | VARCHAR(255) | unique, not null                        |
+| full_name     | VARCHAR(255) | not null                                |
+| password_hash | VARCHAR(255) | not null                                |
+| role          | ENUM         | UserRole (employee \| admin)            |
+| is_active     | BOOLEAN      | default true                            |
+| token_version | INTEGER      | default 0, for refresh token revocation |
+| created_at    | TIMESTAMP    | auto                                    |
+| updated_at    | TIMESTAMP    | auto                                    |
+| deleted_at    | TIMESTAMP    | nullable, soft delete                   |
 
 Index: `unique(email) WHERE deleted_at IS NULL`
 
 ### 4.2 Client
 
-| Column | Type | Notes |
-|--------|------|-------|
-| id | UUID PK | |
-| name | VARCHAR(255) | not null |
-| contact_info | TEXT | nullable, optional per PRD |
-| is_active | BOOLEAN | default true |
-| created_at | TIMESTAMP | |
-| updated_at | TIMESTAMP | |
-| deleted_at | TIMESTAMP | nullable |
+| Column       | Type         | Notes                      |
+| ------------ | ------------ | -------------------------- |
+| id           | UUID PK      |                            |
+| name         | VARCHAR(255) | not null                   |
+| contact_info | TEXT         | nullable, optional per PRD |
+| is_active    | BOOLEAN      | default true               |
+| created_at   | TIMESTAMP    |                            |
+| updated_at   | TIMESTAMP    |                            |
+| deleted_at   | TIMESTAMP    | nullable                   |
 
 ### 4.3 Project
 
-| Column | Type | Notes |
-|--------|------|-------|
-| id | UUID PK | |
-| client_id | UUID FK | → Client.id, not null |
-| name | VARCHAR(255) | not null |
-| is_active | BOOLEAN | default true |
-| created_at | TIMESTAMP | |
-| updated_at | TIMESTAMP | |
-| deleted_at | TIMESTAMP | nullable |
+| Column     | Type         | Notes                 |
+| ---------- | ------------ | --------------------- |
+| id         | UUID PK      |                       |
+| client_id  | UUID FK      | → Client.id, not null |
+| name       | VARCHAR(255) | not null              |
+| is_active  | BOOLEAN      | default true          |
+| created_at | TIMESTAMP    |                       |
+| updated_at | TIMESTAMP    |                       |
+| deleted_at | TIMESTAMP    | nullable              |
 
 ### 4.4 Task
 
-| Column | Type | Notes |
-|--------|------|-------|
-| id | UUID PK | |
-| project_id | UUID FK | → Project.id, not null |
-| name | VARCHAR(255) | not null |
-| description | TEXT | nullable |
-| status | ENUM | TaskStatus (open \| closed) |
-| created_at | TIMESTAMP | |
-| updated_at | TIMESTAMP | |
-| deleted_at | TIMESTAMP | nullable |
+| Column      | Type         | Notes                       |
+| ----------- | ------------ | --------------------------- |
+| id          | UUID PK      |                             |
+| project_id  | UUID FK      | → Project.id, not null      |
+| name        | VARCHAR(255) | not null                    |
+| description | TEXT         | nullable                    |
+| status      | ENUM         | TaskStatus (open \| closed) |
+| created_at  | TIMESTAMP    |                             |
+| updated_at  | TIMESTAMP    |                             |
+| deleted_at  | TIMESTAMP    | nullable                    |
 
 ### 4.5 TaskAssignment
 
-| Column | Type | Notes |
-|--------|------|-------|
-| id | UUID PK | |
-| user_id | UUID FK | → User.id, not null |
-| task_id | UUID FK | → Task.id, not null |
-| created_at | TIMESTAMP | |
+| Column     | Type      | Notes               |
+| ---------- | --------- | ------------------- |
+| id         | UUID PK   |                     |
+| user_id    | UUID FK   | → User.id, not null |
+| task_id    | UUID FK   | → Task.id, not null |
+| created_at | TIMESTAMP |                     |
 
 Constraint: `unique(user_id, task_id)`
 
 ### 4.6 TimeEntry
 
-| Column | Type | Notes |
-|--------|------|-------|
-| id | UUID PK | |
-| user_id | UUID FK | → User.id, not null |
-| task_id | UUID FK | → Task.id, nullable* |
-| date | DATE | not null, derived from start_at |
-| start_at | TIMESTAMP | not null |
-| end_at | TIMESTAMP | nullable (null = running timer) |
-| location | ENUM | WorkLocation, nullable* |
-| description | TEXT | nullable |
-| created_at | TIMESTAMP | |
-| updated_at | TIMESTAMP | |
-| deleted_at | TIMESTAMP | nullable |
+| Column      | Type      | Notes                           |
+| ----------- | --------- | ------------------------------- |
+| id          | UUID PK   |                                 |
+| user_id     | UUID FK   | → User.id, not null             |
+| task_id     | UUID FK   | → Task.id, nullable*            |
+| date        | DATE      | not null, derived from start_at |
+| start_at    | TIMESTAMP | not null                        |
+| end_at      | TIMESTAMP | nullable (null = running timer) |
+| location    | ENUM      | WorkLocation, nullable*         |
+| description | TEXT      | nullable                        |
+| created_at  | TIMESTAMP |                                 |
+| updated_at  | TIMESTAMP |                                 |
+| deleted_at  | TIMESTAMP | nullable                        |
 
 \* `task_id` and `location` are nullable because a running timer (`end_at = null`) has no task/location yet — assigned on stop.
 
@@ -319,19 +319,19 @@ Constraint: `unique(user_id, task_id)`
 
 ### 4.7 Absence
 
-| Column | Type | Notes |
-|--------|------|-------|
-| id | UUID PK | |
-| user_id | UUID FK | → User.id, not null |
-| type | ENUM | AbsenceType |
-| start_date | DATE | not null |
-| end_date | DATE | not null |
-| is_half_day | BOOLEAN | default false |
-| half_day_period | ENUM | HalfDayPeriod (morning \| afternoon), nullable, required if is_half_day=true |
-| notes | TEXT | nullable |
-| created_at | TIMESTAMP | |
-| updated_at | TIMESTAMP | |
-| deleted_at | TIMESTAMP | nullable |
+| Column          | Type      | Notes                                                                        |
+| --------------- | --------- | ---------------------------------------------------------------------------- |
+| id              | UUID PK   |                                                                              |
+| user_id         | UUID FK   | → User.id, not null                                                          |
+| type            | ENUM      | AbsenceType                                                                  |
+| start_date      | DATE      | not null                                                                     |
+| end_date        | DATE      | not null                                                                     |
+| is_half_day     | BOOLEAN   | default false                                                                |
+| half_day_period | ENUM      | HalfDayPeriod (morning \| afternoon), nullable, required if is_half_day=true |
+| notes           | TEXT      | nullable                                                                     |
+| created_at      | TIMESTAMP |                                                                              |
+| updated_at      | TIMESTAMP |                                                                              |
+| deleted_at      | TIMESTAMP | nullable                                                                     |
 
 **Validations:**
 
@@ -341,44 +341,44 @@ Constraint: `unique(user_id, task_id)`
 
 ### 4.8 AbsenceAttachment
 
-| Column | Type | Notes |
-|--------|------|-------|
-| id | UUID PK | |
-| absence_id | UUID FK | → Absence.id, not null |
-| file_name | VARCHAR(255) | original file name |
-| file_type | VARCHAR(50) | jpg, png, or pdf |
-| file_size | INTEGER | bytes, max 5MB |
-| blob_key | VARCHAR(500) | Vercel Blob storage key |
-| created_at | TIMESTAMP | |
+| Column     | Type         | Notes                   |
+| ---------- | ------------ | ----------------------- |
+| id         | UUID PK      |                         |
+| absence_id | UUID FK      | → Absence.id, not null  |
+| file_name  | VARCHAR(255) | original file name      |
+| file_type  | VARCHAR(50)  | jpg, png, or pdf        |
+| file_size  | INTEGER      | bytes, max 5MB          |
+| blob_key   | VARCHAR(500) | Vercel Blob storage key |
+| created_at | TIMESTAMP    |                         |
 
 ### 4.9 MonthLock
 
-| Column | Type | Notes |
-|--------|------|-------|
-| id | UUID PK | |
-| year | INTEGER | not null |
-| month | INTEGER | 1–12, not null |
-| locked_by | UUID FK | → User.id (admin), not null |
-| locked_at | TIMESTAMP | not null |
-| is_locked | BOOLEAN | default true |
-| unlocked_by | UUID FK | → User.id, nullable |
-| unlocked_at | TIMESTAMP | nullable |
+| Column      | Type      | Notes                       |
+| ----------- | --------- | --------------------------- |
+| id          | UUID PK   |                             |
+| year        | INTEGER   | not null                    |
+| month       | INTEGER   | 1–12, not null              |
+| locked_by   | UUID FK   | → User.id (admin), not null |
+| locked_at   | TIMESTAMP | not null                    |
+| is_locked   | BOOLEAN   | default true                |
+| unlocked_by | UUID FK   | → User.id, nullable         |
+| unlocked_at | TIMESTAMP | nullable                    |
 
 Constraint: `unique(year, month)`
 Note: Lock/unlock events also recorded in AuditLog.
 
 ### 4.10 AuditLog
 
-| Column | Type | Notes |
-|--------|------|-------|
-| id | UUID PK | |
-| actor_id | UUID FK | → User.id, not null |
-| action | ENUM | AuditAction |
+| Column      | Type        | Notes                         |
+| ----------- | ----------- | ----------------------------- |
+| id          | UUID PK     |                               |
+| actor_id    | UUID FK     | → User.id, not null           |
+| action      | ENUM        | AuditAction                   |
 | entity_type | VARCHAR(50) | e.g. "TimeEntry", "MonthLock" |
-| entity_id | UUID | the affected record |
-| before | JSONB | nullable, previous state |
-| after | JSONB | nullable, new state |
-| created_at | TIMESTAMP | |
+| entity_id   | UUID        | the affected record           |
+| before      | JSONB       | nullable, previous state      |
+| after       | JSONB       | nullable, new state           |
+| created_at  | TIMESTAMP   |                               |
 
 This table is **append-only**. No updates, no deletes. Visible to admin only.
 
@@ -401,11 +401,12 @@ Legend: ──< means "one to many"
 
 ### 5.1 Auth Flow
 
-- **Login:** `POST /api/v1/auth/login { email, password }`
-- Returns: `{ accessToken }` + sets refreshToken as httpOnly cookie
+- **Login:** `POST /api/v1/auth/login { email, password, rememberMe }`
+- Returns: `{ accessToken, user }` (user summary: id, email, fullName, role) + sets refreshToken as httpOnly cookie
 - **Access token:** JWT, ~15 min expiry, stateless, contains `{ userId, role }`
 - **Refresh token:** httpOnly cookie, checked against `token_version` in User table
-- **Refresh:** `POST /api/v1/auth/refresh` (reads cookie, returns new accessToken)
+- **Refresh:** `POST /api/v1/auth/refresh` (reads cookie, returns `{ accessToken, user }` so clients can bootstrap a session from the cookie alone)
+- Refresh is a **fixed window**: the cookie's Max-Age is set at login and not extended on refresh — the session hard-expires at the original 1-/30-day mark (deliberate; no sliding sessions)
 - **Logout:** `POST /api/v1/auth/logout` (increments token_version, clears cookie)
 - SSO / Azure / Google: **out of scope** (Figma Azure button is a confirmed design mistake)
 
@@ -426,11 +427,11 @@ Legend: ──< means "one to many"
 
 Every API endpoint is protected by one of:
 
-| Decorator | Requirement |
-|-----------|-------------|
-| `@Public()` | No auth required (login, refresh only) |
-| `@Auth()` | Any authenticated user |
-| `@Roles(ADMIN)` | Admin only |
+| Decorator       | Requirement                            |
+| --------------- | -------------------------------------- |
+| `@Public()`     | No auth required (login, refresh only) |
+| `@Auth()`       | Any authenticated user                 |
+| `@Roles(ADMIN)` | Admin only                             |
 
 Guard logic (applied as NestJS guards in this order):
 
@@ -464,11 +465,11 @@ Guard logic (applied as NestJS guards in this order):
 
 ### 6.2 HTTP Methods
 
-| Method | Usage |
-|--------|-------|
-| GET | Read (single or list) |
-| POST | Create |
-| PATCH | Partial update |
+| Method | Usage                         |
+| ------ | ----------------------------- |
+| GET    | Read (single or list)         |
+| POST   | Create                        |
+| PATCH  | Partial update                |
 | DELETE | Soft delete (sets deleted_at) |
 
 ### 6.3 Request/Response Format
@@ -506,25 +507,23 @@ Guard logic (applied as NestJS guards in this order):
   "statusCode": 400,
   "message": "Validation failed",
   "error": "Bad Request",
-  "details": [
-    { "field": "email", "rule": "VAL-01", "message": "Email is required" }
-  ]
+  "details": [{ "field": "email", "rule": "VAL-01", "message": "Email is required" }]
 }
 ```
 
 ### 6.6 HTTP Status Codes
 
-| Code | Usage |
-|------|-------|
-| 200 | OK (read, update) |
-| 201 | Created |
-| 204 | No Content (delete) |
-| 400 | Bad Request (validation) |
-| 401 | Unauthorized (missing/invalid token) |
-| 403 | Forbidden (wrong role, month locked) |
-| 404 | Not Found |
-| 409 | Conflict (duplicate email, overlapping entries) |
-| 422 | Unprocessable Entity (business rule violation) |
+| Code | Usage                                           |
+| ---- | ----------------------------------------------- |
+| 200  | OK (read, update)                               |
+| 201  | Created                                         |
+| 204  | No Content (delete)                             |
+| 400  | Bad Request (validation)                        |
+| 401  | Unauthorized (missing/invalid token)            |
+| 403  | Forbidden (wrong role, month locked)            |
+| 404  | Not Found                                       |
+| 409  | Conflict (duplicate email, overlapping entries) |
+| 422  | Unprocessable Entity (business rule violation)  |
 
 ### 6.7 Pagination
 
@@ -537,23 +536,23 @@ Guard logic (applied as NestJS guards in this order):
 
 Filtering via query params per endpoint (defined in feature specs). Common patterns:
 
-| Param | Usage |
-|-------|-------|
-| `?month=2026-08` | Filter by month |
+| Param            | Usage                            |
+| ---------------- | -------------------------------- |
+| `?month=2026-08` | Filter by month                  |
 | `?userId=<uuid>` | Filter by user (admin endpoints) |
-| `?isActive=true` | Filter active/inactive entities |
+| `?isActive=true` | Filter active/inactive entities  |
 
 Sorting: `?sort=createdAt&order=desc`
 Defaults defined per endpoint in feature specs.
 
 ### 6.9 Timestamps
 
-| Layer | Format |
-|-------|--------|
-| Database | All stored in UTC |
-| API | ISO 8601 UTC (e.g. `2026-08-13T09:00:00Z`) |
-| Frontend | Converted to Asia/Jerusalem for display |
-| Date-only fields | `YYYY-MM-DD` format |
+| Layer            | Format                                     |
+| ---------------- | ------------------------------------------ |
+| Database         | All stored in UTC                          |
+| API              | ISO 8601 UTC (e.g. `2026-08-13T09:00:00Z`) |
+| Frontend         | Converted to Asia/Jerusalem for display    |
+| Date-only fields | `YYYY-MM-DD` format                        |
 
 ### 6.10 Soft Delete
 
@@ -572,45 +571,45 @@ Defaults defined per endpoint in feature specs.
 
 ### 7.1 Employee Permissions
 
-| Resource | Action | Condition |
-|----------|--------|-----------|
-| Own TimeEntries | Create | Month open |
-| Own TimeEntries | Read | Always |
-| Own TimeEntries | Update | Month open |
-| Own TimeEntries | Delete | Month open |
-| Own Absences | Create | Month open, OR month locked + type is sick/military |
-| Own Absences | Read | Always |
-| Own Absences | Update | Month open |
-| Own Absences | Delete | Month open |
-| Own Attachments | Upload | Always (even locked month) |
-| Own Attachments | Read/Download | Always |
-| Own Timer | Start | Month open, no active timer running |
-| Own Timer | Stop | Has active timer |
-| Assigned Tasks | Read | Always (for pickers) |
-| Clients/Projects | Read | Only those linked to assigned tasks |
-| MonthLock | Read | Always (to show lock status) |
-| Other Users | — | No access |
-| AuditLog | — | No access |
+| Resource         | Action        | Condition                                           |
+| ---------------- | ------------- | --------------------------------------------------- |
+| Own TimeEntries  | Create        | Month open                                          |
+| Own TimeEntries  | Read          | Always                                              |
+| Own TimeEntries  | Update        | Month open                                          |
+| Own TimeEntries  | Delete        | Month open                                          |
+| Own Absences     | Create        | Month open, OR month locked + type is sick/military |
+| Own Absences     | Read          | Always                                              |
+| Own Absences     | Update        | Month open                                          |
+| Own Absences     | Delete        | Month open                                          |
+| Own Attachments  | Upload        | Always (even locked month)                          |
+| Own Attachments  | Read/Download | Always                                              |
+| Own Timer        | Start         | Month open, no active timer running                 |
+| Own Timer        | Stop          | Has active timer                                    |
+| Assigned Tasks   | Read          | Always (for pickers)                                |
+| Clients/Projects | Read          | Only those linked to assigned tasks                 |
+| MonthLock        | Read          | Always (to show lock status)                        |
+| Other Users      | —             | No access                                           |
+| AuditLog         | —             | No access                                           |
 
 ### 7.2 Admin Permissions
 
-| Resource | Action | Condition |
-|----------|--------|-----------|
-| Users | CRUD | Always |
-| Clients | CRUD | Always |
-| Projects | CRUD | Always |
-| Tasks | CRUD | Always |
-| TaskAssignments | CRUD | Always |
-| Employee TimeEntries | Read | Always |
-| Employee TimeEntries | Update | Always (audit-logged) |
-| Employee Absences | Read | Always |
-| Employee Absences | Update | Always (audit-logged) |
-| Employee Absences | Delete | Always (audit-logged) |
-| MonthLock | Lock | Always |
-| MonthLock | Unlock/Reopen | Always |
-| AuditLog | Read | Always |
-| Own TimeEntries | — | Admin never reports hours |
-| Own Absences | — | Admin never reports |
+| Resource             | Action        | Condition                 |
+| -------------------- | ------------- | ------------------------- |
+| Users                | CRUD          | Always                    |
+| Clients              | CRUD          | Always                    |
+| Projects             | CRUD          | Always                    |
+| Tasks                | CRUD          | Always                    |
+| TaskAssignments      | CRUD          | Always                    |
+| Employee TimeEntries | Read          | Always                    |
+| Employee TimeEntries | Update        | Always (audit-logged)     |
+| Employee Absences    | Read          | Always                    |
+| Employee Absences    | Update        | Always (audit-logged)     |
+| Employee Absences    | Delete        | Always (audit-logged)     |
+| MonthLock            | Lock          | Always                    |
+| MonthLock            | Unlock/Reopen | Always                    |
+| AuditLog             | Read          | Always                    |
+| Own TimeEntries      | —             | Admin never reports hours |
+| Own Absences         | —             | Admin never reports       |
 
 ### 7.3 Locked Month Override Summary
 
@@ -641,9 +640,10 @@ These rules are defined once here. Feature specs reference them by section numbe
 **Lock:** Admin calls `POST /api/v1/month-lock { year, month }`. Sets `is_locked=true`, `locked_by`, `locked_at`. Creates AuditLog entry.
 
 **Lock warnings:** Before locking, the API checks for:
+
 - Employees with a running timer — returns a warning listing affected employees
 - Sick/military absences without attachments — returns a warning listing affected absences
-The admin sees these warnings but can still proceed with locking.
+  The admin sees these warnings but can still proceed with locking.
 
 **Unlock:** Admin calls `PATCH /api/v1/month-lock/:id { is_locked: false }`. Sets `is_locked=false`, `unlocked_by`, `unlocked_at`. Creates AuditLog entry.
 
@@ -716,12 +716,12 @@ The admin sees these warnings but can still proceed with locking.
 
 **Timezone:**
 
-| Layer | Rule |
-|-------|------|
-| Database | All timestamps in UTC |
-| API | ISO 8601 UTC (`2026-08-13T09:00:00Z`) |
-| Frontend | Display in Asia/Jerusalem |
-| Date fields | `YYYY-MM-DD` |
+| Layer       | Rule                                  |
+| ----------- | ------------------------------------- |
+| Database    | All timestamps in UTC                 |
+| API         | ISO 8601 UTC (`2026-08-13T09:00:00Z`) |
+| Frontend    | Display in Asia/Jerusalem             |
+| Date fields | `YYYY-MM-DD`                          |
 
 **9-Hour Quota:**
 
@@ -777,11 +777,11 @@ A running timer is a TimeEntry with:
 
 **Constraints:**
 
-| Rule | Value |
-|------|-------|
-| Allowed types | JPG, PNG, PDF |
-| Max size | 5MB per file |
-| Access | Signed URLs, 60 minute expiry |
+| Rule          | Value                         |
+| ------------- | ----------------------------- |
+| Allowed types | JPG, PNG, PDF                 |
+| Max size      | 5MB per file                  |
+| Access        | Signed URLs, 60 minute expiry |
 
 **Upload flow:**
 
@@ -805,74 +805,74 @@ All validation rules have a stable ID (`VAL-nn`). Both frontend and backend refe
 
 ### 9.1 Authentication
 
-| ID | Rule |
-|----|------|
-| VAL-01 | Email is required |
+| ID     | Rule                               |
+| ------ | ---------------------------------- |
+| VAL-01 | Email is required                  |
 | VAL-02 | Email must be a valid email format |
-| VAL-03 | Password is required |
-| VAL-04 | Password minimum 8 characters |
+| VAL-03 | Password is required               |
+| VAL-04 | Password minimum 8 characters      |
 
 ### 9.2 User Management
 
-| ID | Rule |
-|----|------|
-| VAL-10 | Full name is required |
-| VAL-11 | Email must be unique (among non-deleted users) |
-| VAL-12 | Role must be a valid UserRole enum value |
+| ID     | Rule                                              |
+| ------ | ------------------------------------------------- |
+| VAL-10 | Full name is required                             |
+| VAL-11 | Email must be unique (among non-deleted users)    |
+| VAL-12 | Role must be a valid UserRole enum value          |
 | VAL-13 | Initial password is required when creating a user |
 
 ### 9.3 Entity Management
 
-| ID | Rule |
-|----|------|
-| VAL-20 | Client name is required |
-| VAL-21 | Client name must be unique (among non-deleted clients) |
-| VAL-22 | Project name is required |
-| VAL-23 | Project must reference an active, non-deleted client |
-| VAL-24 | Task name is required |
-| VAL-25 | Task must reference an active, non-deleted project |
+| ID     | Rule                                                    |
+| ------ | ------------------------------------------------------- |
+| VAL-20 | Client name is required                                 |
+| VAL-21 | Client name must be unique (among non-deleted clients)  |
+| VAL-22 | Project name is required                                |
+| VAL-23 | Project must reference an active, non-deleted client    |
+| VAL-24 | Task name is required                                   |
+| VAL-25 | Task must reference an active, non-deleted project      |
 | VAL-26 | TaskAssignment must reference an existing user and task |
-| VAL-27 | TaskAssignment must be unique (user_id + task_id) |
+| VAL-27 | TaskAssignment must be unique (user_id + task_id)       |
 
 ### 9.4 Time Entries
 
-| ID | Rule |
-|----|------|
-| VAL-30 | start_at is required |
-| VAL-31 | end_at must be after start_at (midnight crossing allowed for night shifts) |
+| ID     | Rule                                                                                                 |
+| ------ | ---------------------------------------------------------------------------------------------------- |
+| VAL-30 | start_at is required                                                                                 |
+| VAL-31 | end_at must be after start_at (midnight crossing allowed for night shifts)                           |
 | VAL-32 | Time entries must not overlap for the same user (checked across dates for midnight-crossing entries) |
-| VAL-33 | User must be assigned to the selected task |
-| VAL-34 | Month must not be locked (see §8.1 exceptions) |
-| VAL-35 | Task is required (except running timer) |
-| VAL-36 | Location is required (except running timer) |
-| VAL-37 | Only one running timer per user at a time |
-| VAL-38 | Date must match the date portion of start_at |
+| VAL-33 | User must be assigned to the selected task                                                           |
+| VAL-34 | Month must not be locked (see §8.1 exceptions)                                                       |
+| VAL-35 | Task is required (except running timer)                                                              |
+| VAL-36 | Location is required (except running timer)                                                          |
+| VAL-37 | Only one running timer per user at a time                                                            |
+| VAL-38 | Date must match the date portion of start_at                                                         |
 
 ### 9.5 Absences
 
-| ID | Rule |
-|----|------|
-| VAL-40 | Absence type must be a valid AbsenceType enum value |
-| VAL-41 | start_date is required |
-| VAL-42 | end_date must be >= start_date |
-| VAL-43 | Date range must exclude Fridays and Saturdays |
+| ID     | Rule                                                                                                          |
+| ------ | ------------------------------------------------------------------------------------------------------------- |
+| VAL-40 | Absence type must be a valid AbsenceType enum value                                                           |
+| VAL-41 | start_date is required                                                                                        |
+| VAL-42 | end_date must be >= start_date                                                                                |
+| VAL-43 | Date range must exclude Fridays and Saturdays                                                                 |
 | VAL-44 | Sick and military absences require attachment (can be added after creation, but must exist before month lock) |
-| VAL-45 | Month must not be locked, UNLESS type is sick or military |
+| VAL-45 | Month must not be locked, UNLESS type is sick or military                                                     |
 
 ### 9.6 Month Lock
 
-| ID | Rule |
-|----|------|
-| VAL-50 | Year and month are required |
+| ID     | Rule                                     |
+| ------ | ---------------------------------------- |
+| VAL-50 | Year and month are required              |
 | VAL-51 | Month cannot be locked if already locked |
 | VAL-52 | Month cannot be unlocked if already open |
 
 ### 9.7 File Uploads
 
-| ID | Rule |
-|----|------|
-| VAL-60 | File type must be JPG, PNG, or PDF |
-| VAL-61 | File size must not exceed 5MB |
+| ID     | Rule                                          |
+| ------ | --------------------------------------------- |
+| VAL-60 | File type must be JPG, PNG, or PDF            |
+| VAL-61 | File size must not exceed 5MB                 |
 | VAL-62 | Attachment must reference an existing absence |
 
 ---
@@ -883,26 +883,26 @@ Components listed here are built ONCE and consumed by multiple screens. Feature 
 
 ### 10.1 Employee App (`apps/mobile/src/components/ui/`)
 
-| Component | Consumed By | Props / Notes |
-|-----------|-------------|---------------|
-| CascadingPicker | Daily report (manual entry), Timer stop dialog | `userId` → filters Client→Project→Task to assigned tasks only |
-| EntryForm | Daily report (create + edit), Timer stop dialog (completion mode) | `mode` (manual \| timer-complete), optional prefilled `start_at`/`end_at` |
-| EntriesTable | Home screen (today's entries), Monthly view (day detail), Admin: employee report view | Columns: time range, duration, client, project, task, location, description |
-| QuotaBar | Home screen, multi-entry day view | `totalHours`, `quota` (default 9). Visual: green >=9, yellow <9, red >9 |
-| DayStatusBadge | Monthly calendar, monthly list | `status` (DayStatus enum). Shows: מלא / חסר / חריג with color |
-| TimerBar | Home screen (persistent top bar when timer is running) | `startAt`, `onStop` callback. Shows elapsed time |
-| LocationDropdown | EntryForm, Timer stop dialog | `value`, `onChange`. Options: WorkLocation enum |
-| AttachmentUpload | Absence form | `absenceId`, `onUploadComplete`. Validates: VAL-60, VAL-61 |
-| HalfDayToggle | Absence form | `value`, `onChange` |
+| Component        | Consumed By                                                                           | Props / Notes                                                               |
+| ---------------- | ------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| CascadingPicker  | Daily report (manual entry), Timer stop dialog                                        | `userId` → filters Client→Project→Task to assigned tasks only               |
+| EntryForm        | Daily report (create + edit), Timer stop dialog (completion mode)                     | `mode` (manual \| timer-complete), optional prefilled `start_at`/`end_at`   |
+| EntriesTable     | Home screen (today's entries), Monthly view (day detail), Admin: employee report view | Columns: time range, duration, client, project, task, location, description |
+| QuotaBar         | Home screen, multi-entry day view                                                     | `totalHours`, `quota` (default 9). Visual: green >=9, yellow <9, red >9     |
+| DayStatusBadge   | Monthly calendar, monthly list                                                        | `status` (DayStatus enum). Shows: מלא / חסר / חריג with color               |
+| TimerBar         | Home screen (persistent top bar when timer is running)                                | `startAt`, `onStop` callback. Shows elapsed time                            |
+| LocationDropdown | EntryForm, Timer stop dialog                                                          | `value`, `onChange`. Options: WorkLocation enum                             |
+| AttachmentUpload | Absence form                                                                          | `absenceId`, `onUploadComplete`. Validates: VAL-60, VAL-61                  |
+| HalfDayToggle    | Absence form                                                                          | `value`, `onChange`                                                         |
 
 ### 10.2 Admin Console (`apps/admin/src/components/ui/`)
 
-| Component | Consumed By | Props / Notes |
-|-----------|-------------|---------------|
-| DataTable | Users list, Clients list, Projects list, Tasks list, Assignments list | Config-driven: columns, sort, filter, pagination, row actions |
-| CrudModal | User create/edit, Client create/edit, Project create/edit, Task create/edit | Config-driven: fields, validation, submit handler |
-| EntriesTable | Employee report view | Same data contract as mobile, different styling (shadcn/ui) |
-| LockStatusIndicator | Month lock screen, report headers | `year`, `month`, `isLocked`, `lockedAt` |
+| Component           | Consumed By                                                                 | Props / Notes                                                 |
+| ------------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| DataTable           | Users list, Clients list, Projects list, Tasks list, Assignments list       | Config-driven: columns, sort, filter, pagination, row actions |
+| CrudModal           | User create/edit, Client create/edit, Project create/edit, Task create/edit | Config-driven: fields, validation, submit handler             |
+| EntriesTable        | Employee report view                                                        | Same data contract as mobile, different styling (shadcn/ui)   |
+| LockStatusIndicator | Month lock screen, report headers                                           | `year`, `month`, `isLocked`, `lockedAt`                       |
 
 ### 10.3 Shared (`packages/contracts/`)
 
@@ -920,15 +920,15 @@ Every screen, its route, required role, and states. Detailed flows and acceptanc
 
 ### 11.1 Employee App
 
-| Screen | Route | Role | States |
-|--------|-------|------|--------|
-| Login | `/login` | Public | default, loading, error (invalid credentials) |
-| Home / Daily Report | `/` | Employee | default (with/without entries), loading, timer-running, month-locked |
-| New Entry | `/entry/new` | Employee | default, saving, validation-error |
-| Edit Entry | `/entry/:id` | Employee | default, saving, validation-error, month-locked (read only) |
-| Monthly View | `/monthly` | Employee | default (calendar + list), loading, empty-month, month-locked |
-| Absence Report | `/absence/new` | Employee | default, saving, validation-error, upload-in-progress |
-| Timer Stop Dialog | (dialog) | Employee | completion form, saving |
+| Screen              | Route          | Role     | States                                                               |
+| ------------------- | -------------- | -------- | -------------------------------------------------------------------- |
+| Login               | `/login`       | Public   | default, loading, error (invalid credentials)                        |
+| Home / Daily Report | `/`            | Employee | default (with/without entries), loading, timer-running, month-locked |
+| New Entry           | `/entry/new`   | Employee | default, saving, validation-error                                    |
+| Edit Entry          | `/entry/:id`   | Employee | default, saving, validation-error, month-locked (read only)          |
+| Monthly View        | `/monthly`     | Employee | default (calendar + list), loading, empty-month, month-locked        |
+| Absence Report      | `/absence/new` | Employee | default, saving, validation-error, upload-in-progress                |
+| Timer Stop Dialog   | (dialog)       | Employee | completion form, saving                                              |
 
 **Navigation (employee):**
 
@@ -938,17 +938,19 @@ Every screen, its route, required role, and states. Detailed flows and acceptanc
 
 ### 11.2 Admin Console
 
-| Screen | Route | Role | States |
-|--------|-------|------|--------|
-| Admin Login | `/admin/login` | Public | default, loading, error |
-| Users | `/admin/users` | Admin | table, loading, empty, modal (create/edit) |
-| Clients | `/admin/clients` | Admin | table, loading, empty, modal |
-| Projects | `/admin/projects` | Admin | table, loading, empty, modal |
-| Tasks | `/admin/tasks` | Admin | table, loading, empty, modal |
-| Assignments | `/admin/assignments` | Admin | table, loading, empty, modal |
-| Employee Reports | `/admin/reports`, `/admin/reports/:id` | Admin | employee list, employee detail (entries table), edit mode, loading |
-| Month Lock | `/admin/month-lock` | Admin | month selector, lock/unlock controls, lock history |
-| Audit Log | `/admin/audit` | Admin | table with filters, loading, empty |
+Routes are app-local: each app is its own deployment (separate Vercel project), so the admin console's login lives at `/login` on the admin domain rather than a literal `/admin/login` path. The `/admin/*` prefixes below describe the console's internal screens.
+
+| Screen           | Route                                  | Role   | States                                                             |
+| ---------------- | -------------------------------------- | ------ | ------------------------------------------------------------------ |
+| Admin Login      | `/login` (admin deployment)            | Public | default, loading, error                                            |
+| Users            | `/admin/users`                         | Admin  | table, loading, empty, modal (create/edit)                         |
+| Clients          | `/admin/clients`                       | Admin  | table, loading, empty, modal                                       |
+| Projects         | `/admin/projects`                      | Admin  | table, loading, empty, modal                                       |
+| Tasks            | `/admin/tasks`                         | Admin  | table, loading, empty, modal                                       |
+| Assignments      | `/admin/assignments`                   | Admin  | table, loading, empty, modal                                       |
+| Employee Reports | `/admin/reports`, `/admin/reports/:id` | Admin  | employee list, employee detail (entries table), edit mode, loading |
+| Month Lock       | `/admin/month-lock`                    | Admin  | month selector, lock/unlock controls, lock history                 |
+| Audit Log        | `/admin/audit`                         | Admin  | table with filters, loading, empty                                 |
 
 **Navigation (admin):** sidebar with links to all screens above.
 
@@ -960,116 +962,116 @@ One line per endpoint. Full request/response shapes defined in `packages/contrac
 
 ### 12.1 Auth
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| POST | `/api/v1/auth/login` | Public | Login |
-| POST | `/api/v1/auth/refresh` | Public | Refresh access token |
-| POST | `/api/v1/auth/logout` | Auth | Logout (revoke refresh) |
+| Method | Path                   | Auth   | Description             |
+| ------ | ---------------------- | ------ | ----------------------- |
+| POST   | `/api/v1/auth/login`   | Public | Login                   |
+| POST   | `/api/v1/auth/refresh` | Public | Refresh access token    |
+| POST   | `/api/v1/auth/logout`  | Auth   | Logout (revoke refresh) |
 
 ### 12.2 Users (Admin only)
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| GET | `/api/v1/users` | Admin | List users (paginated) |
-| GET | `/api/v1/users/:id` | Admin | Get user by ID |
-| POST | `/api/v1/users` | Admin | Create user |
-| PATCH | `/api/v1/users/:id` | Admin | Update user |
-| DELETE | `/api/v1/users/:id` | Admin | Soft delete user |
-| POST | `/api/v1/users/:id/reset-password` | Admin | Reset user password |
+| Method | Path                               | Auth  | Description            |
+| ------ | ---------------------------------- | ----- | ---------------------- |
+| GET    | `/api/v1/users`                    | Admin | List users (paginated) |
+| GET    | `/api/v1/users/:id`                | Admin | Get user by ID         |
+| POST   | `/api/v1/users`                    | Admin | Create user            |
+| PATCH  | `/api/v1/users/:id`                | Admin | Update user            |
+| DELETE | `/api/v1/users/:id`                | Admin | Soft delete user       |
+| POST   | `/api/v1/users/:id/reset-password` | Admin | Reset user password    |
 
 ### 12.3 Clients (Admin only)
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| GET | `/api/v1/clients` | Admin | List clients (paginated) |
-| GET | `/api/v1/clients/:id` | Admin | Get client by ID |
-| POST | `/api/v1/clients` | Admin | Create client |
-| PATCH | `/api/v1/clients/:id` | Admin | Update client |
-| DELETE | `/api/v1/clients/:id` | Admin | Soft delete client |
+| Method | Path                  | Auth  | Description              |
+| ------ | --------------------- | ----- | ------------------------ |
+| GET    | `/api/v1/clients`     | Admin | List clients (paginated) |
+| GET    | `/api/v1/clients/:id` | Admin | Get client by ID         |
+| POST   | `/api/v1/clients`     | Admin | Create client            |
+| PATCH  | `/api/v1/clients/:id` | Admin | Update client            |
+| DELETE | `/api/v1/clients/:id` | Admin | Soft delete client       |
 
 ### 12.4 Projects (Admin only)
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| GET | `/api/v1/projects` | Admin | List projects (paginated) |
-| GET | `/api/v1/projects/:id` | Admin | Get project by ID |
-| POST | `/api/v1/projects` | Admin | Create project |
-| PATCH | `/api/v1/projects/:id` | Admin | Update project |
-| DELETE | `/api/v1/projects/:id` | Admin | Soft delete project |
+| Method | Path                   | Auth  | Description               |
+| ------ | ---------------------- | ----- | ------------------------- |
+| GET    | `/api/v1/projects`     | Admin | List projects (paginated) |
+| GET    | `/api/v1/projects/:id` | Admin | Get project by ID         |
+| POST   | `/api/v1/projects`     | Admin | Create project            |
+| PATCH  | `/api/v1/projects/:id` | Admin | Update project            |
+| DELETE | `/api/v1/projects/:id` | Admin | Soft delete project       |
 
 ### 12.5 Tasks (Admin only)
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| GET | `/api/v1/tasks` | Admin | List tasks (paginated) |
-| GET | `/api/v1/tasks/:id` | Admin | Get task by ID |
-| POST | `/api/v1/tasks` | Admin | Create task |
-| PATCH | `/api/v1/tasks/:id` | Admin | Update task |
+| Method | Path                | Auth  | Description              |
+| ------ | ------------------- | ----- | ------------------------ |
+| GET    | `/api/v1/tasks`     | Admin | List tasks (paginated)   |
+| GET    | `/api/v1/tasks/:id` | Admin | Get task by ID           |
+| POST   | `/api/v1/tasks`     | Admin | Create task              |
+| PATCH  | `/api/v1/tasks/:id` | Admin | Update task              |
 | DELETE | `/api/v1/tasks/:id` | Admin | Soft delete (close) task |
 
 ### 12.6 Task Assignments (Admin only)
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| GET | `/api/v1/assignments` | Admin | List assignments (paginated) |
-| POST | `/api/v1/assignments` | Admin | Assign user to task |
-| DELETE | `/api/v1/assignments/:id` | Admin | Remove assignment |
+| Method | Path                      | Auth  | Description                  |
+| ------ | ------------------------- | ----- | ---------------------------- |
+| GET    | `/api/v1/assignments`     | Admin | List assignments (paginated) |
+| POST   | `/api/v1/assignments`     | Admin | Assign user to task          |
+| DELETE | `/api/v1/assignments/:id` | Admin | Remove assignment            |
 
 ### 12.7 Time Entries
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| GET | `/api/v1/time-entries` | Auth | List own entries (employee) or any user's (admin). `?userId=&date=&month=` |
-| GET | `/api/v1/time-entries/:id` | Auth | Get entry by ID |
-| POST | `/api/v1/time-entries` | Employee | Create entry |
-| PATCH | `/api/v1/time-entries/:id` | Auth | Update entry (employee own, admin any — audit-logged) |
-| DELETE | `/api/v1/time-entries/:id` | Employee | Soft delete own entry |
+| Method | Path                       | Auth     | Description                                                                |
+| ------ | -------------------------- | -------- | -------------------------------------------------------------------------- |
+| GET    | `/api/v1/time-entries`     | Auth     | List own entries (employee) or any user's (admin). `?userId=&date=&month=` |
+| GET    | `/api/v1/time-entries/:id` | Auth     | Get entry by ID                                                            |
+| POST   | `/api/v1/time-entries`     | Employee | Create entry                                                               |
+| PATCH  | `/api/v1/time-entries/:id` | Auth     | Update entry (employee own, admin any — audit-logged)                      |
+| DELETE | `/api/v1/time-entries/:id` | Employee | Soft delete own entry                                                      |
 
 ### 12.8 Timer
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| POST | `/api/v1/timer/start` | Employee | Start timer (creates entry with end_at=null) |
-| POST | `/api/v1/timer/stop` | Employee | Stop timer (sets end_at, task_id, location) |
-| GET | `/api/v1/timer/active` | Employee | Get active timer (if any) |
+| Method | Path                   | Auth     | Description                                  |
+| ------ | ---------------------- | -------- | -------------------------------------------- |
+| POST   | `/api/v1/timer/start`  | Employee | Start timer (creates entry with end_at=null) |
+| POST   | `/api/v1/timer/stop`   | Employee | Stop timer (sets end_at, task_id, location)  |
+| GET    | `/api/v1/timer/active` | Employee | Get active timer (if any)                    |
 
 ### 12.9 Absences
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| GET | `/api/v1/absences` | Auth | List own (employee) or any user's (admin). `?userId=&month=` |
-| GET | `/api/v1/absences/:id` | Auth | Get absence by ID |
-| POST | `/api/v1/absences` | Employee | Create absence |
-| PATCH | `/api/v1/absences/:id` | Employee | Update own absence |
-| DELETE | `/api/v1/absences/:id` | Employee | Soft delete own absence |
+| Method | Path                   | Auth     | Description                                                  |
+| ------ | ---------------------- | -------- | ------------------------------------------------------------ |
+| GET    | `/api/v1/absences`     | Auth     | List own (employee) or any user's (admin). `?userId=&month=` |
+| GET    | `/api/v1/absences/:id` | Auth     | Get absence by ID                                            |
+| POST   | `/api/v1/absences`     | Employee | Create absence                                               |
+| PATCH  | `/api/v1/absences/:id` | Employee | Update own absence                                           |
+| DELETE | `/api/v1/absences/:id` | Employee | Soft delete own absence                                      |
 
 ### 12.10 Absence Attachments
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| POST | `/api/v1/files/upload-url` | Employee | Get signed upload URL |
-| POST | `/api/v1/absences/:id/attachments` | Employee | Register uploaded file |
-| GET | `/api/v1/absences/:absenceId/attachments/:id/url` | Auth | Get signed download URL |
+| Method | Path                                              | Auth     | Description             |
+| ------ | ------------------------------------------------- | -------- | ----------------------- |
+| POST   | `/api/v1/files/upload-url`                        | Employee | Get signed upload URL   |
+| POST   | `/api/v1/absences/:id/attachments`                | Employee | Register uploaded file  |
+| GET    | `/api/v1/absences/:absenceId/attachments/:id/url` | Auth     | Get signed download URL |
 
 ### 12.11 Month Lock (Admin only)
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| GET | `/api/v1/month-lock` | Admin | List month lock statuses. `?year=` |
-| POST | `/api/v1/month-lock` | Admin | Lock a month |
-| PATCH | `/api/v1/month-lock/:id` | Admin | Unlock (reopen) a month |
+| Method | Path                     | Auth  | Description                        |
+| ------ | ------------------------ | ----- | ---------------------------------- |
+| GET    | `/api/v1/month-lock`     | Admin | List month lock statuses. `?year=` |
+| POST   | `/api/v1/month-lock`     | Admin | Lock a month                       |
+| PATCH  | `/api/v1/month-lock/:id` | Admin | Unlock (reopen) a month            |
 
 ### 12.12 Audit Log (Admin only)
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| GET | `/api/v1/audit-log` | Admin | List audit entries (paginated, filterable). `?entityType=&userId=&month=` |
+| Method | Path                | Auth  | Description                                                               |
+| ------ | ------------------- | ----- | ------------------------------------------------------------------------- |
+| GET    | `/api/v1/audit-log` | Admin | List audit entries (paginated, filterable). `?entityType=&userId=&month=` |
 
 ### 12.13 Employee Picker Data
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| GET | `/api/v1/me/assignments` | Employee | Get own task assignments with parent project+client (for cascading picker) |
+| Method | Path                     | Auth     | Description                                                                |
+| ------ | ------------------------ | -------- | -------------------------------------------------------------------------- |
+| GET    | `/api/v1/me/assignments` | Employee | Get own task assignments with parent project+client (for cascading picker) |
 
 ---
 
@@ -1161,10 +1163,10 @@ CI enforces **70% code coverage minimum** on every PR. PRs below 70% are blocked
 
 ### 14.3 Testing Tools
 
-| Layer | Tool |
-|-------|------|
-| Backend | Jest + Supertest (NestJS default) |
-| Frontend | Vitest + React Testing Library |
+| Layer    | Tool                                                      |
+| -------- | --------------------------------------------------------- |
+| Backend  | Jest + Supertest (NestJS default)                         |
+| Frontend | Vitest + React Testing Library                            |
 | Database | Test database (separate Neon branch or docker-compose pg) |
 
 ### 14.4 Test Conventions
@@ -1193,23 +1195,23 @@ Each acceptance criterion maps to at least one test. The feature spec's test pla
 
 ### 15.1 File Ownership
 
-| Path | Ownership Rule |
-|------|----------------|
-| `packages/contracts/` | Joint — PR requires review from at least one other developer |
-| `prisma/schema.prisma` | Joint — PR requires review |
-| `server/api/src/common/` | Joint — PR requires review |
+| Path                     | Ownership Rule                                               |
+| ------------------------ | ------------------------------------------------------------ |
+| `packages/contracts/`    | Joint — PR requires review from at least one other developer |
+| `prisma/schema.prisma`   | Joint — PR requires review                                   |
+| `server/api/src/common/` | Joint — PR requires review                                   |
 
 Rule: if your PR touches `packages/contracts/` or `schema.prisma`, it must be reviewed by at least one other team member.
 
 ### 15.2 Branching Strategy
 
-| Branch | Purpose |
-|--------|---------|
-| `main` | Production, always deployable |
-| `stage` | Pre-production testing |
-| `dev` | Integration branch, PRs merge here |
-| `feat/<epic-name>` | Feature branches |
-| `fix/<description>` | Bugfix branches |
+| Branch              | Purpose                            |
+| ------------------- | ---------------------------------- |
+| `main`              | Production, always deployable      |
+| `stage`             | Pre-production testing             |
+| `dev`               | Integration branch, PRs merge here |
+| `feat/<epic-name>`  | Feature branches                   |
+| `fix/<description>` | Bugfix branches                    |
 
 **Flow:**
 
@@ -1263,33 +1265,33 @@ The general SPEC (this document) is frozen once all team members have reviewed i
 
 Resolved decisions from the blueprint's open questions and PRD contradictions.
 
-| ID | Question | Resolution | Rationale |
-|----|----------|------------|-----------|
-| ADR-01 | One app or two? | Two separate React frontends. Employee app (`apps/mobile`): React+Vite+Tailwind, 393px, RTL. Admin console (`apps/admin`): React+shadcn/ui, web (min 1024px). | Different viewports, different audiences, independent deployability. |
-| ADR-02 | TimeEntry shape: startAt/endAt or hours? | `start_at` + nullable `end_at`. `end_at=null` means running timer. No separate timer table. | Timer is a state, not a migration. |
-| ADR-03 | Work location: per-day or per-entry? | Per-entry. Each TimeEntry carries its own WorkLocation value. | Employee may work from different locations in the same day. |
-| ADR-04 | 9-hour quota: warning or hard block? | Soft visual target. API does not reject entries based on total hours. Frontend shows color-coded quota bar. | User confirmed advisory, not enforcement. |
-| ADR-05 | Overlapping entries: allowed or rejected? | Rejected. API validates no overlapping `[start_at, end_at]` for same user on same date. | User confirmed. |
-| ADR-06 | Timezone | UTC in database, ISO 8601 UTC in API, Asia/Jerusalem in frontend display. | Standard practice. |
-| ADR-07 | Midnight crossing / night shifts | Supported. `end_at` must be > `start_at`, but can cross midnight (e.g. 22:00–06:00). `date` field = date of `start_at`. | Night shifts are a real use case. Overlap detection checks across dates. |
-| ADR-08 | Timer edge cases | At most one running timer per user. Timer cannot start if month is locked. If month is locked while timer is running: admin gets a warning, timer is NOT auto-stopped. | Admin warned, employee must stop manually. |
-| ADR-09 | Half-day absence quota | Deferred to feature spec for absences. | Feature-specific detail. |
-| ADR-10 | Israeli holidays | Not handled. Only Fri/Sat excluded from absence ranges. No holiday calendar. | PRD does not mention holidays. |
-| ADR-11 | Absence attachment status | Sick and military absences require attachments. Attachment can be added after absence creation (even in locked month). No explicit status field for "missing attachment." | Detail in feature spec. |
-| ADR-12 | Month lock model | Two states only — Open and Locked. No employee-close step. Month is open until admin locks. Admin can reopen. Locked month is read-only with exceptions per §7.3. | User confirmed single state change. |
-| ADR-13 | Audit log scope and UI | Must log admin edits to reports + month lock/unlock. Should log time entry and absence CRUD. Admin-only visibility. UI: filterable table at `/admin/audit`. | PRD requirement + best practice. |
-| ADR-14 | היסטוריית דיווחים (report history) | Folded into Monthly View screen. Not a separate screen. | Avoids inventing unspecified UI. |
-| ADR-15 | Soft-delete read path | Deactivated/deleted entities hidden from new-entry pickers. Historical entries still display the name of deleted entities. See §8.3. | Data integrity for historical records. |
-| ADR-16 | Auth gaps | No forgot-password flow — admin resets manually. No force-change on first login. No lockout policy. Password minimum 8 chars, no additional complexity rules. "Remember me": unchecked = 1 day refresh token, checked = 30 days. | Scope limited to PRD requirements. |
-| ADR-17 | Attachments | JPG/PNG/PDF only. 5MB max. Vercel Blob private access, signed URLs 60 min expiry. | Security best practice. |
-| ADR-18 | Containers in production | No. docker-compose for local dev only. Production is Vercel (static + serverless). | User confirmed. |
-| ADR-19 | Timer running at month lock | Admin gets warning listing employees with active timers. Locking proceeds. Timer is NOT auto-stopped. | Admin informed, employee handles stop. |
-| ADR-20 | Missing attachment at month lock | Admin gets warning listing absences without attachments. Locking proceeds. Employee can still upload after lock. | Warn but don't block — prevents employees from blocking month closure. |
-| ADR-21 | Admin edit/delete employee absences | Yes, admin can edit and delete employee absences (audit-logged). | User confirmed. |
-| ADR-22 | Audit log retention | Indefinite retention, no export in MVP. | Course project, no compliance constraints. |
-| ADR-23 | Admin console viewport | Web app, minimum 1024px width. | Covers standard laptops. |
-| ADR-24 | Half-day absence: morning or afternoon | Both options available. Employee chooses morning or afternoon. | User confirmed. |
-| ADR-25 | Branching strategy | `main` → `stage` → `dev` → `feat/<name>`. Stage branch added for pre-production testing. | User confirmed. |
+| ID     | Question                                  | Resolution                                                                                                                                                                                                                       | Rationale                                                                |
+| ------ | ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| ADR-01 | One app or two?                           | Two separate React frontends. Employee app (`apps/mobile`): React+Vite+Tailwind, 393px, RTL. Admin console (`apps/admin`): React+shadcn/ui, web (min 1024px).                                                                    | Different viewports, different audiences, independent deployability.     |
+| ADR-02 | TimeEntry shape: startAt/endAt or hours?  | `start_at` + nullable `end_at`. `end_at=null` means running timer. No separate timer table.                                                                                                                                      | Timer is a state, not a migration.                                       |
+| ADR-03 | Work location: per-day or per-entry?      | Per-entry. Each TimeEntry carries its own WorkLocation value.                                                                                                                                                                    | Employee may work from different locations in the same day.              |
+| ADR-04 | 9-hour quota: warning or hard block?      | Soft visual target. API does not reject entries based on total hours. Frontend shows color-coded quota bar.                                                                                                                      | User confirmed advisory, not enforcement.                                |
+| ADR-05 | Overlapping entries: allowed or rejected? | Rejected. API validates no overlapping `[start_at, end_at]` for same user on same date.                                                                                                                                          | User confirmed.                                                          |
+| ADR-06 | Timezone                                  | UTC in database, ISO 8601 UTC in API, Asia/Jerusalem in frontend display.                                                                                                                                                        | Standard practice.                                                       |
+| ADR-07 | Midnight crossing / night shifts          | Supported. `end_at` must be > `start_at`, but can cross midnight (e.g. 22:00–06:00). `date` field = date of `start_at`.                                                                                                          | Night shifts are a real use case. Overlap detection checks across dates. |
+| ADR-08 | Timer edge cases                          | At most one running timer per user. Timer cannot start if month is locked. If month is locked while timer is running: admin gets a warning, timer is NOT auto-stopped.                                                           | Admin warned, employee must stop manually.                               |
+| ADR-09 | Half-day absence quota                    | Deferred to feature spec for absences.                                                                                                                                                                                           | Feature-specific detail.                                                 |
+| ADR-10 | Israeli holidays                          | Not handled. Only Fri/Sat excluded from absence ranges. No holiday calendar.                                                                                                                                                     | PRD does not mention holidays.                                           |
+| ADR-11 | Absence attachment status                 | Sick and military absences require attachments. Attachment can be added after absence creation (even in locked month). No explicit status field for "missing attachment."                                                        | Detail in feature spec.                                                  |
+| ADR-12 | Month lock model                          | Two states only — Open and Locked. No employee-close step. Month is open until admin locks. Admin can reopen. Locked month is read-only with exceptions per §7.3.                                                                | User confirmed single state change.                                      |
+| ADR-13 | Audit log scope and UI                    | Must log admin edits to reports + month lock/unlock. Should log time entry and absence CRUD. Admin-only visibility. UI: filterable table at `/admin/audit`.                                                                      | PRD requirement + best practice.                                         |
+| ADR-14 | היסטוריית דיווחים (report history)        | Folded into Monthly View screen. Not a separate screen.                                                                                                                                                                          | Avoids inventing unspecified UI.                                         |
+| ADR-15 | Soft-delete read path                     | Deactivated/deleted entities hidden from new-entry pickers. Historical entries still display the name of deleted entities. See §8.3.                                                                                             | Data integrity for historical records.                                   |
+| ADR-16 | Auth gaps                                 | No forgot-password flow — admin resets manually. No force-change on first login. No lockout policy. Password minimum 8 chars, no additional complexity rules. "Remember me": unchecked = 1 day refresh token, checked = 30 days. | Scope limited to PRD requirements.                                       |
+| ADR-17 | Attachments                               | JPG/PNG/PDF only. 5MB max. Vercel Blob private access, signed URLs 60 min expiry.                                                                                                                                                | Security best practice.                                                  |
+| ADR-18 | Containers in production                  | No. docker-compose for local dev only. Production is Vercel (static + serverless).                                                                                                                                               | User confirmed.                                                          |
+| ADR-19 | Timer running at month lock               | Admin gets warning listing employees with active timers. Locking proceeds. Timer is NOT auto-stopped.                                                                                                                            | Admin informed, employee handles stop.                                   |
+| ADR-20 | Missing attachment at month lock          | Admin gets warning listing absences without attachments. Locking proceeds. Employee can still upload after lock.                                                                                                                 | Warn but don't block — prevents employees from blocking month closure.   |
+| ADR-21 | Admin edit/delete employee absences       | Yes, admin can edit and delete employee absences (audit-logged).                                                                                                                                                                 | User confirmed.                                                          |
+| ADR-22 | Audit log retention                       | Indefinite retention, no export in MVP.                                                                                                                                                                                          | Course project, no compliance constraints.                               |
+| ADR-23 | Admin console viewport                    | Web app, minimum 1024px width.                                                                                                                                                                                                   | Covers standard laptops.                                                 |
+| ADR-24 | Half-day absence: morning or afternoon    | Both options available. Employee chooses morning or afternoon.                                                                                                                                                                   | User confirmed.                                                          |
+| ADR-25 | Branching strategy                        | `main` → `stage` → `dev` → `feat/<name>`. Stage branch added for pre-production testing.                                                                                                                                         | User confirmed.                                                          |
 
 ---
 
@@ -1297,6 +1299,6 @@ Resolved decisions from the blueprint's open questions and PRD contradictions.
 
 Most questions from the original list have been resolved (see §16 Decision Log). Remaining items:
 
-| ID | Question | Resolve In |
-|----|----------|------------|
+| ID    | Question                                                                                                                                                                    | Resolve In            |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- |
 | OQ-04 | Half-day absence details — is a half day always 4.5 hours? Does the remaining half require time entries? Can be morning or afternoon (confirmed), but exact hour split TBD. | Absences feature spec |
