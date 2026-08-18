@@ -1,4 +1,4 @@
-import { AuthUser } from '@abra/contracts';
+import { AuthUser, UserRole } from '@abra/contracts';
 
 const AUTH_KEY = 'abra_admin_auth_session';
 
@@ -93,6 +93,7 @@ export function clearAuthSession(): void {
   }
 }
 
-export function isAuthenticated(): boolean {
-  return getAuthSession() !== null;
+/** The only role the console admits (GENERAL_SPEC §5.5). */
+export function isAdmin(candidate: AuthSession | null): boolean {
+  return candidate?.user.role === UserRole.enum.admin;
 }

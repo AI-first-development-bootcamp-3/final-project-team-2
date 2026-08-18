@@ -2,7 +2,7 @@ import React, { useEffect, useSyncExternalStore } from 'react';
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { LoginPage } from './features/auth/LoginPage';
 import { UsersPage } from './features/users/users-page';
-import { clearAuthSession, getAuthSession, subscribeToAuthChanges } from './lib/auth';
+import { clearAuthSession, getAuthSession, isAdmin, subscribeToAuthChanges } from './lib/auth';
 
 // Reactive session read: consumers re-render when the session is written or
 // cleared (login, logout, a future 401 interceptor), instead of trusting a
@@ -27,7 +27,7 @@ function RequireAdmin({ children }: { children: React.ReactElement }) {
     // Remember where the visitor was headed so login can return them there.
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
-  if (session.user.role !== 'admin') {
+  if (!isAdmin(session)) {
     return <DenyNonAdmin />;
   }
   return children;
@@ -37,7 +37,7 @@ function RequireAdmin({ children }: { children: React.ReactElement }) {
 // logging in) — send them home instead of re-showing the credential form.
 function RedirectIfAdmin({ children }: { children: React.ReactElement }) {
   const session = useAuthSession();
-  if (session?.user.role === 'admin') {
+  if (isAdmin(session)) {
     return <Navigate to="/" replace />;
   }
   return children;
@@ -47,7 +47,7 @@ function RedirectIfAdmin({ children }: { children: React.ReactElement }) {
 // URLs through the protected route.
 function CatchAll() {
   const session = useAuthSession();
-  return <Navigate to={session?.user.role === 'admin' ? '/' : '/login'} replace />;
+  return <Navigate to={isAdmin(session) ? '/' : '/login'} replace />;
 }
 
 // Console shell around admin screens; grows a sidebar with later epics.

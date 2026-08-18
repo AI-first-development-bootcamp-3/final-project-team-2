@@ -4,6 +4,7 @@ import { render, screen, cleanup, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { AppRoutes } from './App';
 import { clearAuthSession, getAuthSession, setAuthSession } from './lib/auth';
+import { ADMIN_USER, EMPLOYEE_USER, makeSession } from './test/fixtures';
 
 describe('Admin route protection (KAN-70 3.3)', () => {
   beforeEach(() => {
@@ -26,15 +27,7 @@ describe('Admin route protection (KAN-70 3.3)', () => {
   });
 
   it('shows the portal home to an authenticated admin', () => {
-    setAuthSession({
-      accessToken: 'header.payload.sig',
-      user: {
-        id: '7d9d2c8e-8f9a-4b6e-9d3e-2f1a5b8c9d0e',
-        email: 'admin@abra.co',
-        fullName: 'Admin User',
-        role: 'admin',
-      },
-    });
+    setAuthSession(makeSession(ADMIN_USER));
 
     render(
       <MemoryRouter initialEntries={['/']}>
@@ -46,15 +39,7 @@ describe('Admin route protection (KAN-70 3.3)', () => {
   });
 
   it('rejects an authenticated employee: session cleared, login screen shown', async () => {
-    setAuthSession({
-      accessToken: 'header.payload.sig',
-      user: {
-        id: '2b1c3d4e-5f6a-4b7c-8d9e-0f1a2b3c4d5e',
-        email: 'employee1@abra.co',
-        fullName: 'Alice Cohen',
-        role: 'employee',
-      },
-    });
+    setAuthSession(makeSession(EMPLOYEE_USER));
 
     render(
       <MemoryRouter initialEntries={['/']}>

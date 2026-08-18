@@ -3,7 +3,12 @@ import type { AuthSession } from './auth';
 
 // `||` (not `??`) so a set-but-empty VITE_API_URL also falls back — same
 // pitfall server/api/src/env.ts guards with emptyToUndefined.
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1';
+const API_URL: string = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1';
+if (!API_URL.startsWith('http')) {
+  // Fail at boot, not on the first fetch: a relative API_URL silently hits
+  // the SPA rewrite and every request comes back as 200-with-HTML.
+  throw new Error(`VITE_API_URL must be an absolute http(s) URL, got: "${API_URL}"`);
+}
 
 export class InvalidCredentialsError extends Error {
   constructor() {

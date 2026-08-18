@@ -4,6 +4,7 @@ import type { LoginFormData } from '@abra/contracts';
 import { LoginForm } from './LoginForm';
 import { login } from '../../lib/api';
 import { setAuthSession } from '../../lib/auth';
+import { requestedPathFrom } from '../../lib/navigation';
 
 // Design א׳ (Figma node 1-32876): full-bleed city illustration with a single
 // centered white card — abra logo, greeting, then the credential form that
@@ -17,8 +18,7 @@ export const LoginPage: React.FC = () => {
     const session = await login(data);
     setAuthSession(session, data.rememberMe);
     // Return to the page the guard bounced the visitor from, if any.
-    const from = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname;
-    navigate(from ?? '/', { replace: true });
+    navigate(requestedPathFrom(location) ?? '/', { replace: true });
   };
 
   return (

@@ -5,6 +5,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { VAL_MESSAGES } from '@abra/contracts';
 import { LoginPage } from './LoginPage';
 import { clearAuthSession, getAuthSession } from '../../lib/auth';
+import { ADMIN_USER } from '../../test/fixtures';
 
 function renderLogin() {
   return render(
@@ -14,6 +15,24 @@ function renderLogin() {
         <Route path="/" element={<div>PORTAL HOME</div>} />
       </Routes>
     </MemoryRouter>,
+  );
+}
+
+function fillAndSubmit(email: string, password: string, opts: { rememberMe?: boolean } = {}) {
+  fireEvent.change(screen.getByLabelText('אימייל'), { target: { value: email } });
+  fireEvent.change(screen.getByLabelText('סיסמה'), { target: { value: password } });
+  if (opts.rememberMe) {
+    fireEvent.click(screen.getByLabelText('זכור אותי'));
+  }
+  fireEvent.click(screen.getByRole('button', { name: 'התחבר למערכת' }));
+}
+
+function mockLoginSuccess() {
+  return vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+    new Response(JSON.stringify({ accessToken: 'header.payload.sig', user: ADMIN_USER }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    }),
   );
 }
 
@@ -45,10 +64,7 @@ describe('Admin LoginPage — form and client-side validation (KAN-70 3.1)', () 
 
   it('shows the shared Hebrew message for a malformed email without calling the API', async () => {
     renderLogin();
-
-    fireEvent.change(screen.getByLabelText('אימייל'), { target: { value: 'not-an-email' } });
-    fireEvent.change(screen.getByLabelText('סיסמה'), { target: { value: 'Password123!' } });
-    fireEvent.click(screen.getByRole('button', { name: 'התחבר למערכת' }));
+    fillAndSubmit('not-an-email', 'Password123!');
 
     await waitFor(() => {
       expect(screen.getByText(VAL_MESSAGES['VAL-02'])).toBeInTheDocument();
@@ -58,10 +74,7 @@ describe('Admin LoginPage — form and client-side validation (KAN-70 3.1)', () 
 
   it('shows the shared Hebrew message for a short password without calling the API', async () => {
     renderLogin();
-
-    fireEvent.change(screen.getByLabelText('אימייל'), { target: { value: 'admin@abra.co' } });
-    fireEvent.change(screen.getByLabelText('סיסמה'), { target: { value: 'short' } });
-    fireEvent.click(screen.getByRole('button', { name: 'התחבר למערכת' }));
+    fillAndSubmit('admin@abra.co', 'short');
 
     await waitFor(() => {
       expect(screen.getByText(VAL_MESSAGES['VAL-04'])).toBeInTheDocument();
@@ -71,13 +84,6 @@ describe('Admin LoginPage — form and client-side validation (KAN-70 3.1)', () 
 });
 
 describe('Admin LoginPage — submit to the auth API (KAN-70 3.2)', () => {
-  const SESSION_USER = {
-    id: '7d9d2c8e-8f9a-4b6e-9d3e-2f1a5b8c9d0e',
-    email: 'admin@abra.co',
-    fullName: 'Admin User',
-    role: 'admin',
-  };
-
   beforeEach(() => {
     clearAuthSession();
   });
@@ -88,18 +94,10 @@ describe('Admin LoginPage — submit to the auth API (KAN-70 3.2)', () => {
   });
 
   it('posts credentials with cookies enabled, stores the session, and lands on portal home', async () => {
-    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-      new Response(JSON.stringify({ accessToken: 'header.payload.sig', user: SESSION_USER }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      }),
-    );
+    const fetchSpy = mockLoginSuccess();
 
     renderLogin();
-    fireEvent.change(screen.getByLabelText('אימייל'), { target: { value: 'admin@abra.co' } });
-    fireEvent.change(screen.getByLabelText('סיסמה'), { target: { value: 'Admin123!' } });
-    fireEvent.click(screen.getByLabelText('זכור אותי'));
-    fireEvent.click(screen.getByRole('button', { name: 'התחבר למערכת' }));
+    fillAndSubmit('admin@abra.co', 'Admin123!', { rememberMe: true });
 
     await waitFor(() => {
       expect(screen.getByText('PORTAL HOME')).toBeInTheDocument();
@@ -115,41 +113,14 @@ describe('Admin LoginPage — submit to the auth API (KAN-70 3.2)', () => {
       rememberMe: true,
     });
 
-    expect(getAuthSession()).toEqual({ accessToken: 'header.payload.sig', user: SESSION_USER });
-  });
-
-  it('shows the generic Hebrew error on 401 and stays on the login screen', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-      new Response(JSON.stringify({ message: 'Invalid credentials' }), { status: 401 }),
-    );
-
-    renderLogin();
-    fireEvent.change(screen.getByLabelText('אימייל'), { target: { value: 'admin@abra.co' } });
-    fireEvent.change(screen.getByLabelText('סיסמה'), { target: { value: 'WrongPass1!' } });
-    fireEvent.click(screen.getByRole('button', { name: 'התחבר למערכת' }));
-
-    await waitFor(() => {
-      expect(screen.getByRole('alert')).toHaveTextContent(
-        'שם המשתמש או הסיסמה שהוזנו אינם נכונים.',
-      );
-    });
-    expect(screen.queryByText('PORTAL HOME')).not.toBeInTheDocument();
-    expect(getAuthSession()).toBeNull();
+    expect(getAuthSession()).toEqual({ accessToken: 'header.payload.sig', user: ADMIN_USER });
   });
 
   it('persists the session in localStorage when remember-me is ticked', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-      new Response(JSON.stringify({ accessToken: 'header.payload.sig', user: SESSION_USER }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      }),
-    );
+    mockLoginSuccess();
 
     renderLogin();
-    fireEvent.change(screen.getByLabelText('אימייל'), { target: { value: 'admin@abra.co' } });
-    fireEvent.change(screen.getByLabelText('סיסמה'), { target: { value: 'Admin123!' } });
-    fireEvent.click(screen.getByLabelText('זכור אותי'));
-    fireEvent.click(screen.getByRole('button', { name: 'התחבר למערכת' }));
+    fillAndSubmit('admin@abra.co', 'Admin123!', { rememberMe: true });
 
     await waitFor(() => {
       expect(screen.getByText('PORTAL HOME')).toBeInTheDocument();
@@ -160,17 +131,10 @@ describe('Admin LoginPage — submit to the auth API (KAN-70 3.2)', () => {
   });
 
   it('keeps the session in sessionStorage when remember-me is not ticked', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-      new Response(JSON.stringify({ accessToken: 'header.payload.sig', user: SESSION_USER }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      }),
-    );
+    mockLoginSuccess();
 
     renderLogin();
-    fireEvent.change(screen.getByLabelText('אימייל'), { target: { value: 'admin@abra.co' } });
-    fireEvent.change(screen.getByLabelText('סיסמה'), { target: { value: 'Admin123!' } });
-    fireEvent.click(screen.getByRole('button', { name: 'התחבר למערכת' }));
+    fillAndSubmit('admin@abra.co', 'Admin123!');
 
     await waitFor(() => {
       expect(screen.getByText('PORTAL HOME')).toBeInTheDocument();
@@ -180,13 +144,28 @@ describe('Admin LoginPage — submit to the auth API (KAN-70 3.2)', () => {
     expect(localStorage.getItem('abra_admin_auth_session')).toBeNull();
   });
 
+  it('shows the generic Hebrew error on 401 and stays on the login screen', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ message: 'Invalid credentials' }), { status: 401 }),
+    );
+
+    renderLogin();
+    fillAndSubmit('admin@abra.co', 'WrongPass1!');
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        'שם המשתמש או הסיסמה שהוזנו אינם נכונים.',
+      );
+    });
+    expect(screen.queryByText('PORTAL HOME')).not.toBeInTheDocument();
+    expect(getAuthSession()).toBeNull();
+  });
+
   it('shows a system-error message — not the credentials one — when the API is unreachable', async () => {
     vi.spyOn(globalThis, 'fetch').mockRejectedValue(new TypeError('Failed to fetch'));
 
     renderLogin();
-    fireEvent.change(screen.getByLabelText('אימייל'), { target: { value: 'admin@abra.co' } });
-    fireEvent.change(screen.getByLabelText('סיסמה'), { target: { value: 'Admin123!' } });
-    fireEvent.click(screen.getByRole('button', { name: 'התחבר למערכת' }));
+    fillAndSubmit('admin@abra.co', 'Admin123!');
 
     await waitFor(() => {
       expect(screen.getByRole('alert')).toHaveTextContent(
@@ -204,9 +183,7 @@ describe('Admin LoginPage — submit to the auth API (KAN-70 3.2)', () => {
     );
 
     renderLogin();
-    fireEvent.change(screen.getByLabelText('אימייל'), { target: { value: 'admin@abra.co' } });
-    fireEvent.change(screen.getByLabelText('סיסמה'), { target: { value: 'Admin123!' } });
-    fireEvent.click(screen.getByRole('button', { name: 'התחבר למערכת' }));
+    fillAndSubmit('admin@abra.co', 'Admin123!');
 
     await waitFor(() => {
       expect(screen.getByRole('alert')).toHaveTextContent(
