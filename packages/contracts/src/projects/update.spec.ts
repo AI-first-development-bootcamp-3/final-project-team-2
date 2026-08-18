@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   UpdateProjectBodySchema,
+  UpdateProjectReportTypeBodySchema,
   ProjectUpdateSuccessSchema,
   ProjectGetSuccessSchema,
 } from '../index';
@@ -15,9 +16,41 @@ const item = {
   reportType: 'TOTAL_HOURS' as const,
 };
 
+describe('UpdateProjectReportTypeBodySchema', () => {
+  it('accepts a valid reportType', () => {
+    expect(UpdateProjectReportTypeBodySchema.parse({ reportType: 'CLOCK_IN_OUT' })).toEqual({
+      reportType: 'CLOCK_IN_OUT',
+    });
+  });
+
+  it('rejects an invalid reportType with VAL-28', () => {
+    const result = UpdateProjectReportTypeBodySchema.safeParse({ reportType: 'INVALID' });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues[0]?.message).toBe('VAL-28');
+    }
+  });
+
+  it('rejects a missing reportType with VAL-28', () => {
+    const result = UpdateProjectReportTypeBodySchema.safeParse({});
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues[0]?.message).toBe('VAL-28');
+    }
+  });
+});
+
 describe('UpdateProjectBodySchema', () => {
   it('accepts an empty object (all fields optional)', () => {
     expect(UpdateProjectBodySchema.parse({})).toEqual({});
+  });
+
+  it('rejects an invalid reportType with VAL-28', () => {
+    const result = UpdateProjectBodySchema.safeParse({ reportType: 'INVALID' });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues[0]?.message).toBe('VAL-28');
+    }
   });
 
   it('accepts optional name, clientId, and isActive', () => {

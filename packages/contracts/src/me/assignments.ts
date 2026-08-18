@@ -8,7 +8,9 @@ export const MyAssignmentSchema = z.object({
   projectName: z.string(),
   clientId: z.string().uuid(),
   clientName: z.string(),
-  reportType: ReportType.default('TOTAL_HOURS'),
+  // Required on purpose: the DB column is NOT NULL with a default, so a
+  // missing field is a contract violation — defaulting here would mask it.
+  reportType: ReportType,
 });
 
 export const MyAssignmentsResponseSchema = z.object({

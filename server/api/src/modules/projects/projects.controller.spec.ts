@@ -598,13 +598,58 @@ describe('PATCH /api/v1/projects/:id/report-type', () => {
     });
   });
 
-  it('returns 400 on invalid reportType enum value', async () => {
+  it('returns 400 with VAL-28 and a Hebrew message on invalid reportType enum value', async () => {
     ({ app } = await createApp('admin'));
-    await request(app.getHttpServer())
+    const response = await request(app.getHttpServer())
       .patch(`/api/v1/projects/${PROJECT.id}/report-type`)
       .set('Authorization', 'Bearer admin-token')
       .send({ reportType: 'INVALID_ENUM' })
       .expect(400);
+
+    expect(response.body.details).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          field: 'reportType',
+          rule: 'VAL-28',
+          message: 'יש לבחור אופן דיווח תקין',
+        }),
+      ]),
+    );
+  });
+
+  it('returns 400 VAL-25 for a malformed project id instead of a 500', async () => {
+    ({ app } = await createApp('admin'));
+    const response = await request(app.getHttpServer())
+      .patch('/api/v1/projects/not-a-uuid/report-type')
+      .set('Authorization', 'Bearer admin-token')
+      .send({ reportType: 'CLOCK_IN_OUT' })
+      .expect(400);
+
+    expect(response.body.details).toEqual(
+      expect.arrayContaining([expect.objectContaining({ field: 'id', rule: 'VAL-25' })]),
+    );
+  });
+
+  it('mutates report_type through the same prisma update path as the generic PATCH', async () => {
+    const created = await createApp('admin');
+    app = created.app;
+    created.prisma.project.update.mockResolvedValue({
+      ...PROJECT,
+      report_type: 'CLOCK_IN_OUT',
+    });
+
+    await request(app.getHttpServer())
+      .patch(`/api/v1/projects/${PROJECT.id}/report-type`)
+      .set('Authorization', 'Bearer admin-token')
+      .send({ reportType: 'CLOCK_IN_OUT' })
+      .expect(200);
+
+    expect(created.prisma.project.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: PROJECT.id },
+        data: { report_type: 'CLOCK_IN_OUT' },
+      }),
+    );
   });
 });
 

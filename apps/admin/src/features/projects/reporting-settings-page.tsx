@@ -1,8 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ProjectListItem, ProjectsListSuccess, ReportType } from '@abra/contracts';
 import { apiFetch } from '@/lib/api/client';
+import { useDebouncedValue } from '@/lib/use-debounced-value';
 
 const PAGE_SIZE = 20;
+const SEARCH_DEBOUNCE_MS = 300;
 
 export function ReportingSettingsPage() {
   const [page, setPage] = useState(1);
@@ -12,8 +14,13 @@ export function ReportingSettingsPage() {
   const [error, setError] = useState<string | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const debouncedQ = useDebouncedValue(q, SEARCH_DEBOUNCE_MS);
+  // Monotonic ticket per request: a slow, older response must never
+  // overwrite the results of a newer query.
+  const requestSeq = useRef(0);
 
   const fetchProjects = useCallback(() => {
+    const seq = ++requestSeq.current;
     setLoading(true);
     setError(null);
     const search = new URLSearchParams({
@@ -22,13 +29,22 @@ export function ReportingSettingsPage() {
       sort: 'name',
       order: 'asc',
     });
-    if (q.trim()) search.set('q', q.trim());
+    if (debouncedQ.trim()) search.set('q', debouncedQ.trim());
 
     apiFetch<ProjectsListSuccess>(`/projects?${search.toString()}`)
-      .then((data) => setResult(data))
-      .catch(() => setError('שגיאה בטעינת הפרויקטים'))
-      .finally(() => setLoading(false));
-  }, [page, q]);
+      .then((data) => {
+        if (seq !== requestSeq.current) return;
+        setResult(data);
+      })
+      .catch(() => {
+        if (seq !== requestSeq.current) return;
+        setError('שגיאה בטעינת הפרויקטים');
+      })
+      .finally(() => {
+        if (seq !== requestSeq.current) return;
+        setLoading(false);
+      });
+  }, [page, debouncedQ]);
 
   useEffect(() => {
     fetchProjects();
@@ -99,10 +115,28 @@ export function ReportingSettingsPage() {
       </div>
 
       {loading ? <p>טוען…</p> : null}
-      {error ? <p role="alert">{error}</p> : null}
-      {!loading && !error && result && result.data.length === 0 ? <p>לא נמצאו פרויקטים</p> : null}
+      {error ? (
+        <div
+          role="alert"
+          className="mb-4 flex items-center justify-between rounded bg-red-100 p-3 text-sm text-red-800"
+        >
+          <span>{error}</span>
+          <button
+            type="button"
+            onClick={() => setError(null)}
+            aria-label="סגור הודעה"
+            title="סגור הודעה"
+            className="text-xs font-bold"
+          >
+            ✕
+          </button>
+        </div>
+      ) : null}
+      {!loading && result && result.data.length === 0 ? <p>לא נמצאו פרויקטים</p> : null}
 
-      {!loading && !error && result && result.data.length > 0 ? (
+      {/* A failed update must not hide the table — the error renders as a
+          dismissible banner above it and the admin can retry immediately. */}
+      {!loading && result && result.data.length > 0 ? (
         <div className="overflow-x-auto rounded border bg-white shadow-sm">
           <table className="w-full text-right text-sm">
             <thead className="border-b bg-neutral-100 font-semibold text-neutral-700">
