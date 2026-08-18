@@ -25,10 +25,10 @@
 
 - [x] 4.1 Rebuild the reporting-settings table on the shared `DataTable` with a `columns[]` definition (radio group as a cell renderer, à la `projects-columns.tsx`); drop the hand-rolled table and page math.
 - [x] 4.2 Update `reporting-settings-page` tests for the DataTable markup; coverage stays >70%.
-- [ ] 4.3 Open PR-B into `staging` (sections 3–4), confirm CI green.
+- [x] 4.3 Open PR-B into `staging` (sections 3–4), confirm CI green.
 
 ## 5. OpenSpec hygiene (`openspec/changes/project-report-type`)
 
-- [ ] 5.1 Uncheck tasks 4.2 / 4.3 / 5.3 in `project-report-type/tasks.md` with a note pointing at the deferred change.
-- [ ] 5.2 Move the "Employee App Flow Switch by Report Type" requirement (and its scenarios) out of `project-report-type/specs/project-report-type/spec.md` into a new deferred change `employee-report-flow-switch` (proposal + delta spec stub, no tasks yet).
-- [ ] 5.3 Validate both changes: `openspec validate --change project-report-type && openspec validate --change fix-report-type-review-findings`.
+- [x] 5.1 Uncheck tasks 4.2 / 4.3 / 5.3 in `project-report-type/tasks.md` with a note pointing at the deferred change.
+- [x] 5.2 Move the "Employee App Flow Switch by Report Type" requirement (and its scenarios) out of `project-report-type/specs/project-report-type/spec.md` into a new deferred change `employee-report-flow-switch` (proposal + delta spec stub, no tasks yet).
+- [x] 5.3 Validate both changes: `openspec validate --change project-report-type && openspec validate --change fix-report-type-review-findings`.
