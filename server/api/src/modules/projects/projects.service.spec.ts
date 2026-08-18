@@ -53,26 +53,56 @@ describe('ProjectsService', () => {
       expect(result.data[0]).toMatchObject({ name: 'Project Alpha', clientName: 'Acme Corp' });
     });
 
-    it('filters by clientId', async () => {
+    it('filters by clientId, q search, and isActive', async () => {
       await service.list({
         page: 1,
         limit: 20,
         sort: 'name',
         order: 'asc',
         clientId: PROJECT.client_id,
-        includeDeleted: false,
+        q: 'Alpha',
+        isActive: true,
+        includeDeleted: true,
       });
       expect(prisma.project.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
-            AND: expect.arrayContaining([{ client_id: PROJECT.client_id }]),
+            AND: expect.arrayContaining([
+              { client_id: PROJECT.client_id },
+              { name: { contains: 'Alpha', mode: 'insensitive' } },
+              { is_active: true },
+            ]),
           }),
         }),
       );
     });
   });
 
+  describe('findOne', () => {
+    it('returns project details when found', async () => {
+      const result = await service.findOne(PROJECT.id);
+      expect(result).toMatchObject({ id: PROJECT.id, name: 'Project Alpha' });
+    });
+
+    it('throws NotFoundException when missing', async () => {
+      prisma.project.findUnique.mockResolvedValue(null);
+      await expect(service.findOne(PROJECT.id)).rejects.toThrow(NotFoundException);
+    });
+  });
+
   describe('create', () => {
+    it('creates project when client exists and active', async () => {
+      const result = await service.create({ name: 'Project Alpha', clientId: PROJECT.client_id });
+      expect(result).toMatchObject({ id: PROJECT.id });
+    });
+
+    it('validates clientId exists', async () => {
+      prisma.client.findUnique.mockResolvedValue(null);
+      await expect(service.create({ name: 'P', clientId: 'x' })).rejects.toThrow(
+        UnprocessableEntityException,
+      );
+    });
+
     it('validates clientId is active', async () => {
       prisma.client.findUnique.mockResolvedValue({ id: 'x', is_active: false, deleted_at: null });
       await expect(service.create({ name: 'P', clientId: 'x' })).rejects.toThrow(
@@ -89,6 +119,31 @@ describe('ProjectsService', () => {
       await expect(service.create({ name: 'P', clientId: 'x' })).rejects.toThrow(
         UnprocessableEntityException,
       );
+    });
+  });
+
+  describe('update', () => {
+    it('updates project name and status', async () => {
+      const result = await service.update(PROJECT.id, { name: 'New Name', isActive: false });
+      expect(result).toMatchObject({ id: PROJECT.id });
+      expect(prisma.project.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ name: 'New Name', is_active: false }),
+        }),
+      );
+    });
+
+    it('validates clientId if updated', async () => {
+      const newClientId = '770e8400-e29b-41d4-a716-446655440000';
+      prisma.client.findUnique.mockResolvedValue(null);
+      await expect(service.update(PROJECT.id, { clientId: newClientId })).rejects.toThrow(
+        UnprocessableEntityException,
+      );
+    });
+
+    it('throws NotFoundException when project missing or deleted', async () => {
+      prisma.project.findUnique.mockResolvedValue(null);
+      await expect(service.update(PROJECT.id, { name: 'X' })).rejects.toThrow(NotFoundException);
     });
   });
 
