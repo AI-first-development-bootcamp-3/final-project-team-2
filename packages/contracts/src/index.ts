@@ -148,11 +148,13 @@ export type { CreateProjectBody, ProjectCreateSuccess } from './projects/create.
 
 export {
   UpdateProjectBodySchema,
+  UpdateProjectReportTypeBodySchema,
   ProjectGetSuccessSchema,
   ProjectUpdateSuccessSchema,
 } from './projects/update.js';
 export type {
   UpdateProjectBody,
+  UpdateProjectReportTypeBody,
   ProjectGetSuccess,
   ProjectUpdateSuccess,
 } from './projects/update.js';

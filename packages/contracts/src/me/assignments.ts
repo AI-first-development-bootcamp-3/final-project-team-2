@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { ReportType } from '../enums.js';
 
 export const MyAssignmentSchema = z.object({
   taskId: z.string().uuid(),
@@ -7,6 +8,7 @@ export const MyAssignmentSchema = z.object({
   projectName: z.string(),
   clientId: z.string().uuid(),
   clientName: z.string(),
+  reportType: ReportType.default('TOTAL_HOURS'),
 });
 
 export const MyAssignmentsResponseSchema = z.object({

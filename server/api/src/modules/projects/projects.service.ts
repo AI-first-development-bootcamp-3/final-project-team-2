@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma, ReportType } from '@prisma/client';
 import {
   VAL_MESSAGES,
   type ProjectListItem,
@@ -14,6 +14,7 @@ const PROJECT_LIST_SELECT = {
   name: true,
   client_id: true,
   is_active: true,
+  report_type: true,
   deleted_at: true,
   client: { select: { name: true } },
 } as const;
@@ -23,6 +24,7 @@ type ProjectRow = {
   name: string;
   client_id: string;
   is_active: boolean;
+  report_type: ReportType;
   deleted_at: Date | null;
   client: { name: string };
 };
@@ -35,6 +37,7 @@ function toListItem(row: ProjectRow): ProjectListItem {
     clientName: row.client.name,
     isActive: row.is_active,
     isDeleted: row.deleted_at != null,
+    reportType: row.report_type,
   };
 }
 
@@ -114,7 +117,22 @@ export class ProjectsService {
         ...(payload.name !== undefined ? { name: payload.name } : {}),
         ...(payload.clientId !== undefined ? { client_id: payload.clientId } : {}),
         ...(payload.isActive !== undefined ? { is_active: payload.isActive } : {}),
+        ...(payload.reportType !== undefined ? { report_type: payload.reportType } : {}),
       },
+      select: PROJECT_LIST_SELECT,
+    });
+    return toListItem(row as ProjectRow);
+  }
+
+  async updateReportType(id: string, reportType: ReportType): Promise<ProjectListItem> {
+    const existing = await this.prisma.project.findUnique({ where: { id } });
+    if (!existing || existing.deleted_at) {
+      throw new NotFoundException('פרויקט לא נמצא');
+    }
+
+    const row = await this.prisma.project.update({
+      where: { id },
+      data: { report_type: reportType },
       select: PROJECT_LIST_SELECT,
     });
     return toListItem(row as ProjectRow);
@@ -132,10 +150,6 @@ export class ProjectsService {
     });
   }
 
-  /**
-   * History reads must bypass soft-delete on related TimeEntry/Task/Project
-   * so a removed project's name still renders (KAN-51 FR-011).
-   */
   async historicalProjectNameForTimeEntry(timeEntryId: string): Promise<string | null> {
     const entry = await this.prisma.timeEntry.findFirst({
       where: { id: timeEntryId, deleted_at: {} },

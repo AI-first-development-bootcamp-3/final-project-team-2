@@ -17,6 +17,7 @@ import {
   ProjectsListQuerySchema,
   CreateProjectBodySchema,
   UpdateProjectBodySchema,
+  UpdateProjectReportTypeBodySchema,
   VAL_MESSAGES,
   zodIssuesToDetails,
   type ValCode,
@@ -93,6 +94,22 @@ export class ProjectsController {
       });
     }
     const data = await this.projectsService.update(id, parsed.data);
+    return { data };
+  }
+
+  @Patch(':id/report-type')
+  @ApiOperation({ summary: 'Update project report type (admin)' })
+  async updateReportType(@Param('id') id: string, @Body() body: unknown) {
+    const parsed = UpdateProjectReportTypeBodySchema.safeParse(body);
+    if (!parsed.success) {
+      throw new BadRequestException({
+        statusCode: 400,
+        message: 'Validation failed',
+        error: 'Bad Request',
+        details: hebrewDetails(parsed.error.issues),
+      });
+    }
+    const data = await this.projectsService.updateReportType(id, parsed.data.reportType);
     return { data };
   }
 
