@@ -165,7 +165,7 @@ describe('ClientsPage', () => {
     await user.click(screen.getByRole('button', { name: 'השבת' }));
 
     expect(screen.getByText(/האם אתה בטוח/)).toBeInTheDocument();
-    expect(screen.getByText('Acme Corp')).toBeInTheDocument();
+    expect(screen.getAllByText('Acme Corp').length).toBeGreaterThan(0);
 
     apiFetch.mockImplementation((path: string, init?: RequestInit) => {
       if (init?.method === 'PATCH') {

@@ -38,7 +38,13 @@ describe('ClientsService', () => {
 
   describe('list', () => {
     it('returns paginated clients', async () => {
-      const result = await service.list({ page: 1, limit: 20, sort: 'name', order: 'asc', includeDeleted: false });
+      const result = await service.list({
+        page: 1,
+        limit: 20,
+        sort: 'name',
+        order: 'asc',
+        includeDeleted: false,
+      });
       expect(result.data).toHaveLength(1);
       expect(result.data[0]).toEqual({
         id: ACME.id,
@@ -50,13 +56,18 @@ describe('ClientsService', () => {
     });
 
     it('passes search query to prisma', async () => {
-      await service.list({ page: 1, limit: 20, sort: 'name', order: 'asc', q: 'acme', includeDeleted: false });
+      await service.list({
+        page: 1,
+        limit: 20,
+        sort: 'name',
+        order: 'asc',
+        q: 'acme',
+        includeDeleted: false,
+      });
       expect(prisma.client.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
-            AND: expect.arrayContaining([
-              { name: { contains: 'acme', mode: 'insensitive' } },
-            ]),
+            AND: expect.arrayContaining([{ name: { contains: 'acme', mode: 'insensitive' } }]),
           }),
         }),
       );

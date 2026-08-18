@@ -75,27 +75,27 @@
 
 ## 9. Admin UI — Projects Page
 
-- [ ] 9.1 Create `apps/admin/src/features/projects/projects-columns.tsx` — columns (name, clientName, status, taskCount, actions including "View Tasks")
-- [ ] 9.2 Create `apps/admin/src/features/projects/projects-page.tsx` — DataTable with client filter dropdown, search, create/edit modals
-- [ ] 9.3 Create `apps/admin/src/features/projects/project-create-form.tsx` — CrudModal with name + clientId dropdown (active clients only), Zod validation
-- [ ] 9.4 Create `apps/admin/src/features/projects/project-edit-modal.tsx` — pre-populated form with name, clientId, isActive toggle
-- [ ] 9.5 Write projects-page.spec.tsx — test client filter, "View Tasks" navigation to /admin/tasks?projectId=, create with client picker, 422 error
+- [x] 9.1 Create `apps/admin/src/features/projects/projects-columns.tsx` — columns (name, clientName, status, taskCount, actions including "View Tasks")
+- [x] 9.2 Create `apps/admin/src/features/projects/projects-page.tsx` — DataTable with client filter dropdown, search, create/edit modals
+- [x] 9.3 Create `apps/admin/src/features/projects/project-create-form.tsx` — CrudModal with name + clientId dropdown (active clients only), Zod validation
+- [x] 9.4 Create `apps/admin/src/features/projects/project-edit-modal.tsx` — pre-populated form with name, clientId, isActive toggle
+- [x] 9.5 Write projects-page.spec.tsx — test client filter, "View Tasks" navigation to /admin/tasks?projectId=, create with client picker, 422 error
 
 ## 10. Admin UI — Tasks Page
 
-- [ ] 10.1 Create `apps/admin/src/features/tasks/tasks-columns.tsx` — columns (name, projectName, clientName, status badge, description truncated, actions)
-- [ ] 10.2 Create `apps/admin/src/features/tasks/tasks-page.tsx` — DataTable with projectId URL pre-filter, project dropdown filter, status filter, search, create/edit modals
-- [ ] 10.3 Create `apps/admin/src/features/tasks/task-create-form.tsx` — CrudModal with name + projectId dropdown (pre-selected from URL if present) + description textarea
-- [ ] 10.4 Create `apps/admin/src/features/tasks/task-edit-modal.tsx` — pre-populated form with name, projectId, status toggle, description
-- [ ] 10.5 Write tasks-page.spec.tsx — test URL pre-filter, project pre-selection in create modal, status filter, 422 error
+- [x] 10.1 Create `apps/admin/src/features/tasks/tasks-columns.tsx` — columns (name, projectName, clientName, status badge, description truncated, actions)
+- [x] 10.2 Create `apps/admin/src/features/tasks/tasks-page.tsx` — DataTable with projectId URL pre-filter, project dropdown filter, status filter, search, create/edit modals
+- [x] 10.3 Create `apps/admin/src/features/tasks/task-create-form.tsx` — CrudModal with name + projectId dropdown (pre-selected from URL if present) + description textarea
+- [x] 10.4 Create `apps/admin/src/features/tasks/task-edit-modal.tsx` — pre-populated form with name, projectId, status toggle, description
+- [x] 10.5 Write tasks-page.spec.tsx — test URL pre-filter, project pre-selection in create modal, status filter, 422 error
 
 ## 11. Admin UI — Assignments Page
 
-- [ ] 11.1 Create `apps/admin/src/features/assignments/assignments-columns.tsx` — columns (userFullName, userEmail, taskName, projectName, clientName, remove action)
-- [ ] 11.2 Create `apps/admin/src/features/assignments/assignments-page.tsx` — DataTable with user/task filter dropdowns, search, create modal, remove confirmation
-- [ ] 11.3 Create `apps/admin/src/features/assignments/assignment-create-form.tsx` — CrudModal with userId dropdown (active users) + taskId dropdown (open tasks), 409 duplicate handling
-- [ ] 11.4 Write assignments-page.spec.tsx — test create, remove confirmation, 409 duplicate display, filter by user/task
+- [x] 11.1 Create `apps/admin/src/features/assignments/assignments-columns.tsx` — columns (userFullName, userEmail, taskName, projectName, clientName, remove action)
+- [x] 11.2 Create `apps/admin/src/features/assignments/assignments-page.tsx` — DataTable with user/task filter dropdowns, search, create modal, remove confirmation
+- [x] 11.3 Create `apps/admin/src/features/assignments/assignment-create-form.tsx` — CrudModal with userId dropdown (active users) + taskId dropdown (open tasks), 409 duplicate handling
+- [x] 11.4 Write assignments-page.spec.tsx — test create, remove confirmation, 409 duplicate display, filter by user/task
 
 ## 12. E2E Test
 
-- [ ] 12.1 Create `e2e/specs/entity-chain.spec.ts` — Playwright spec: admin login -> create client -> create project under client -> create task under project -> assign employee to task -> verify GET /api/v1/me/assignments returns the chain
+- [x] 12.1 Create `e2e/specs/entity-chain.spec.ts` — Playwright spec: admin login -> create client -> create project under client -> create task under project -> assign employee to task -> verify GET /api/v1/me/assignments returns the chain

@@ -25,7 +25,10 @@ describe('CreateProjectBodySchema', () => {
   });
 
   it('rejects invalid UUID clientId with VAL-23', () => {
-    const result = CreateProjectBodySchema.safeParse({ name: 'Project Alpha', clientId: 'not-a-uuid' });
+    const result = CreateProjectBodySchema.safeParse({
+      name: 'Project Alpha',
+      clientId: 'not-a-uuid',
+    });
     expect(result.success).toBe(false);
     if (!result.success) {
       const clientIdIssue = result.error.issues.find((i) => i.path.includes('clientId'));

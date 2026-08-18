@@ -28,7 +28,10 @@ describe('CreateAssignmentBodySchema', () => {
   });
 
   it('rejects invalid UUID userId with VAL-26', () => {
-    const result = CreateAssignmentBodySchema.safeParse({ userId: 'bad', taskId: validBody.taskId });
+    const result = CreateAssignmentBodySchema.safeParse({
+      userId: 'bad',
+      taskId: validBody.taskId,
+    });
     expect(result.success).toBe(false);
     if (!result.success) {
       const issue = result.error.issues.find((i) => i.path.includes('userId'));

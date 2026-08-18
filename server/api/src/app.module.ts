@@ -9,7 +9,15 @@ import { AssignmentsModule } from './modules/assignments/assignments.module';
 import { MeModule } from './modules/me/me.module';
 
 @Module({
-  imports: [PrismaModule, UsersModule, ClientsModule, ProjectsModule, TasksModule, AssignmentsModule, MeModule],
+  imports: [
+    PrismaModule,
+    UsersModule,
+    ClientsModule,
+    ProjectsModule,
+    TasksModule,
+    AssignmentsModule,
+    MeModule,
+  ],
   controllers: [AppController],
 })
 export class AppModule {}

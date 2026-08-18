@@ -1,21 +1,24 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
-  CreateClientBodySchema,
+  CreateTaskBodySchema,
   VAL_MESSAGES,
   zodIssuesToDetails,
   type ApiError,
+  type ProjectListItem,
+  type ProjectsListSuccess,
   type ValCode,
 } from '@abra/contracts';
 import { CrudModal } from '@/components/ui/crud-modal';
 import { ApiClientError, apiFetch } from '@/lib/api/client';
 
-export type ClientCreateFormProps = {
+export type TaskCreateFormProps = {
   open: boolean;
   onClose: () => void;
   onCreated: () => void;
+  defaultProjectId?: string;
 };
 
-type FieldErrors = Partial<Record<'name' | 'contactInfo', string>>;
+type FieldErrors = Partial<Record<'name' | 'projectId' | 'description', string>>;
 
 function messageForRule(rule: string, fallback: string): string {
   if (rule in VAL_MESSAGES) return VAL_MESSAGES[rule as ValCode];
@@ -28,17 +31,38 @@ function detailsFromBody(body: unknown): ApiError['details'] {
   return Array.isArray(details) ? details : undefined;
 }
 
-export function ClientCreateForm({ open, onClose, onCreated }: ClientCreateFormProps) {
+export function TaskCreateForm({
+  open,
+  onClose,
+  onCreated,
+  defaultProjectId,
+}: TaskCreateFormProps) {
   const [name, setName] = useState('');
-  const [contactInfo, setContactInfo] = useState('');
+  const [projectId, setProjectId] = useState(defaultProjectId ?? '');
+  const [description, setDescription] = useState('');
+  const [projects, setProjects] = useState<ProjectListItem[]>([]);
   const [saving, setSaving] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const savingRef = useRef(false);
 
+  useEffect(() => {
+    if (!open) return;
+    apiFetch<ProjectsListSuccess>('/projects?limit=100&isActive=true')
+      .then((res) => setProjects(res.data))
+      .catch(() => {});
+  }, [open]);
+
+  useEffect(() => {
+    if (defaultProjectId) {
+      setProjectId(defaultProjectId);
+    }
+  }, [defaultProjectId]);
+
   function resetForm() {
     setName('');
-    setContactInfo('');
+    setProjectId(defaultProjectId ?? '');
+    setDescription('');
     setFieldErrors({});
     setFormError(null);
     setSaving(false);
@@ -55,10 +79,13 @@ export function ClientCreateForm({ open, onClose, onCreated }: ClientCreateFormP
     setFieldErrors({});
     setFormError(null);
 
-    const parsed = CreateClientBodySchema.safeParse({
+    const payload = {
       name,
-      contactInfo: contactInfo || undefined,
-    });
+      projectId,
+      ...(description.trim() ? { description: description.trim() } : {}),
+    };
+
+    const parsed = CreateTaskBodySchema.safeParse(payload);
     if (!parsed.success) {
       const next: FieldErrors = {};
       for (const detail of zodIssuesToDetails(parsed.error.issues)) {
@@ -72,7 +99,7 @@ export function ClientCreateForm({ open, onClose, onCreated }: ClientCreateFormP
     savingRef.current = true;
     setSaving(true);
     try {
-      await apiFetch('/clients', {
+      await apiFetch('/tasks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(parsed.data),
@@ -83,20 +110,20 @@ export function ClientCreateForm({ open, onClose, onCreated }: ClientCreateFormP
     } catch (err: unknown) {
       if (err instanceof ApiClientError) {
         if (err.status === 401) return;
-        if (err.status === 400 || err.status === 409) {
+        if (err.status === 400 || err.status === 422) {
           const next: FieldErrors = {};
           for (const detail of detailsFromBody(err.body) ?? []) {
             const key = detail.field as keyof FieldErrors;
             next[key] = messageForRule(detail.rule, detail.message);
           }
-          if (err.status === 409 && !next.name) {
-            next.name = VAL_MESSAGES['VAL-21'];
+          if (err.status === 422 && !next.projectId) {
+            next.projectId = VAL_MESSAGES['VAL-25'];
           }
           setFieldErrors(next);
           return;
         }
       }
-      setFormError('לא ניתן ליצור את הלקוח כרגע. נסו שוב.');
+      setFormError('לא ניתן ליצור את המשימה כרגע. נסו שוב.');
     } finally {
       savingRef.current = false;
       setSaving(false);
@@ -106,7 +133,7 @@ export function ClientCreateForm({ open, onClose, onCreated }: ClientCreateFormP
   return (
     <CrudModal
       open={open}
-      title="לקוח חדש"
+      title="משימה חדשה"
       saving={saving}
       onClose={handleClose}
       onSubmit={() => {
@@ -114,7 +141,7 @@ export function ClientCreateForm({ open, onClose, onCreated }: ClientCreateFormP
       }}
     >
       <label className="flex flex-col text-sm">
-        שם לקוח
+        שם משימה
         <input
           required
           value={name}
@@ -128,16 +155,37 @@ export function ClientCreateForm({ open, onClose, onCreated }: ClientCreateFormP
         ) : null}
       </label>
       <label className="flex flex-col text-sm">
-        פרטי קשר
-        <textarea
-          value={contactInfo}
-          onChange={(e) => setContactInfo(e.target.value)}
+        פרויקט
+        <select
+          required
+          value={projectId}
+          onChange={(e) => setProjectId(e.target.value)}
           className="rounded border px-2 py-1"
-          rows={2}
-        />
-        {fieldErrors.contactInfo ? (
+        >
+          <option value="">בחר פרויקט</option>
+          {projects.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name} ({p.clientName})
+            </option>
+          ))}
+        </select>
+        {fieldErrors.projectId ? (
           <p role="alert" className="text-sm text-red-600">
-            {fieldErrors.contactInfo}
+            {fieldErrors.projectId}
+          </p>
+        ) : null}
+      </label>
+      <label className="flex flex-col text-sm">
+        תיאור (אופציונלי)
+        <textarea
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          className="rounded border px-2 py-1"
+          rows={3}
+        />
+        {fieldErrors.description ? (
+          <p role="alert" className="text-sm text-red-600">
+            {fieldErrors.description}
           </p>
         ) : null}
       </label>

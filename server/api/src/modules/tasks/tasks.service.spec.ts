@@ -22,7 +22,9 @@ function createPrisma() {
       update: vi.fn().mockResolvedValue(TASK),
     },
     project: {
-      findUnique: vi.fn().mockResolvedValue({ id: TASK.project_id, is_active: true, deleted_at: null }),
+      findUnique: vi
+        .fn()
+        .mockResolvedValue({ id: TASK.project_id, is_active: true, deleted_at: null }),
     },
   };
 }
@@ -43,7 +45,9 @@ describe('TasksService', () => {
   describe('create', () => {
     it('validates projectId is active', async () => {
       prisma.project.findUnique.mockResolvedValue({ id: 'x', is_active: false, deleted_at: null });
-      await expect(service.create({ name: 'T', projectId: 'x' })).rejects.toThrow(UnprocessableEntityException);
+      await expect(service.create({ name: 'T', projectId: 'x' })).rejects.toThrow(
+        UnprocessableEntityException,
+      );
     });
   });
 

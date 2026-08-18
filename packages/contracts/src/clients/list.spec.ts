@@ -54,7 +54,14 @@ describe('ClientListItemSchema', () => {
 describe('ClientsListSuccessSchema', () => {
   it('accepts a valid list envelope', () => {
     const envelope = {
-      data: [{ id: '550e8400-e29b-41d4-a716-446655440000', name: 'Acme', contactInfo: null, isActive: true }],
+      data: [
+        {
+          id: '550e8400-e29b-41d4-a716-446655440000',
+          name: 'Acme',
+          contactInfo: null,
+          isActive: true,
+        },
+      ],
       meta: { page: 1, limit: 20, total: 1 },
     };
     expect(ClientsListSuccessSchema.parse(envelope)).toEqual(envelope);

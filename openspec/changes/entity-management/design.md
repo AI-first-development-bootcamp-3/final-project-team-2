@@ -3,6 +3,7 @@
 See proposal.md for motivation. The project has a working monorepo scaffold, Prisma schema with all entity models (Client, Project, Task, TaskAssignment), and a User Management implementation (PRs #19, #23, #24) that establishes clear patterns across all three layers (contracts, API, admin UI). Entity Management follows these patterns exactly.
 
 Key constraints:
+
 - Prisma schema already exists -- no migration needed
 - Soft-delete middleware already handles read/write filtering globally
 - DataTable and CrudModal shared components already exist from User Management
@@ -14,6 +15,7 @@ Key constraints:
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Full CRUD for Client, Project, Task entities via API + admin UI
 - Assignment create/remove for user-to-task via API + admin UI
 - Employee picker endpoint (`GET /api/v1/me/assignments`) for cascading picker data
@@ -21,6 +23,7 @@ Key constraints:
 - E2E test covering the full entity chain
 
 **Non-Goals:**
+
 - Per-project report type (KAN-63) -- deferred to Daily Time Reporting spec
 - Employee-facing cascading picker UI component -- built in Daily Time Reporting spec
 - Audit logging for entity CRUD -- not required for MVP per GENERAL_SPEC section 8.4
@@ -29,6 +32,7 @@ Key constraints:
 ## Decisions
 
 ### D1: One NestJS module per entity domain
+
 **Decision:** Create separate `clients`, `projects`, `tasks`, `assignments` modules under `server/api/src/modules/`.
 
 **Rationale:** Matches the existing `users` module pattern. Each module is self-contained (controller + service + module file) and registers in `app.module.ts`. Keeps files small and testable.
@@ -36,6 +40,7 @@ Key constraints:
 **Alternative considered:** A single `entities` module with sub-services. Rejected because it creates a large, coupled module and doesn't match the established pattern.
 
 ### D2: Employee picker as a separate controller, not part of assignments module
+
 **Decision:** Create `server/api/src/modules/me/me.controller.ts` with `GET /me/assignments` instead of adding it to the assignments module.
 
 **Rationale:** The `me/` namespace is employee-scoped (`@Roles('employee')`), while the assignments module is admin-scoped (`@Roles('admin')`). Mixing roles in one module creates confusing guard configuration. The `me/` controller also serves as the natural home for future employee-self endpoints (e.g., `GET /me/profile`).
@@ -43,11 +48,13 @@ Key constraints:
 **Alternative considered:** Adding to assignments controller with per-route role override. Rejected for clarity.
 
 ### D3: Contracts organized per entity domain
+
 **Decision:** Create `packages/contracts/src/clients/`, `projects/`, `tasks/`, `assignments/`, `me/` directories, each with `list.ts`, `create.ts`, `update.ts` (as applicable).
 
 **Rationale:** Mirrors the `users/` contracts pattern exactly. Each file exports Zod schemas and inferred TypeScript types.
 
 ### D4: Denormalized list item responses (include parent names)
+
 **Decision:** List endpoints return joined parent names: `ProjectListItem` includes `clientName`, `TaskListItem` includes `projectName` + `clientName`, `AssignmentListItem` includes all four names.
 
 **Rationale:** The admin DataTable needs to display parent entity names. Requiring the frontend to resolve UUIDs to names would create N+1 queries or require a separate lookup. A single Prisma `include` with `select` is cheap and simple.
@@ -55,6 +62,7 @@ Key constraints:
 **Alternative considered:** Return only UUIDs and have the frontend batch-fetch names. Rejected -- unnecessary complexity for a paginated admin list.
 
 ### D5: Simple navigation for "add task from project"
+
 **Decision:** The Projects page has a "View Tasks" action button per row that navigates to `/admin/tasks?projectId={id}`. The Tasks page reads `projectId` from the URL to pre-filter the table and pre-select the project dropdown in the create modal.
 
 **Rationale:** Satisfies the PRD requirement ("a task can also be created from its project's screen") without building a nested/expandable UI pattern. Reuses existing DataTable + CrudModal components. Zero new components.
@@ -62,17 +70,21 @@ Key constraints:
 **Alternative considered:** Expandable project rows with inline task sub-table. Rejected -- high complexity, not in any Figma design, and the simple navigation approach is better UX (consistent task management in one place).
 
 ### D6: AdminLayout wraps all admin routes
+
 **Decision:** Create an `AdminLayout` component that renders sidebar + content area. All admin routes (users, clients, projects, tasks, assignments) are children of this layout in the router.
 
 **Rationale:** Single place for navigation, consistent page structure, and the sidebar always visible. Follows standard React Router nested layout pattern.
 
 ### D7: Hard delete for TaskAssignment
+
 **Decision:** `DELETE /api/v1/assignments/:id` physically removes the row. No soft delete.
 
 **Rationale:** The Prisma schema has no `deleted_at` on TaskAssignment. The spec (section 8.3) explicitly states that removing an assignment never touches historical TimeEntries. The assignment itself has no business value once removed -- it's a pure link table.
 
 ### D8: Validation error status code conventions
+
 **Decision:**
+
 - Missing/invalid field format -> 400 Bad Request (Zod validation failures)
 - Uniqueness violation (duplicate name, duplicate assignment) -> 409 Conflict
 - Foreign key references inactive/deleted/non-existent entity -> 422 Unprocessable Entity

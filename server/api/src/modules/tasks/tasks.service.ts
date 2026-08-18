@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  UnprocessableEntityException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import {
   VAL_MESSAGES,
@@ -13,10 +9,7 @@ import {
 } from '@abra/contracts';
 import { PrismaService } from '../../prisma/prisma.service';
 
-const SORT_COLUMN: Record<
-  TasksListQuery['sort'],
-  keyof Prisma.TaskOrderByWithRelationInput
-> = {
+const SORT_COLUMN: Record<TasksListQuery['sort'], keyof Prisma.TaskOrderByWithRelationInput> = {
   name: 'name',
   status: 'status',
 };

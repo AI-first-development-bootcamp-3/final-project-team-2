@@ -116,7 +116,9 @@ export function ProjectCreateForm({ open, onClose, onCreated }: ProjectCreateFor
       title="פרויקט חדש"
       saving={saving}
       onClose={handleClose}
-      onSubmit={() => { void handleSubmit(); }}
+      onSubmit={() => {
+        void handleSubmit();
+      }}
     >
       <label className="flex flex-col text-sm">
         שם פרויקט
@@ -126,7 +128,11 @@ export function ProjectCreateForm({ open, onClose, onCreated }: ProjectCreateFor
           onChange={(e) => setName(e.target.value)}
           className="rounded border px-2 py-1"
         />
-        {fieldErrors.name ? <p role="alert" className="text-sm text-red-600">{fieldErrors.name}</p> : null}
+        {fieldErrors.name ? (
+          <p role="alert" className="text-sm text-red-600">
+            {fieldErrors.name}
+          </p>
+        ) : null}
       </label>
       <label className="flex flex-col text-sm">
         לקוח
@@ -138,12 +144,22 @@ export function ProjectCreateForm({ open, onClose, onCreated }: ProjectCreateFor
         >
           <option value="">בחר לקוח</option>
           {clients.map((c) => (
-            <option key={c.id} value={c.id}>{c.name}</option>
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
           ))}
         </select>
-        {fieldErrors.clientId ? <p role="alert" className="text-sm text-red-600">{fieldErrors.clientId}</p> : null}
+        {fieldErrors.clientId ? (
+          <p role="alert" className="text-sm text-red-600">
+            {fieldErrors.clientId}
+          </p>
+        ) : null}
       </label>
-      {formError ? <p role="alert" className="text-sm text-red-600">{formError}</p> : null}
+      {formError ? (
+        <p role="alert" className="text-sm text-red-600">
+          {formError}
+        </p>
+      ) : null}
     </CrudModal>
   );
 }

@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  UnprocessableEntityException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import {
   VAL_MESSAGES,
@@ -13,13 +9,11 @@ import {
 } from '@abra/contracts';
 import { PrismaService } from '../../prisma/prisma.service';
 
-const SORT_COLUMN: Record<
-  ProjectsListQuery['sort'],
-  keyof Prisma.ProjectOrderByWithRelationInput
-> = {
-  name: 'name',
-  isActive: 'is_active',
-};
+const SORT_COLUMN: Record<ProjectsListQuery['sort'], keyof Prisma.ProjectOrderByWithRelationInput> =
+  {
+    name: 'name',
+    isActive: 'is_active',
+  };
 
 const PROJECT_LIST_SELECT = {
   id: true,

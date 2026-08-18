@@ -53,7 +53,9 @@ export function ProjectEditModal({ project, onClose, onSuccess }: ProjectEditMod
       title="עריכת פרויקט"
       saving={saving}
       onClose={onClose}
-      onSubmit={() => { void handleSubmit(); }}
+      onSubmit={() => {
+        void handleSubmit();
+      }}
     >
       <label className="flex flex-col text-sm">
         שם פרויקט
@@ -74,19 +76,21 @@ export function ProjectEditModal({ project, onClose, onSuccess }: ProjectEditMod
         >
           <option value="">בחר לקוח</option>
           {clients.map((c) => (
-            <option key={c.id} value={c.id}>{c.name}</option>
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
           ))}
         </select>
       </label>
       <label className="flex items-center gap-2 text-sm">
-        <input
-          type="checkbox"
-          checked={isActive}
-          onChange={(e) => setIsActive(e.target.checked)}
-        />
+        <input type="checkbox" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} />
         פעיל
       </label>
-      {error ? <p role="alert" className="text-sm text-red-600">{error}</p> : null}
+      {error ? (
+        <p role="alert" className="text-sm text-red-600">
+          {error}
+        </p>
+      ) : null}
     </CrudModal>
   );
 }

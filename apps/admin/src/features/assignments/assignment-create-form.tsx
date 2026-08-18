@@ -1,21 +1,25 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
-  CreateClientBodySchema,
+  CreateAssignmentBodySchema,
   VAL_MESSAGES,
   zodIssuesToDetails,
   type ApiError,
+  type TaskListItem,
+  type TasksListSuccess,
+  type UserListItem,
+  type UsersListSuccess,
   type ValCode,
 } from '@abra/contracts';
 import { CrudModal } from '@/components/ui/crud-modal';
 import { ApiClientError, apiFetch } from '@/lib/api/client';
 
-export type ClientCreateFormProps = {
+export type AssignmentCreateFormProps = {
   open: boolean;
   onClose: () => void;
   onCreated: () => void;
 };
 
-type FieldErrors = Partial<Record<'name' | 'contactInfo', string>>;
+type FieldErrors = Partial<Record<'userId' | 'taskId', string>>;
 
 function messageForRule(rule: string, fallback: string): string {
   if (rule in VAL_MESSAGES) return VAL_MESSAGES[rule as ValCode];
@@ -28,17 +32,30 @@ function detailsFromBody(body: unknown): ApiError['details'] {
   return Array.isArray(details) ? details : undefined;
 }
 
-export function ClientCreateForm({ open, onClose, onCreated }: ClientCreateFormProps) {
-  const [name, setName] = useState('');
-  const [contactInfo, setContactInfo] = useState('');
+export function AssignmentCreateForm({ open, onClose, onCreated }: AssignmentCreateFormProps) {
+  const [userId, setUserId] = useState('');
+  const [taskId, setTaskId] = useState('');
+  const [users, setUsers] = useState<UserListItem[]>([]);
+  const [tasks, setTasks] = useState<TaskListItem[]>([]);
   const [saving, setSaving] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const savingRef = useRef(false);
 
+  useEffect(() => {
+    if (!open) return;
+    apiFetch<UsersListSuccess>('/users?limit=100')
+      .then((res) => setUsers(res.data.filter((u) => u.isActive)))
+      .catch(() => {});
+
+    apiFetch<TasksListSuccess>('/tasks?limit=100&status=open')
+      .then((res) => setTasks(res.data))
+      .catch(() => {});
+  }, [open]);
+
   function resetForm() {
-    setName('');
-    setContactInfo('');
+    setUserId('');
+    setTaskId('');
     setFieldErrors({});
     setFormError(null);
     setSaving(false);
@@ -55,10 +72,7 @@ export function ClientCreateForm({ open, onClose, onCreated }: ClientCreateFormP
     setFieldErrors({});
     setFormError(null);
 
-    const parsed = CreateClientBodySchema.safeParse({
-      name,
-      contactInfo: contactInfo || undefined,
-    });
+    const parsed = CreateAssignmentBodySchema.safeParse({ userId, taskId });
     if (!parsed.success) {
       const next: FieldErrors = {};
       for (const detail of zodIssuesToDetails(parsed.error.issues)) {
@@ -72,7 +86,7 @@ export function ClientCreateForm({ open, onClose, onCreated }: ClientCreateFormP
     savingRef.current = true;
     setSaving(true);
     try {
-      await apiFetch('/clients', {
+      await apiFetch('/assignments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(parsed.data),
@@ -83,20 +97,26 @@ export function ClientCreateForm({ open, onClose, onCreated }: ClientCreateFormP
     } catch (err: unknown) {
       if (err instanceof ApiClientError) {
         if (err.status === 401) return;
-        if (err.status === 400 || err.status === 409) {
+        if (err.status === 409) {
+          setFormError('השיוך כבר קיים במערכת');
+          return;
+        }
+        if (err.status === 400 || err.status === 422) {
           const next: FieldErrors = {};
           for (const detail of detailsFromBody(err.body) ?? []) {
             const key = detail.field as keyof FieldErrors;
             next[key] = messageForRule(detail.rule, detail.message);
           }
-          if (err.status === 409 && !next.name) {
-            next.name = VAL_MESSAGES['VAL-21'];
+          if (err.status === 422 && (!next.userId || !next.taskId)) {
+            const msg = VAL_MESSAGES['VAL-26'];
+            if (!next.userId) next.userId = msg;
+            if (!next.taskId) next.taskId = msg;
           }
           setFieldErrors(next);
           return;
         }
       }
-      setFormError('לא ניתן ליצור את הלקוח כרגע. נסו שוב.');
+      setFormError('לא ניתן ליצור את השיוך כרגע. נסו שוב.');
     } finally {
       savingRef.current = false;
       setSaving(false);
@@ -106,7 +126,7 @@ export function ClientCreateForm({ open, onClose, onCreated }: ClientCreateFormP
   return (
     <CrudModal
       open={open}
-      title="לקוח חדש"
+      title="שיוך חדש"
       saving={saving}
       onClose={handleClose}
       onSubmit={() => {
@@ -114,30 +134,44 @@ export function ClientCreateForm({ open, onClose, onCreated }: ClientCreateFormP
       }}
     >
       <label className="flex flex-col text-sm">
-        שם לקוח
-        <input
+        עובד
+        <select
           required
-          value={name}
-          onChange={(e) => setName(e.target.value)}
+          value={userId}
+          onChange={(e) => setUserId(e.target.value)}
           className="rounded border px-2 py-1"
-        />
-        {fieldErrors.name ? (
+        >
+          <option value="">בחר עובד</option>
+          {users.map((u) => (
+            <option key={u.id} value={u.id}>
+              {u.fullName} ({u.email})
+            </option>
+          ))}
+        </select>
+        {fieldErrors.userId ? (
           <p role="alert" className="text-sm text-red-600">
-            {fieldErrors.name}
+            {fieldErrors.userId}
           </p>
         ) : null}
       </label>
       <label className="flex flex-col text-sm">
-        פרטי קשר
-        <textarea
-          value={contactInfo}
-          onChange={(e) => setContactInfo(e.target.value)}
+        משימה
+        <select
+          required
+          value={taskId}
+          onChange={(e) => setTaskId(e.target.value)}
           className="rounded border px-2 py-1"
-          rows={2}
-        />
-        {fieldErrors.contactInfo ? (
+        >
+          <option value="">בחר משימה</option>
+          {tasks.map((t) => (
+            <option key={t.id} value={t.id}>
+              {t.name} ({t.projectName} - {t.clientName})
+            </option>
+          ))}
+        </select>
+        {fieldErrors.taskId ? (
           <p role="alert" className="text-sm text-red-600">
-            {fieldErrors.contactInfo}
+            {fieldErrors.taskId}
           </p>
         ) : null}
       </label>

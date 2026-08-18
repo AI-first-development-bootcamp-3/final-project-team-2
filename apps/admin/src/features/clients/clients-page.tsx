@@ -121,7 +121,11 @@ export function ClientsPage() {
           className="mb-4 flex items-center justify-between rounded bg-green-100 p-3 text-sm text-green-800"
         >
           <span>{successMessage}</span>
-          <button type="button" onClick={() => setSuccessMessage(null)} className="text-xs font-bold">
+          <button
+            type="button"
+            onClick={() => setSuccessMessage(null)}
+            className="text-xs font-bold"
+          >
             ✕
           </button>
         </div>
@@ -221,7 +225,9 @@ export function ClientsPage() {
               <button
                 type="button"
                 className="rounded bg-red-600 px-3 py-1 text-sm text-white hover:bg-red-700"
-                onClick={() => { void handleDeactivate(); }}
+                onClick={() => {
+                  void handleDeactivate();
+                }}
               >
                 השבת
               </button>

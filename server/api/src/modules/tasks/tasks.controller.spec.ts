@@ -35,7 +35,9 @@ async function createApp() {
       update: vi.fn().mockResolvedValue(TASK),
     },
     project: {
-      findUnique: vi.fn().mockResolvedValue({ id: TASK.project_id, is_active: true, deleted_at: null }),
+      findUnique: vi
+        .fn()
+        .mockResolvedValue({ id: TASK.project_id, is_active: true, deleted_at: null }),
     },
   };
 
@@ -77,7 +79,11 @@ describe('POST /api/v1/tasks', () => {
   it('returns 422 with VAL-25 for inactive project', async () => {
     const created = await createApp();
     app = created.app;
-    created.prisma.project.findUnique.mockResolvedValue({ id: 'x', is_active: false, deleted_at: null });
+    created.prisma.project.findUnique.mockResolvedValue({
+      id: 'x',
+      is_active: false,
+      deleted_at: null,
+    });
 
     const response = await request(app.getHttpServer())
       .post('/api/v1/tasks')

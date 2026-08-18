@@ -50,7 +50,9 @@ export function ClientEditModal({ client, onClose, onSuccess }: ClientEditModalP
       title="עריכת לקוח"
       saving={saving}
       onClose={onClose}
-      onSubmit={() => { void handleSubmit(); }}
+      onSubmit={() => {
+        void handleSubmit();
+      }}
     >
       <label className="flex flex-col text-sm">
         שם לקוח
@@ -71,14 +73,14 @@ export function ClientEditModal({ client, onClose, onSuccess }: ClientEditModalP
         />
       </label>
       <label className="flex items-center gap-2 text-sm">
-        <input
-          type="checkbox"
-          checked={isActive}
-          onChange={(e) => setIsActive(e.target.checked)}
-        />
+        <input type="checkbox" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} />
         פעיל
       </label>
-      {error ? <p role="alert" className="text-sm text-red-600">{error}</p> : null}
+      {error ? (
+        <p role="alert" className="text-sm text-red-600">
+          {error}
+        </p>
+      ) : null}
     </CrudModal>
   );
 }

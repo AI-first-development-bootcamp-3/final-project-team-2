@@ -15,6 +15,7 @@ Entity Management is the critical bottleneck blocking all downstream features. D
 ## Capabilities
 
 ### New Capabilities
+
 - `clients-crud`: Admin CRUD for Client entity -- API endpoints (GET/POST/PATCH/DELETE /api/v1/clients), admin console page with DataTable + CrudModal, Zod contracts, and unit tests.
 - `projects-crud`: Admin CRUD for Project entity -- API endpoints, admin console page, client foreign-key validation (VAL-23), "View Tasks" drill-down navigation, Zod contracts, and unit tests.
 - `tasks-crud`: Admin CRUD for Task entity -- API endpoints, admin console page, project foreign-key validation (VAL-25), close-on-delete behavior (status + deleted_at), URL-aware project pre-filter, Zod contracts, and unit tests.
@@ -24,6 +25,7 @@ Entity Management is the critical bottleneck blocking all downstream features. D
 - `entity-e2e`: Playwright end-to-end spec covering the full catalog chain: admin creates client > project > task > assigns employee > employee picker returns the chain.
 
 ### Modified Capabilities
+
 _(none -- no existing specs are changing)_
 
 ## Impact
