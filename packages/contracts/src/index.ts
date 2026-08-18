@@ -96,7 +96,17 @@ export type ValCode =
   | 'VAL-24'
   | 'VAL-25'
   | 'VAL-26'
-  | 'VAL-27';
+  | 'VAL-27'
+  | 'VAL-30'
+  | 'VAL-31'
+  | 'VAL-32'
+  | 'VAL-33'
+  | 'VAL-34'
+  | 'VAL-35'
+  | 'VAL-36'
+  | 'VAL-38'
+  | 'VAL-DATE-RANGE'
+  | 'VAL-EMPTY-UPDATE';
 
 export const VAL_MESSAGES: Record<ValCode, string> = {
   'VAL-01': 'כתובת האימייל היא שדה חובה',
@@ -115,6 +125,18 @@ export const VAL_MESSAGES: Record<ValCode, string> = {
   'VAL-25': 'יש לבחור פרויקט תקין ופעיל',
   'VAL-26': 'יש לבחור משתמש ומשימה תקינים',
   'VAL-27': 'השיוך כבר קיים במערכת',
+  // Time entries (§8.5). VAL-37 (one running timer per user) belongs to the
+  // Punch Clock epic and is intentionally absent here.
+  'VAL-30': 'שעת התחלה היא שדה חובה',
+  'VAL-31': 'שעת הסיום חייבת להיות מאוחרת משעת ההתחלה',
+  'VAL-32': 'קיים כבר דיווח שעות חופף בטווח זה',
+  'VAL-33': 'אינך משויך למשימה שנבחרה',
+  'VAL-34': 'החודש נעול ולא ניתן לעדכן דיווחי שעות',
+  'VAL-35': 'יש לבחור משימה',
+  'VAL-36': 'יש לבחור מיקום עבודה',
+  'VAL-38': 'התאריך אינו תואם את יום תחילת הדיווח',
+  'VAL-DATE-RANGE': 'יש לציין תאריך יחיד או טווח תאריכים תקין',
+  'VAL-EMPTY-UPDATE': 'לא נשלחו שדות לעדכון',
 };
 
 // --- Clients ---
@@ -218,3 +240,33 @@ export {
   isSameLocalDate,
   toYearMonth,
 } from './day-status/local-date.js';
+
+// --- Time entries ---
+export {
+  TimeEntryLocationSchema,
+  TimeEntryDateSchema,
+  TimeEntryTaskIdSchema,
+  TimeEntryStartAtSchema,
+  TimeEntryEndAtSchema,
+  refineTimeEntryTimes,
+} from './time-entries/fields.js';
+export type { TimeEntryTimes } from './time-entries/fields.js';
+
+export { CreateTimeEntryBodySchema } from './time-entries/create.js';
+export type { CreateTimeEntryBody } from './time-entries/create.js';
+
+export { UpdateTimeEntryBodySchema, MergedTimeEntrySchema } from './time-entries/update.js';
+export type { UpdateTimeEntryBody, MergedTimeEntry } from './time-entries/update.js';
+
+export {
+  TimeEntriesListQuerySchema,
+  TimeEntryListItemSchema,
+  TimeEntriesListSuccessSchema,
+  TimeEntrySuccessSchema,
+} from './time-entries/list.js';
+export type {
+  TimeEntriesListQuery,
+  TimeEntryListItem,
+  TimeEntriesListSuccess,
+  TimeEntrySuccess,
+} from './time-entries/list.js';
