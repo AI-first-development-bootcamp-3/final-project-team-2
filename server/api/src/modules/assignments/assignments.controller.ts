@@ -9,7 +9,6 @@ import {
   Param,
   Post,
   Query,
-  UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import {
@@ -19,9 +18,7 @@ import {
   zodIssuesToDetails,
   type ValCode,
 } from '@abra/contracts';
-import { Roles } from '../../common/decorators/roles.decorator';
-import { JwtGuard } from '../../common/guards/jwt.guard';
-import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../auth/auth.decorators';
 import { AssignmentsService } from './assignments.service';
 
 function hebrewDetails(issues: Parameters<typeof zodIssuesToDetails>[0]) {
@@ -34,7 +31,6 @@ function hebrewDetails(issues: Parameters<typeof zodIssuesToDetails>[0]) {
 @ApiTags('assignments')
 @ApiBearerAuth()
 @Controller('assignments')
-@UseGuards(JwtGuard, RolesGuard)
 @Roles('admin')
 export class AssignmentsController {
   constructor(private readonly assignmentsService: AssignmentsService) {}
