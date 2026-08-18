@@ -16,7 +16,7 @@ vi.mock('@/lib/api/client', async () => {
   };
 });
 
-const mockTask = {
+const openTask = {
   id: '770e8400-e29b-41d4-a716-446655440000',
   name: 'Design Login Flow',
   projectId: '550e8400-e29b-41d4-a716-446655440000',
@@ -24,6 +24,16 @@ const mockTask = {
   clientName: 'Acme Corp',
   status: 'open' as const,
   description: 'Design mockups and user flows',
+};
+
+const closedTask = {
+  id: '770e8400-e29b-41d4-a716-446655440001',
+  name: 'Old Task Flow',
+  projectId: '550e8400-e29b-41d4-a716-446655440000',
+  projectName: 'Acme Mobile App',
+  clientName: 'Acme Corp',
+  status: 'closed' as const,
+  description: null,
 };
 
 const mockProject = {
@@ -49,7 +59,10 @@ describe('TasksPage', () => {
       if (String(path).startsWith('/projects')) {
         return Promise.resolve({ data: [mockProject], meta: { page: 1, limit: 100, total: 1 } });
       }
-      return Promise.resolve({ data: [mockTask], meta: { page: 1, limit: 20, total: 1 } });
+      return Promise.resolve({
+        data: [openTask, closedTask],
+        meta: { page: 1, limit: 20, total: 2 },
+      });
     });
   });
 
@@ -63,9 +76,10 @@ describe('TasksPage', () => {
     expect(screen.getByRole('columnheader', { name: /פעולות/ })).toBeInTheDocument();
 
     expect(await screen.findByText('Design Login Flow')).toBeInTheDocument();
+    expect(screen.getByText('Old Task Flow')).toBeInTheDocument();
     expect(screen.getAllByText(/Acme Mobile App/).length).toBeGreaterThan(0);
     expect(screen.getAllByText('Acme Corp').length).toBeGreaterThan(0);
-    expect(screen.getByRole('button', { name: 'ערוך' })).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: 'ערוך' }).length).toBeGreaterThan(0);
     expect(screen.getByRole('button', { name: 'השבת' })).toBeInTheDocument();
   });
 
@@ -98,11 +112,69 @@ describe('TasksPage', () => {
           }),
         );
       }
-      return Promise.resolve({ data: [mockTask], meta: { page: 1, limit: 20, total: 1 } });
+      return Promise.resolve({ data: [openTask], meta: { page: 1, limit: 20, total: 1 } });
     });
 
     await user.click(within(dialog).getByRole('button', { name: 'שמירה' }));
 
+    expect(await screen.findByText('יש לבחור פרויקט תקין ופעיל')).toBeInTheDocument();
+  });
+
+  it('opens TaskEditModal and updates task details', async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    expect(await screen.findByText('Design Login Flow')).toBeInTheDocument();
+    const editButtons = screen.getAllByRole('button', { name: 'ערוך' });
+    await user.click(editButtons[0]!);
+
+    const dialog = screen.getByRole('dialog');
+    expect(dialog).toBeInTheDocument();
+    expect(within(dialog).getByDisplayValue('Design Login Flow')).toBeInTheDocument();
+
+    await user.clear(within(dialog).getByLabelText('שם משימה'));
+    await user.type(within(dialog).getByLabelText('שם משימה'), 'Updated Task Flow');
+
+    apiFetch.mockImplementation((path: string, init?: RequestInit) => {
+      if (init?.method === 'PATCH' && path === `/tasks/${openTask.id}`) {
+        return Promise.resolve({ ...openTask, name: 'Updated Task Flow' });
+      }
+      return Promise.resolve({ data: [openTask], meta: { page: 1, limit: 20, total: 1 } });
+    });
+
+    await user.click(within(dialog).getByRole('button', { name: 'שמירה' }));
+
+    await waitFor(() => {
+      expect(apiFetch).toHaveBeenCalledWith(
+        `/tasks/${openTask.id}`,
+        expect.objectContaining({ method: 'PATCH' }),
+      );
+    });
+  });
+
+  it('validates empty name and handles 422 error in TaskEditModal', async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    expect(await screen.findByText('Design Login Flow')).toBeInTheDocument();
+    const editButtons = screen.getAllByRole('button', { name: 'ערוך' });
+    await user.click(editButtons[0]!);
+
+    const dialog = screen.getByRole('dialog');
+    await user.clear(within(dialog).getByLabelText('שם משימה'));
+
+    await user.click(within(dialog).getByRole('button', { name: 'שמירה' }));
+    expect(await screen.findByText('שם המשימה הוא שדה חובה')).toBeInTheDocument();
+
+    await user.type(within(dialog).getByRole('textbox', { name: /שם משימה/ }), 'New Name');
+    apiFetch.mockImplementation((path: string, init?: RequestInit) => {
+      if (init?.method === 'PATCH' && path === `/tasks/${openTask.id}`) {
+        return Promise.reject(new ApiClientError(422, { details: [] }));
+      }
+      return Promise.resolve({ data: [openTask], meta: { page: 1, limit: 20, total: 1 } });
+    });
+
+    await user.click(within(dialog).getByRole('button', { name: 'שמירה' }));
     expect(await screen.findByText('יש לבחור פרויקט תקין ופעיל')).toBeInTheDocument();
   });
 
@@ -119,14 +191,14 @@ describe('TasksPage', () => {
       if (init?.method === 'DELETE') {
         return Promise.resolve(undefined);
       }
-      return Promise.resolve({ data: [mockTask], meta: { page: 1, limit: 20, total: 1 } });
+      return Promise.resolve({ data: [openTask], meta: { page: 1, limit: 20, total: 1 } });
     });
 
     await user.click(screen.getByRole('button', { name: 'השבת משימה' }));
 
     await waitFor(() => {
       expect(apiFetch).toHaveBeenCalledWith(
-        `/tasks/${mockTask.id}`,
+        `/tasks/${openTask.id}`,
         expect.objectContaining({ method: 'DELETE' }),
       );
     });

@@ -16,12 +16,20 @@ vi.mock('@/lib/api/client', async () => {
   };
 });
 
-const mockProject = {
+const activeProject = {
   id: '550e8400-e29b-41d4-a716-446655440000',
   name: 'Acme Mobile App',
   clientId: '110e8400-e29b-41d4-a716-446655440000',
   clientName: 'Acme Corp',
   isActive: true,
+};
+
+const inactiveProject = {
+  id: '550e8400-e29b-41d4-a716-446655440001',
+  name: 'Old Project',
+  clientId: '110e8400-e29b-41d4-a716-446655440000',
+  clientName: 'Acme Corp',
+  isActive: false,
 };
 
 const mockClient = {
@@ -46,7 +54,10 @@ describe('ProjectsPage', () => {
       if (String(path).startsWith('/clients')) {
         return Promise.resolve({ data: [mockClient], meta: { page: 1, limit: 100, total: 1 } });
       }
-      return Promise.resolve({ data: [mockProject], meta: { page: 1, limit: 20, total: 1 } });
+      return Promise.resolve({
+        data: [activeProject, inactiveProject],
+        meta: { page: 1, limit: 20, total: 2 },
+      });
     });
   });
 
@@ -59,9 +70,10 @@ describe('ProjectsPage', () => {
     expect(screen.getByRole('columnheader', { name: /פעולות/ })).toBeInTheDocument();
 
     expect(await screen.findByText('Acme Mobile App')).toBeInTheDocument();
+    expect(screen.getByText('Old Project')).toBeInTheDocument();
     expect(screen.getAllByText('Acme Corp').length).toBeGreaterThan(0);
-    expect(screen.getByRole('button', { name: 'משימות' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'ערוך' })).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: 'משימות' }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('button', { name: 'ערוך' }).length).toBeGreaterThan(0);
     expect(screen.getByRole('button', { name: 'השבת' })).toBeInTheDocument();
   });
 
@@ -98,7 +110,60 @@ describe('ProjectsPage', () => {
           }),
         );
       }
-      return Promise.resolve({ data: [mockProject], meta: { page: 1, limit: 20, total: 1 } });
+      return Promise.resolve({ data: [activeProject], meta: { page: 1, limit: 20, total: 1 } });
+    });
+
+    await user.click(within(dialog).getByRole('button', { name: 'שמירה' }));
+
+    expect(await screen.findByText('יש לבחור לקוח תקין ופעיל')).toBeInTheDocument();
+  });
+
+  it('opens ProjectEditModal and updates project name and status', async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    expect(await screen.findByText('Acme Mobile App')).toBeInTheDocument();
+    const editButtons = screen.getAllByRole('button', { name: 'ערוך' });
+    await user.click(editButtons[0]!);
+
+    const dialog = screen.getByRole('dialog');
+    expect(dialog).toBeInTheDocument();
+    expect(within(dialog).getByDisplayValue('Acme Mobile App')).toBeInTheDocument();
+
+    await user.clear(within(dialog).getByLabelText('שם פרויקט'));
+    await user.type(within(dialog).getByLabelText('שם פרויקט'), 'Updated Mobile App');
+
+    apiFetch.mockImplementation((path: string, init?: RequestInit) => {
+      if (init?.method === 'PATCH' && path === `/projects/${activeProject.id}`) {
+        return Promise.resolve({ ...activeProject, name: 'Updated Mobile App' });
+      }
+      return Promise.resolve({ data: [activeProject], meta: { page: 1, limit: 20, total: 1 } });
+    });
+
+    await user.click(within(dialog).getByRole('button', { name: 'שמירה' }));
+
+    await waitFor(() => {
+      expect(apiFetch).toHaveBeenCalledWith(
+        `/projects/${activeProject.id}`,
+        expect.objectContaining({ method: 'PATCH' }),
+      );
+    });
+  });
+
+  it('handles 422 VAL-23 error in ProjectEditModal', async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    expect(await screen.findByText('Acme Mobile App')).toBeInTheDocument();
+    const editButtons = screen.getAllByRole('button', { name: 'ערוך' });
+    await user.click(editButtons[0]!);
+
+    const dialog = screen.getByRole('dialog');
+    apiFetch.mockImplementation((path: string, init?: RequestInit) => {
+      if (init?.method === 'PATCH' && path === `/projects/${activeProject.id}`) {
+        return Promise.reject(new ApiClientError(422, { details: [] }));
+      }
+      return Promise.resolve({ data: [activeProject], meta: { page: 1, limit: 20, total: 1 } });
     });
 
     await user.click(within(dialog).getByRole('button', { name: 'שמירה' }));
@@ -119,14 +184,14 @@ describe('ProjectsPage', () => {
       if (init?.method === 'DELETE') {
         return Promise.resolve(undefined);
       }
-      return Promise.resolve({ data: [mockProject], meta: { page: 1, limit: 20, total: 1 } });
+      return Promise.resolve({ data: [activeProject], meta: { page: 1, limit: 20, total: 1 } });
     });
 
     await user.click(screen.getByRole('button', { name: 'השבת פרויקט' }));
 
     await waitFor(() => {
       expect(apiFetch).toHaveBeenCalledWith(
-        `/projects/${mockProject.id}`,
+        `/projects/${activeProject.id}`,
         expect.objectContaining({ method: 'DELETE' }),
       );
     });

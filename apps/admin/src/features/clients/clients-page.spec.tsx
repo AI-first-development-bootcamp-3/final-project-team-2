@@ -16,11 +16,18 @@ vi.mock('@/lib/api/client', async () => {
   };
 });
 
-const acme = {
+const activeClient = {
   id: '550e8400-e29b-41d4-a716-446655440010',
   name: 'Acme Corp',
   contactInfo: 'contact@acme.com',
   isActive: true,
+};
+
+const inactiveClient = {
+  id: '550e8400-e29b-41d4-a716-446655440011',
+  name: 'Old Corp',
+  contactInfo: null,
+  isActive: false,
 };
 
 function renderPage() {
@@ -35,8 +42,8 @@ describe('ClientsPage', () => {
   beforeEach(() => {
     apiFetch.mockReset();
     apiFetch.mockResolvedValue({
-      data: [acme],
-      meta: { page: 1, limit: 20, total: 1 },
+      data: [activeClient, inactiveClient],
+      meta: { page: 1, limit: 20, total: 2 },
     });
   });
 
@@ -49,6 +56,7 @@ describe('ClientsPage', () => {
     expect(screen.getByRole('columnheader', { name: /פעולות/ })).toBeInTheDocument();
     expect(await screen.findByText('Acme Corp')).toBeInTheDocument();
     expect(screen.getByText('contact@acme.com')).toBeInTheDocument();
+    expect(screen.getByText('Old Corp')).toBeInTheDocument();
   });
 
   it('filters by search query', async () => {
@@ -80,9 +88,9 @@ describe('ClientsPage', () => {
     const user = userEvent.setup();
     apiFetch.mockImplementation((path: string, init?: RequestInit) => {
       if (init?.method === 'POST') {
-        return Promise.resolve({ data: { ...acme, name: 'New Client' } });
+        return Promise.resolve({ data: { ...activeClient, name: 'New Client' } });
       }
-      return Promise.resolve({ data: [acme], meta: { page: 1, limit: 20, total: 1 } });
+      return Promise.resolve({ data: [activeClient], meta: { page: 1, limit: 20, total: 1 } });
     });
 
     renderPage();
@@ -107,7 +115,7 @@ describe('ClientsPage', () => {
       if (init?.method === 'POST') {
         return Promise.reject(new ApiClientError(409, { details: [] }));
       }
-      return Promise.resolve({ data: [acme], meta: { page: 1, limit: 20, total: 1 } });
+      return Promise.resolve({ data: [activeClient], meta: { page: 1, limit: 20, total: 1 } });
     });
 
     renderPage();
@@ -121,33 +129,31 @@ describe('ClientsPage', () => {
     expect(await screen.findByText('שם הלקוח כבר קיים במערכת')).toBeInTheDocument();
   });
 
-  it('opens edit modal pre-populated and submits update', async () => {
+  it('opens edit modal pre-populated, changes contactInfo & isActive, and handles submit & error', async () => {
     const user = userEvent.setup();
     renderPage();
     await screen.findByText('Acme Corp');
 
-    await user.click(screen.getByRole('button', { name: 'ערוך' }));
+    const editButtons = screen.getAllByRole('button', { name: 'ערוך' });
+    await user.click(editButtons[0]!);
 
     const dialog = screen.getByRole('dialog');
     expect(within(dialog).getByLabelText('שם לקוח')).toHaveValue('Acme Corp');
 
+    await user.clear(within(dialog).getByLabelText('פרטי קשר'));
+    await user.type(within(dialog).getByLabelText('פרטי קשר'), 'newcontact@acme.com');
+    await user.click(within(dialog).getByLabelText('פעיל'));
+
     apiFetch.mockImplementation((path: string, init?: RequestInit) => {
       if (init?.method === 'PATCH') {
-        return Promise.resolve({ data: { ...acme, name: 'Updated' } });
+        return Promise.reject(new ApiClientError(409, { details: [] }));
       }
-      return Promise.resolve({ data: [acme], meta: { page: 1, limit: 20, total: 1 } });
+      return Promise.resolve({ data: [activeClient], meta: { page: 1, limit: 20, total: 1 } });
     });
 
-    await user.clear(within(dialog).getByLabelText('שם לקוח'));
-    await user.type(within(dialog).getByLabelText('שם לקוח'), 'Updated');
     await user.click(within(dialog).getByRole('button', { name: 'שמירה' }));
 
-    await waitFor(() => {
-      expect(apiFetch).toHaveBeenCalledWith(
-        `/clients/${acme.id}`,
-        expect.objectContaining({ method: 'PATCH' }),
-      );
-    });
+    expect(await screen.findByText('שם הלקוח כבר קיים במערכת')).toBeInTheDocument();
   });
 
   it('shows deactivate confirmation and sends PATCH isActive=false', async () => {
@@ -162,9 +168,9 @@ describe('ClientsPage', () => {
 
     apiFetch.mockImplementation((path: string, init?: RequestInit) => {
       if (init?.method === 'PATCH') {
-        return Promise.resolve({ data: { ...acme, isActive: false } });
+        return Promise.resolve({ data: { ...activeClient, isActive: false } });
       }
-      return Promise.resolve({ data: [acme], meta: { page: 1, limit: 20, total: 1 } });
+      return Promise.resolve({ data: [activeClient], meta: { page: 1, limit: 20, total: 1 } });
     });
 
     const confirmButtons = screen.getAllByRole('button', { name: 'השבת' });
@@ -172,7 +178,7 @@ describe('ClientsPage', () => {
 
     await waitFor(() => {
       expect(apiFetch).toHaveBeenCalledWith(
-        `/clients/${acme.id}`,
+        `/clients/${activeClient.id}`,
         expect.objectContaining({ method: 'PATCH' }),
       );
     });
