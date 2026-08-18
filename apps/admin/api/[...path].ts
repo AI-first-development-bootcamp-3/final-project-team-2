@@ -28,11 +28,14 @@ const HOP_BY_HOP = new Set([
 
 type ProxyRequest = IncomingMessage & { body?: unknown };
 
-function upstreamBody(req: ProxyRequest): string | Buffer | undefined {
+function upstreamBody(req: ProxyRequest): string | ArrayBuffer | undefined {
   // Vercel's Node helpers consume the stream and expose the parsed body:
-  // Buffer/string pass through untouched, parsed JSON is re-serialized.
+  // string passes through untouched, parsed JSON is re-serialized, and a
+  // Buffer is copied into a plain ArrayBuffer — the DOM's BodyInit type
+  // doesn't accept Node's Buffer.
   if (req.method === 'GET' || req.method === 'HEAD' || req.body === undefined) return undefined;
-  if (typeof req.body === 'string' || Buffer.isBuffer(req.body)) return req.body;
+  if (typeof req.body === 'string') return req.body;
+  if (Buffer.isBuffer(req.body)) return new Uint8Array(req.body).buffer;
   return JSON.stringify(req.body);
 }
 
@@ -44,13 +47,24 @@ export default async function handler(req: ProxyRequest, res: ServerResponse): P
     return;
   }
 
+  // new URL(path, base) IGNORES the base when path is an absolute URL, and
+  // "//host" / backslash variants re-root the authority — any of those would
+  // turn this proxy into an SSRF gadget. Build the URL, then require that it
+  // still points at API_ORIGIN.
+  const url = new URL(req.url ?? '/', apiOrigin);
+  if (url.origin !== new URL(apiOrigin).origin) {
+    res.statusCode = 400;
+    res.end('Invalid request path');
+    return;
+  }
+
   const headers: Record<string, string> = {};
   for (const [name, value] of Object.entries(req.headers)) {
     if (value === undefined || HOP_BY_HOP.has(name)) continue;
     headers[name] = Array.isArray(value) ? value.join(', ') : value;
   }
 
-  const upstream = await fetch(new URL(req.url ?? '/', apiOrigin), {
+  const upstream = await fetch(url, {
     method: req.method,
     headers,
     body: upstreamBody(req),
