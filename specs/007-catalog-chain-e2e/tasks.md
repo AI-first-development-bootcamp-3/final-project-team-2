@@ -30,9 +30,9 @@ description: 'Task list for Full Catalog Chain E2E (KAN-54)'
 
 **Purpose**: Scaffold e2e helpers; confirm no new packages and no product-code changes
 
-- [ ] T001 Confirm `@playwright/test` is already in `e2e/package.json` and do **not** add npm packages; do **not** change `server/api/prisma/schema.prisma`, `apps/admin/src/`, `apps/mobile/src/`, `server/api/src/`, or `packages/contracts/` product behavior
-- [ ] T002 [P] Create `e2e/helpers/unique-name.ts` exporting `uniqueName(kind: string)` that returns `e2e.{kind}.{timestamp}.{random}` for client/project/task names (FR-010 / VAL-21)
-- [ ] T003 [P] Create `e2e/helpers/catalog-chain.ts` with console helpers (no API creates): `createClientViaConsole`, `createProjectViaConsole`, `createTaskViaConsole`, `assignEmployeeViaConsole` using Hebrew UI from `specs/007-catalog-chain-e2e/research.md` §4, plus `fetchMyAssignments(request, email, password)` against `API_BASE_URL` from `e2e/playwright.config.ts` (`POST /auth/login` then `GET /me/assignments`)
+- [x] T001 Confirm `@playwright/test` is already in `e2e/package.json` and do **not** add npm packages; do **not** change `server/api/prisma/schema.prisma`, `apps/admin/src/`, `apps/mobile/src/`, `server/api/src/`, or `packages/contracts/` product behavior
+- [x] T002 [P] Create `e2e/helpers/unique-name.ts` exporting `uniqueName(kind: string)` that returns `e2e.{kind}.{timestamp}.{random}` for client/project/task names (FR-010 / VAL-21)
+- [x] T003 [P] Create `e2e/helpers/catalog-chain.ts` with console helpers (no API creates): `createClientViaConsole`, `createProjectViaConsole`, `createTaskViaConsole`, `assignEmployeeViaConsole` using Hebrew UI from `specs/007-catalog-chain-e2e/research.md` §4, plus `fetchMyAssignments(request, email, password)` against `API_BASE_URL` from `e2e/playwright.config.ts` (`POST /auth/login` then `GET /me/assignments`)
 
 ---
 
@@ -42,9 +42,9 @@ description: 'Task list for Full Catalog Chain E2E (KAN-54)'
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T004 [P] Confirm `e2e/playwright.config.ts` already exports `ADMIN_BASE_URL` (default `http://localhost:5174`) and `API_BASE_URL`, keeps `baseURL` as the employee app, and starts the admin `webServer` on `ADMIN_PORT`; do **not** add a fourth server or change smoke `baseURL`
-- [ ] T005 [P] Confirm `.github/workflows/ci.yml` already runs `prisma migrate deploy`, `prisma db seed`, then `pnpm --filter @abra/e2e test`; do **not** add a new CI job or extra seed step
-- [ ] T006 [P] Confirm KAN-50–53 screens exist at `apps/admin/src/features/clients/clients-page.tsx`, `apps/admin/src/features/projects/projects-page.tsx`, `apps/admin/src/features/tasks/tasks-page.tsx`, `apps/admin/src/features/assignments/assignments-page.tsx` and picker at `server/api/src/modules/me/me.controller.ts`; if a screen is missing, do **not** implement it here — the journey in later phases must fail on that screen instead of using hidden API creates
+- [x] T004 [P] Confirm `e2e/playwright.config.ts` already exports `ADMIN_BASE_URL` (default `http://localhost:5174`) and `API_BASE_URL`, keeps `baseURL` as the employee app, and starts the admin `webServer` on `ADMIN_PORT`; do **not** add a fourth server or change smoke `baseURL`
+- [x] T005 [P] Confirm `.github/workflows/ci.yml` already runs `prisma migrate deploy`, `prisma db seed`, then `pnpm --filter @abra/e2e test`; do **not** add a new CI job or extra seed step
+- [x] T006 [P] Confirm KAN-50–53 screens exist at `apps/admin/src/features/clients/clients-page.tsx`, `apps/admin/src/features/projects/projects-page.tsx`, `apps/admin/src/features/tasks/tasks-page.tsx`, `apps/admin/src/features/assignments/assignments-page.tsx` and picker at `server/api/src/modules/me/me.controller.ts`; if a screen is missing, do **not** implement it here — the journey in later phases must fail on that screen instead of using hidden API creates
 
 **Checkpoint**: Foundation ready — Playwright starts API + mobile + admin; CI seeds; helpers exist; no catalog/picker product implemented in this feature
 
@@ -58,9 +58,9 @@ description: 'Task list for Full Catalog Chain E2E (KAN-54)'
 
 ### Implementation for User Story 1
 
-- [ ] T007 [US1] Rewrite `e2e/specs/entity-chain.spec.ts`: remove `test.describe.skip`; `test.setTimeout(240_000)`; one browser context; `signInAsAdmin` from `e2e/helpers/users-directory.ts` (fail fast if still on `/login`, FR-012); `createEmployeeViaUsers` with `uniqueEmail()` from `e2e/helpers/unique-email.ts` + `CREATED_EMPLOYEE_PASSWORD` from `e2e/helpers/credentials.ts` (setup, not a KAN-54 catalog step); navigate sidebar `לקוחות`; `createClientViaConsole` with `uniqueName('client')`; assert the Clients row is `פעיל` via search `חיפוש` per `specs/007-catalog-chain-e2e/contracts/catalog-chain-e2e.md`
-- [ ] T008 [US1] Extend `e2e/specs/entity-chain.spec.ts`: sidebar `פרויקטים` → create project with `uniqueName('project')` parented to that client (`צור פרויקט`); assert Projects row shows that client and `פעיל`; sidebar `משימות` → create task with `uniqueName('task')` parented to that project; assert Tasks row shows that project and `פתוחה`
-- [ ] T009 [US1] Extend `e2e/specs/entity-chain.spec.ts`: sidebar `שיוכים` → assign the dedicated employee to that task via `assignEmployeeViaConsole`; assert the Assignments row shows that employee (name/email) and that task. Delete the old `request.post` catalog creates (`/clients`, `/projects`, `/tasks`, `/assignments`) from this file
+- [x] T007 [US1] Rewrite `e2e/specs/entity-chain.spec.ts`: remove `test.describe.skip`; `test.setTimeout(240_000)`; one browser context; `signInAsAdmin` from `e2e/helpers/users-directory.ts` (fail fast if still on `/login`, FR-012); `createEmployeeViaUsers` with `uniqueEmail()` from `e2e/helpers/unique-email.ts` + `CREATED_EMPLOYEE_PASSWORD` from `e2e/helpers/credentials.ts` (setup, not a KAN-54 catalog step); navigate sidebar `לקוחות`; `createClientViaConsole` with `uniqueName('client')`; assert the Clients row is `פעיל` via search `חיפוש` per `specs/007-catalog-chain-e2e/contracts/catalog-chain-e2e.md`
+- [x] T008 [US1] Extend `e2e/specs/entity-chain.spec.ts`: sidebar `פרויקטים` → create project with `uniqueName('project')` parented to that client (`צור פרויקט`); assert Projects row shows that client and `פעיל`; sidebar `משימות` → create task with `uniqueName('task')` parented to that project; assert Tasks row shows that project and `פתוחה`
+- [x] T009 [US1] Extend `e2e/specs/entity-chain.spec.ts`: sidebar `שיוכים` → assign the dedicated employee to that task via `assignEmployeeViaConsole`; assert the Assignments row shows that employee (name/email) and that task. Delete the old `request.post` catalog creates (`/clients`, `/projects`, `/tasks`, `/assignments`) from this file
 
 **Checkpoint**: User Story 1 is independently testable (MVP Epic 4 console-chain proof). Picker assertions are not required yet.
 
@@ -74,8 +74,8 @@ description: 'Task list for Full Catalog Chain E2E (KAN-54)'
 
 ### Implementation for User Story 2
 
-- [ ] T010 [US2] Extend `e2e/specs/entity-chain.spec.ts`: after the Assignments row is visible, call `fetchMyAssignments` from `e2e/helpers/catalog-chain.ts` as the dedicated employee; if login fails, fail with a setup message (not an empty-picker assertion); assert HTTP 200, `data.length === 1`, and `clientName` / `projectName` / `taskName` equal this run’s unique names
-- [ ] T011 [US2] Extend `e2e/specs/entity-chain.spec.ts`: call `fetchMyAssignments` as `SEEDED_EMPLOYEE` from `e2e/fixtures/users.ts` (`employee1@abra.co`); assert no item has this run’s `taskName`. Use absolute `API_BASE_URL` (do not `request.get('/api/v1/...')` against the employee-app `baseURL`)
+- [x] T010 [US2] Extend `e2e/specs/entity-chain.spec.ts`: after the Assignments row is visible, call `fetchMyAssignments` from `e2e/helpers/catalog-chain.ts` as the dedicated employee; if login fails, fail with a setup message (not an empty-picker assertion); assert HTTP 200, `data.length === 1`, and `clientName` / `projectName` / `taskName` equal this run’s unique names
+- [x] T011 [US2] Extend `e2e/specs/entity-chain.spec.ts`: call `fetchMyAssignments` as `SEEDED_EMPLOYEE` from `e2e/fixtures/users.ts` (`employee1@abra.co`); assert no item has this run’s `taskName`. Use absolute `API_BASE_URL` (do not `request.get('/api/v1/...')` against the employee-app `baseURL`)
 
 **Checkpoint**: User Stories 1 and 2 both pass in `entity-chain.spec.ts` (console chain + picker data)
 
@@ -89,9 +89,9 @@ description: 'Task list for Full Catalog Chain E2E (KAN-54)'
 
 ### Implementation for User Story 3
 
-- [ ] T012 [US3] Keep `e2e/specs/app-shell.spec.ts`, `e2e/specs/health.spec.ts`, `e2e/specs/create-then-login.spec.ts`, `e2e/specs/deactivated-cannot-login.spec.ts`, and `e2e/specs/login.spec.ts` still discovered by `testDir: './specs'` in `e2e/playwright.config.ts` (no `testIgnore` that drops smokes, Epic 3 files, or `entity-chain.spec.ts`). Do **not** unskip KAN-49 files as part of this feature if they are still skipped
-- [ ] T013 [US3] Confirm `e2e/specs/entity-chain.spec.ts` has no `test.skip` / `test.fixme` / `test.fail` / `describe.skip` so a failure fails `pnpm --filter @abra/e2e test` (SC-005); confirm `e2e/helpers/unique-name.ts` and `e2e/helpers/unique-email.ts` are used so two consecutive runs cannot collide on VAL-21 or email uniqueness (SC-006)
-- [ ] T014 [P] [US3] Update the E2E section in `README.md` so the required-check list includes catalog-chain (`entity-chain`: admin creates client → project → task → assignment on the console, then picker data is exactly that chain), still listing app shell, health, create-then-login, and deactivated-cannot-login
+- [x] T012 [US3] Keep `e2e/specs/app-shell.spec.ts`, `e2e/specs/health.spec.ts`, `e2e/specs/create-then-login.spec.ts`, `e2e/specs/deactivated-cannot-login.spec.ts`, and `e2e/specs/login.spec.ts` still discovered by `testDir: './specs'` in `e2e/playwright.config.ts` (no `testIgnore` that drops smokes, Epic 3 files, or `entity-chain.spec.ts`). Do **not** unskip KAN-49 files as part of this feature if they are still skipped
+- [x] T013 [US3] Confirm `e2e/specs/entity-chain.spec.ts` has no `test.skip` / `test.fixme` / `test.fail` / `describe.skip` so a failure fails `pnpm --filter @abra/e2e test` (SC-005); confirm `e2e/helpers/unique-name.ts` and `e2e/helpers/unique-email.ts` are used so two consecutive runs cannot collide on VAL-21 or email uniqueness (SC-006)
+- [x] T014 [P] [US3] Update the E2E section in `README.md` so the required-check list includes catalog-chain (`entity-chain`: admin creates client → project → task → assignment on the console, then picker data is exactly that chain), still listing app shell, health, create-then-login, and deactivated-cannot-login
 
 **Checkpoint**: Required check documents and discovers the catalog-chain spec plus existing checks; reruns are unique-name safe
 
@@ -101,9 +101,9 @@ description: 'Task list for Full Catalog Chain E2E (KAN-54)'
 
 **Purpose**: Typecheck, docs, and quickstart validation across the journey
 
-- [ ] T015 [P] Ensure `e2e/tsconfig.json` still includes `helpers/**/*.ts` and `specs/**/*.ts` so `pnpm --filter @abra/e2e typecheck` passes after adding `e2e/helpers/unique-name.ts` and `e2e/helpers/catalog-chain.ts`
-- [ ] T016 Run the validation in `specs/007-catalog-chain-e2e/quickstart.md` (`pnpm test:e2e` or `pnpm --filter @abra/e2e exec playwright test specs/entity-chain.spec.ts`); if KAN-50–53 are incomplete, record the failing assertions rather than weakening the spec or restoring API creates
-- [ ] T017 Confirm `git diff -- apps/admin apps/mobile server/api/src packages/contracts` is empty for this feature (FR-011) aside from any pre-existing unrelated work
+- [x] T015 [P] Ensure `e2e/tsconfig.json` still includes `helpers/**/*.ts` and `specs/**/*.ts` so `pnpm --filter @abra/e2e typecheck` passes after adding `e2e/helpers/unique-name.ts` and `e2e/helpers/catalog-chain.ts`
+- [x] T016 Run the validation in `specs/007-catalog-chain-e2e/quickstart.md` (`pnpm test:e2e` or `pnpm --filter @abra/e2e exec playwright test specs/entity-chain.spec.ts`); if KAN-50–53 are incomplete, record the failing assertions rather than weakening the spec or restoring API creates
+- [x] T017 Confirm `git diff -- apps/admin apps/mobile server/api/src packages/contracts` is empty for this feature (FR-011) aside from any pre-existing unrelated work
 
 ---
 
