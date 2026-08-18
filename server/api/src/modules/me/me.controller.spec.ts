@@ -124,6 +124,35 @@ describe('GET /api/v1/me/assignments', () => {
       .expect(403);
   });
 
+  it('omits a deactivated or removed projectId from the employee picker', async () => {
+    const created = await createApp(employeeJwtGuard());
+    app = created.app;
+    created.prisma.taskAssignment.findMany.mockResolvedValue([]);
+
+    const response = await request(app.getHttpServer())
+      .get('/api/v1/me/assignments')
+      .set('Authorization', 'Bearer emp-token')
+      .expect(200);
+
+    expect(response.body.data).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ projectId: ASSIGNMENT_ROW.task.project.id }),
+      ]),
+    );
+    expect(created.prisma.taskAssignment.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          task: expect.objectContaining({
+            project: expect.objectContaining({
+              is_active: true,
+              deleted_at: null,
+            }),
+          }),
+        }),
+      }),
+    );
+  });
+
   it('returns empty array when no assignments', async () => {
     const created = await createApp(employeeJwtGuard());
     app = created.app;

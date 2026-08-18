@@ -146,8 +146,16 @@ export type { ProjectsListQuery, ProjectListItem, ProjectsListSuccess } from './
 export { CreateProjectBodySchema, ProjectCreateSuccessSchema } from './projects/create.js';
 export type { CreateProjectBody, ProjectCreateSuccess } from './projects/create.js';
 
-export { UpdateProjectBodySchema } from './projects/update.js';
-export type { UpdateProjectBody } from './projects/update.js';
+export {
+  UpdateProjectBodySchema,
+  ProjectGetSuccessSchema,
+  ProjectUpdateSuccessSchema,
+} from './projects/update.js';
+export type {
+  UpdateProjectBody,
+  ProjectGetSuccess,
+  ProjectUpdateSuccess,
+} from './projects/update.js';
 
 // --- Tasks ---
 export {

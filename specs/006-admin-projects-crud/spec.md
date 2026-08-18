@@ -8,7 +8,7 @@
 
 **Input**: User description: "Jira KAN-51 (Epic KAN-44 — Entity Management). §12.4 endpoints + /admin/projects screen. Fields: name (VAL-22), client (must reference an active, non-deleted client — VAL-23), active/inactive (default active). Client picker in the modal shows active clients only. Soft delete; same historical-rendering rule as clients. Confluence Epic 4 spec and Figma time-report file provided as context."
 
-## User Scenarios & Testing *(mandatory)*
+## User Scenarios & Testing _(mandatory)_
 
 ### User Story 1 - Browse the projects catalog (Priority: P1)
 
@@ -149,7 +149,7 @@ Create, edit, and remove must not look broken while saving, when validation fail
 - Combined clients/projects assignment table (ניהול לקוחות/פרויקטים) is not this screen; this delivery is the dedicated Projects catalog.
 - Per-project hour-report type (סכום שעות vs כניסה/יציאה) is out of scope (KAN-63).
 
-## Requirements *(mandatory)*
+## Requirements _(mandatory)_
 
 ### Functional Requirements
 
@@ -180,7 +180,7 @@ Create, edit, and remove must not look broken while saving, when validation fail
 - **Projects catalog**: The admin Projects screen (table + search + client filter + create/edit/remove). Empty, loading, and modal states included.
 - **Historical time report**: An already-stored time report that named a project. After that project is deactivated or removed, the stored name still renders; it is not blanked out.
 
-## Success Criteria *(mandatory)*
+## Success Criteria _(mandatory)_
 
 ### Measurable Outcomes
 

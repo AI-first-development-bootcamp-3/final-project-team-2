@@ -9,17 +9,12 @@ import {
 } from '@abra/contracts';
 import { PrismaService } from '../../prisma/prisma.service';
 
-const SORT_COLUMN: Record<ProjectsListQuery['sort'], keyof Prisma.ProjectOrderByWithRelationInput> =
-  {
-    name: 'name',
-    isActive: 'is_active',
-  };
-
 const PROJECT_LIST_SELECT = {
   id: true,
   name: true,
   client_id: true,
   is_active: true,
+  deleted_at: true,
   client: { select: { name: true } },
 } as const;
 
@@ -28,6 +23,7 @@ type ProjectRow = {
   name: string;
   client_id: string;
   is_active: boolean;
+  deleted_at: Date | null;
   client: { name: string };
 };
 
@@ -38,7 +34,18 @@ function toListItem(row: ProjectRow): ProjectListItem {
     clientId: row.client_id,
     clientName: row.client.name,
     isActive: row.is_active,
+    isDeleted: row.deleted_at != null,
   };
+}
+
+function buildOrderBy(query: ProjectsListQuery): Prisma.ProjectOrderByWithRelationInput {
+  if (query.sort === 'clientName') {
+    return { client: { name: query.order } };
+  }
+  if (query.sort === 'isActive') {
+    return { is_active: query.order };
+  }
+  return { name: query.order };
 }
 
 @Injectable()
@@ -49,15 +56,12 @@ export class ProjectsService {
     query: ProjectsListQuery,
   ): Promise<{ data: ProjectListItem[]; meta: { page: number; limit: number; total: number } }> {
     const where = this.buildWhere(query);
-    const orderBy = {
-      [SORT_COLUMN[query.sort]]: query.order,
-    } as Prisma.ProjectOrderByWithRelationInput;
 
     const [rows, total] = await Promise.all([
       this.prisma.project.findMany({
         where,
         select: PROJECT_LIST_SELECT,
-        orderBy,
+        orderBy: buildOrderBy(query),
         skip: (query.page - 1) * query.limit,
         take: query.limit,
       }),
@@ -75,7 +79,7 @@ export class ProjectsService {
       where: { id },
       select: PROJECT_LIST_SELECT,
     });
-    if (!row) {
+    if (!row || row.deleted_at) {
       throw new NotFoundException('פרויקט לא נמצא');
     }
     return toListItem(row as ProjectRow);
@@ -96,11 +100,11 @@ export class ProjectsService {
 
   async update(id: string, payload: UpdateProjectBody): Promise<ProjectListItem> {
     const existing = await this.prisma.project.findUnique({ where: { id } });
-    if (!existing) {
+    if (!existing || existing.deleted_at) {
       throw new NotFoundException('פרויקט לא נמצא');
     }
 
-    if (payload.clientId) {
+    if (payload.clientId && payload.clientId !== existing.client_id) {
       await this.validateClientId(payload.clientId);
     }
 
@@ -118,7 +122,7 @@ export class ProjectsService {
 
   async softDelete(id: string): Promise<void> {
     const existing = await this.prisma.project.findUnique({ where: { id } });
-    if (!existing) {
+    if (!existing || existing.deleted_at) {
       throw new NotFoundException('פרויקט לא נמצא');
     }
 
@@ -126,6 +130,26 @@ export class ProjectsService {
       where: { id },
       data: { deleted_at: new Date() },
     });
+  }
+
+  /**
+   * History reads must bypass soft-delete on related TimeEntry/Task/Project
+   * so a removed project's name still renders (KAN-51 FR-011).
+   */
+  async historicalProjectNameForTimeEntry(timeEntryId: string): Promise<string | null> {
+    const entry = await this.prisma.timeEntry.findFirst({
+      where: { id: timeEntryId, deleted_at: {} },
+      select: {
+        task: {
+          select: {
+            project: {
+              select: { name: true },
+            },
+          },
+        },
+      },
+    });
+    return entry?.task?.project?.name ?? null;
   }
 
   private async validateClientId(clientId: string): Promise<void> {

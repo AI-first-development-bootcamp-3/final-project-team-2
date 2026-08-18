@@ -113,15 +113,16 @@ export function ProjectCreateForm({ open, onClose, onCreated }: ProjectCreateFor
   return (
     <CrudModal
       open={open}
-      title="פרויקט חדש"
+      title="יצירת פרויקט"
       saving={saving}
+      submitLabel="צור פרויקט"
       onClose={handleClose}
       onSubmit={() => {
         void handleSubmit();
       }}
     >
       <label className="flex flex-col text-sm">
-        שם פרויקט
+        שם הפרויקט
         <input
           required
           value={name}
@@ -135,7 +136,7 @@ export function ProjectCreateForm({ open, onClose, onCreated }: ProjectCreateFor
         ) : null}
       </label>
       <label className="flex flex-col text-sm">
-        לקוח
+        שם הלקוח
         <select
           required
           value={clientId}

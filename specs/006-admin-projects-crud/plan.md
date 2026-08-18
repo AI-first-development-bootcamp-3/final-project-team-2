@@ -32,32 +32,32 @@ Deliver Jira KAN-51 (Epic KAN-44): admin-only Projects catalog — Hebrew RTL ta
 
 ## Constitution Check
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+_GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
 Project `.specify/memory/constitution.md` is still a template (not ratified). Gates below are taken from **GENERAL_SPEC** + this feature’s FR-017 until a real constitution is adopted.
 
-| Gate | Status | Notes |
-| ---- | ------ | ----- |
-| Shared contracts in `packages/contracts/` for API + admin | PASS | List/get/create/update/remove designed in Phase 1 `contracts/` |
-| Same-phase FE + BE (no FE-only or BE-only ship) | PASS | Plan and quickstart require contract + API + admin together |
-| Soft-delete + pagination conventions (§6.4, §6.6, §6.7, §6.10, §8.3) | PASS | Documented in research + data-model; DELETE → 204 + `deleted_at` |
-| VAL-22 / VAL-23 (§9.3); 400 vs 422 (§6.6) | PASS | Missing name 400 VAL-22; unusable client 422 VAL-23 |
-| Admin-only Projects (§7.2, §11.2); employees denied | PASS | JwtGuard + RolesGuard from KAN-39 |
-| Historical names + picker hide (§8.3 / ADR-15) | PASS | Picker `/me/assignments`; history via stored Project row + TimeEntry join |
-| No cascade to tasks on deactivate/remove | PASS | Encoded in data-model state transitions |
-| No unjustified new packages/services | PASS | Reuse Project/Client models, projects module, DataTable, CrudModal, Clients list for picker |
-| Test-first / coverage discipline (§14) | PASS | Contract + integration + UI state tests in quickstart |
+| Gate                                                                 | Status | Notes                                                                                       |
+| -------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------- |
+| Shared contracts in `packages/contracts/` for API + admin            | PASS   | List/get/create/update/remove designed in Phase 1 `contracts/`                              |
+| Same-phase FE + BE (no FE-only or BE-only ship)                      | PASS   | Plan and quickstart require contract + API + admin together                                 |
+| Soft-delete + pagination conventions (§6.4, §6.6, §6.7, §6.10, §8.3) | PASS   | Documented in research + data-model; DELETE → 204 + `deleted_at`                            |
+| VAL-22 / VAL-23 (§9.3); 400 vs 422 (§6.6)                            | PASS   | Missing name 400 VAL-22; unusable client 422 VAL-23                                         |
+| Admin-only Projects (§7.2, §11.2); employees denied                  | PASS   | JwtGuard + RolesGuard from KAN-39                                                           |
+| Historical names + picker hide (§8.3 / ADR-15)                       | PASS   | Picker `/me/assignments`; history via stored Project row + TimeEntry join                   |
+| No cascade to tasks on deactivate/remove                             | PASS   | Encoded in data-model state transitions                                                     |
+| No unjustified new packages/services                                 | PASS   | Reuse Project/Client models, projects module, DataTable, CrudModal, Clients list for picker |
+| Test-first / coverage discipline (§14)                               | PASS   | Contract + integration + UI state tests in quickstart                                       |
 
 **Gate result**: PASS — proceed to Phase 0 / Phase 1.
 
 ### Post-design re-check (after Phase 1)
 
-| Gate | Status | Notes |
-| ---- | ------ | ----- |
-| Shared contracts designed | PASS | `contracts/projects.md` → `@abra/contracts` |
-| Same-phase validation path | PASS | `quickstart.md` requires contract + API + admin |
-| Soft-delete / VAL ids / no cascade | PASS | Encoded in `research.md` + `data-model.md` + contract |
-| No unjustified complexity | PASS | Complexity Tracking empty; reuses Project model, Clients picker, monorepo layout |
+| Gate                               | Status | Notes                                                                            |
+| ---------------------------------- | ------ | -------------------------------------------------------------------------------- |
+| Shared contracts designed          | PASS   | `contracts/projects.md` → `@abra/contracts`                                      |
+| Same-phase validation path         | PASS   | `quickstart.md` requires contract + API + admin                                  |
+| Soft-delete / VAL ids / no cascade | PASS   | Encoded in `research.md` + `data-model.md` + contract                            |
+| No unjustified complexity          | PASS   | Complexity Tracking empty; reuses Project model, Clients picker, monorepo layout |
 
 **Post-design gate result**: PASS.
 

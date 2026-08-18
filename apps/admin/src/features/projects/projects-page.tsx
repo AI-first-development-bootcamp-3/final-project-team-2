@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type {
   ClientListItem,
@@ -53,8 +53,10 @@ export function ProjectsPage() {
   const [error, setError] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<ProjectListItem | null>(null);
-  const [deactivatingProject, setDeactivatingProject] = useState<ProjectListItem | null>(null);
+  const [removingProject, setRemovingProject] = useState<ProjectListItem | null>(null);
+  const [removing, setRemoving] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const removingRef = useRef(false);
 
   useEffect(() => {
     apiFetch<ClientsListSuccess>('/clients?limit=100')
@@ -100,15 +102,23 @@ export function ProjectsPage() {
     setPage(1);
   }, []);
 
-  const handleDeactivate = async () => {
-    if (!deactivatingProject) return;
+  const handleRemove = async () => {
+    if (!removingProject || removingRef.current) return;
+    removingRef.current = true;
+    setRemoving(true);
     try {
-      await apiFetch(`/projects/${deactivatingProject.id}`, { method: 'DELETE' });
-      setSuccessMessage('הפרויקט הושבת בהצלחה');
-      setDeactivatingProject(null);
+      await apiFetch(`/projects/${removingProject.id}`, { method: 'DELETE' });
+      setSuccessMessage('הפרויקט הוסר בהצלחה');
+      setRemovingProject(null);
       fetchProjects();
-    } catch {
-      setError('שגיאה בהשבתת הפרויקט');
+    } catch (err: unknown) {
+      if (err && typeof err === 'object' && 'status' in err && err.status === 401) {
+        return;
+      }
+      setError('לא ניתן להסיר את הפרויקט כרגע. נסו שוב.');
+    } finally {
+      removingRef.current = false;
+      setRemoving(false);
     }
   };
 
@@ -116,7 +126,7 @@ export function ProjectsPage() {
     () =>
       createProjectsColumns({
         onEdit: (project) => setEditingProject(project),
-        onDeactivate: (project) => setDeactivatingProject(project),
+        onRemove: (project) => setRemovingProject(project),
         onViewTasks: (project) => navigate(`/admin/tasks?projectId=${project.id}`),
       }),
     [navigate],
@@ -203,13 +213,13 @@ export function ProjectsPage() {
               setPage(1);
             }}
           />
-          כולל מושבתים
+          כולל מוסרים
         </label>
       </div>
 
       {loading ? <p>טוען…</p> : null}
       {error ? <p role="alert">{error}</p> : null}
-      {!loading && !error && result && result.data.length === 0 ? <p>לא נמצאו פרויקטים</p> : null}
+      {!loading && !error && result && result.data.length === 0 ? <p>אין מידע קיים עד כה</p> : null}
       {!loading && !error && result && result.data.length > 0 ? (
         <DataTable
           columns={columns}
@@ -247,31 +257,38 @@ export function ProjectsPage() {
         />
       ) : null}
 
-      {deactivatingProject ? (
+      {removingProject ? (
         <div
           role="dialog"
           aria-modal="true"
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
         >
           <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl" dir="rtl">
-            <h3 className="mb-2 text-lg font-bold text-red-600">השבתת פרויקט</h3>
+            <h3 className="mb-2 text-lg font-bold text-red-600">הסרת פרויקט</h3>
             <p className="mb-4 text-sm text-neutral-700">
-              האם אתה בטוח שברצונך להשבית את הפרויקט <strong>{deactivatingProject.name}</strong>?
+              האם אתה בטוח שברצונך להסיר את הפרויקט <strong>{removingProject.name}</strong>?
             </p>
             <div className="mt-6 flex justify-end gap-3">
               <button
                 type="button"
-                onClick={() => setDeactivatingProject(null)}
+                onClick={() => {
+                  if (removing) return;
+                  setRemovingProject(null);
+                }}
                 className="rounded border px-4 py-2 text-sm font-medium hover:bg-neutral-100"
+                disabled={removing}
               >
                 ביטול
               </button>
               <button
                 type="button"
-                onClick={handleDeactivate}
-                className="rounded bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+                onClick={() => {
+                  void handleRemove();
+                }}
+                className="rounded bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+                disabled={removing}
               >
-                השבת פרויקט
+                {removing ? 'מוחק…' : 'מחיקה'}
               </button>
             </div>
           </div>

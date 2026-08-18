@@ -39,12 +39,12 @@ Extend `ProjectListItem` with `isDeleted` (boolean derived from `deleted_at != n
 
 **Decision**: Keep `is_active` and `deleted_at` as **independent** flags.
 
-| Action | API | Persistence | Default catalog | New-entry picker |
-| ------ | --- | ----------- | ---------------- | ---------------- |
-| Create | `POST /projects` | `is_active=true`, `deleted_at=null` | Visible, status פעיל | Visible (if assigned later) |
-| Deactivate | `PATCH` `{ isActive: false }` | `is_active=false` only | **Still visible**, status לא פעיל | Hidden |
-| Reactivate | `PATCH` `{ isActive: true }` | `is_active=true` | Visible, פעיל | Visible again |
-| Remove | `DELETE /projects/:id` | `deleted_at=now()`; do **not** require `is_active=false` | Hidden unless `includeDeleted=true` | Hidden |
+| Action     | API                           | Persistence                                              | Default catalog                     | New-entry picker            |
+| ---------- | ----------------------------- | -------------------------------------------------------- | ----------------------------------- | --------------------------- |
+| Create     | `POST /projects`              | `is_active=true`, `deleted_at=null`                      | Visible, status פעיל                | Visible (if assigned later) |
+| Deactivate | `PATCH` `{ isActive: false }` | `is_active=false` only                                   | **Still visible**, status לא פעיל   | Hidden                      |
+| Reactivate | `PATCH` `{ isActive: true }`  | `is_active=true`                                         | Visible, פעיל                       | Visible again               |
+| Remove     | `DELETE /projects/:id`        | `deleted_at=now()`; do **not** require `is_active=false` | Hidden unless `includeDeleted=true` | Hidden                      |
 
 Admin UI must expose both: edit form toggles active/inactive; a separate remove flow uses Hebrew confirmation **ביטול** / **מחיקה**. Do not map the row action השבת to `DELETE`. Include-removed control is labeled as including **removed** rows, not as “כולל מושבתים”.
 
@@ -59,12 +59,12 @@ Admin UI must expose both: edit form toggles active/inactive; a separate remove 
 
 **Decision**:
 
-| Input | HTTP | Rule |
-| ----- | ---- | ---- |
-| Missing / whitespace-only name | `400` | VAL-22 |
-| Missing clientId or not a UUID | `400` | VAL-23 |
-| UUID of inactive, removed, or unknown client **when assigning/changing** | `422` | VAL-23 |
-| Duplicate project name | `201` / `200` | Allowed — names are **not** unique (unlike VAL-21 on clients) |
+| Input                                                                    | HTTP          | Rule                                                          |
+| ------------------------------------------------------------------------ | ------------- | ------------------------------------------------------------- |
+| Missing / whitespace-only name                                           | `400`         | VAL-22                                                        |
+| Missing clientId or not a UUID                                           | `400`         | VAL-23                                                        |
+| UUID of inactive, removed, or unknown client **when assigning/changing** | `422`         | VAL-23                                                        |
+| Duplicate project name                                                   | `201` / `200` | Allowed — names are **not** unique (unlike VAL-21 on clients) |
 
 Create always validates the chosen client is active and not removed (`validateClientId`). Update re-applies VAL-23 **only when `clientId` is present and different from the project’s current `client_id`**. Saving name or `isActive` without a client change MUST succeed even if the current parent client was later deactivated. If the payload sends the same `clientId` as stored, treat it as no change (do not 422).
 

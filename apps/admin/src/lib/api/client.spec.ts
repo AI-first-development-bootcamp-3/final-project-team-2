@@ -52,6 +52,17 @@ describe('apiFetch', () => {
     expect(getAuthSession()).toBeNull();
   });
 
+  it('returns undefined for 204 empty responses', async () => {
+    vi.mocked(fetch).mockResolvedValue({
+      status: 204,
+      ok: true,
+      json: async (): Promise<unknown> => {
+        throw new Error('empty body');
+      },
+    } as Response);
+    await expect(apiFetch('/projects/1', { method: 'DELETE' })).resolves.toBeUndefined();
+  });
+
   it('throws ApiClientError for non-auth failures', async () => {
     vi.mocked(fetch).mockResolvedValue({
       status: 500,

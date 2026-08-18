@@ -28,9 +28,9 @@ description: 'Task list for Admin Projects CRUD (KAN-51)'
 
 **Purpose**: Confirm reuse of existing Project/Client models, contracts, Nest module, and admin feature files; no new packages or Prisma migration
 
-- [ ] T001 Confirm Prisma `Project` in `server/api/prisma/schema.prisma` already has `name`, `client_id`, `is_active`, `deleted_at` (GENERAL_SPEC §4.3) and do **not** add a migration; do **not** add `react-hook-form` or a new dialog library to `apps/admin/package.json`
-- [ ] T002 [P] Ensure contract files exist: `packages/contracts/src/projects/list.ts`, `packages/contracts/src/projects/create.ts`, `packages/contracts/src/projects/update.ts`, plus `packages/contracts/src/projects/list.spec.ts`, `packages/contracts/src/projects/create.spec.ts`, and `packages/contracts/src/projects/update.spec.ts` (create empty spec files if missing)
-- [ ] T003 [P] Confirm admin feature files exist: `apps/admin/src/features/projects/projects-page.tsx`, `apps/admin/src/features/projects/projects-columns.tsx`, `apps/admin/src/features/projects/project-create-form.tsx`, `apps/admin/src/features/projects/project-edit-modal.tsx`, `apps/admin/src/features/projects/projects-page.spec.tsx`; confirm API module files exist: `server/api/src/modules/projects/projects.controller.ts`, `server/api/src/modules/projects/projects.service.ts`, `server/api/src/modules/projects/projects.module.ts`
+- [x] T001 Confirm Prisma `Project` in `server/api/prisma/schema.prisma` already has `name`, `client_id`, `is_active`, `deleted_at` (GENERAL_SPEC §4.3) and do **not** add a migration; do **not** add `react-hook-form` or a new dialog library to `apps/admin/package.json`
+- [x] T002 [P] Ensure contract files exist: `packages/contracts/src/projects/list.ts`, `packages/contracts/src/projects/create.ts`, `packages/contracts/src/projects/update.ts`, plus `packages/contracts/src/projects/list.spec.ts`, `packages/contracts/src/projects/create.spec.ts`, and `packages/contracts/src/projects/update.spec.ts` (create empty spec files if missing)
+- [x] T003 [P] Confirm admin feature files exist: `apps/admin/src/features/projects/projects-page.tsx`, `apps/admin/src/features/projects/projects-columns.tsx`, `apps/admin/src/features/projects/project-create-form.tsx`, `apps/admin/src/features/projects/project-edit-modal.tsx`, `apps/admin/src/features/projects/projects-page.spec.tsx`; confirm API module files exist: `server/api/src/modules/projects/projects.controller.ts`, `server/api/src/modules/projects/projects.service.ts`, `server/api/src/modules/projects/projects.module.ts`
 
 ---
 
@@ -40,12 +40,12 @@ description: 'Task list for Admin Projects CRUD (KAN-51)'
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T004 Extend `ProjectsListSortSchema` with `clientName` and add `isDeleted: z.boolean()` to `ProjectListItemSchema` in `packages/contracts/src/projects/list.ts` per `specs/006-admin-projects-crud/contracts/projects.md` (defaults remain `page=1`, `limit=20`, `sort=name`, `order=asc`, `includeDeleted=false`; `q` trim; `clientId` uuid)
-- [ ] T005 [P] Add `ProjectGetSuccessSchema` and `ProjectUpdateSuccessSchema` (`{ data: ProjectListItem }`) in `packages/contracts/src/projects/update.ts` (keep `UpdateProjectBodySchema` optional `name` VAL-22 / `clientId` VAL-23 uuid / `isActive`); confirm `CreateProjectBodySchema` + `ProjectCreateSuccessSchema` in `packages/contracts/src/projects/create.ts`
-- [ ] T006 Confirm `ValCode` and Hebrew `VAL_MESSAGES` already include VAL-22 (`שם הפרויקט הוא שדה חובה`) and VAL-23 (`יש לבחור לקוח תקין ופעיל`) in `packages/contracts/src/index.ts`; add them only if missing
-- [ ] T007 Export list/create/update schemas and success types from `packages/contracts/src/index.ts` and ensure `pnpm --filter @abra/contracts build` succeeds
-- [ ] T008 [P] Confirm `JwtGuard` + `RolesGuard` + `@Roles('admin')` on `server/api/src/modules/projects/projects.controller.ts` and that `ProjectsModule` is imported from `server/api/src/app.module.ts`; if missing, document blocker and stop before story endpoints
-- [ ] T009 [P] Confirm shared `DataTable` in `apps/admin/src/components/ui/data-table.tsx` and `CrudModal` in `apps/admin/src/components/ui/crud-modal.tsx`; confirm KAN-50 `GET /clients?limit=100&isActive=true` is available for the picker (Clients list in `server/api/src/modules/clients/`)
+- [x] T004 Extend `ProjectsListSortSchema` with `clientName` and add `isDeleted: z.boolean()` to `ProjectListItemSchema` in `packages/contracts/src/projects/list.ts` per `specs/006-admin-projects-crud/contracts/projects.md` (defaults remain `page=1`, `limit=20`, `sort=name`, `order=asc`, `includeDeleted=false`; `q` trim; `clientId` uuid)
+- [x] T005 [P] Add `ProjectGetSuccessSchema` and `ProjectUpdateSuccessSchema` (`{ data: ProjectListItem }`) in `packages/contracts/src/projects/update.ts` (keep `UpdateProjectBodySchema` optional `name` VAL-22 / `clientId` VAL-23 uuid / `isActive`); confirm `CreateProjectBodySchema` + `ProjectCreateSuccessSchema` in `packages/contracts/src/projects/create.ts`
+- [x] T006 Confirm `ValCode` and Hebrew `VAL_MESSAGES` already include VAL-22 (`שם הפרויקט הוא שדה חובה`) and VAL-23 (`יש לבחור לקוח תקין ופעיל`) in `packages/contracts/src/index.ts`; add them only if missing
+- [x] T007 Export list/create/update schemas and success types from `packages/contracts/src/index.ts` and ensure `pnpm --filter @abra/contracts build` succeeds
+- [x] T008 [P] Confirm `JwtGuard` + `RolesGuard` + `@Roles('admin')` on `server/api/src/modules/projects/projects.controller.ts` and that `ProjectsModule` is imported from `server/api/src/app.module.ts`; if missing, document blocker and stop before story endpoints
+- [x] T009 [P] Confirm shared `DataTable` in `apps/admin/src/components/ui/data-table.tsx` and `CrudModal` in `apps/admin/src/components/ui/crud-modal.tsx`; confirm KAN-50 `GET /clients?limit=100&isActive=true` is available for the picker (Clients list in `server/api/src/modules/clients/`)
 
 **Checkpoint**: Foundation ready — project contract builds with `isDeleted` + `clientName` sort, VAL-22/23 exist, projects module is admin-guarded, DataTable/CrudModal reusable
 
@@ -61,17 +61,17 @@ description: 'Task list for Admin Projects CRUD (KAN-51)'
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T010 [P] [US1] Add contract tests for list defaults, `q` trim, `clientId`, `includeDeleted`, `sort=clientName`, and `ProjectListItemSchema` requiring `isDeleted` in `packages/contracts/src/projects/list.spec.ts`
-- [ ] T011 [P] [US1] Add API tests for `GET /api/v1/projects`: 200 with `clientName` join, default limit 20 / `sort=name` asc, search `q`, filter `clientId`, default excludes removed, `includeDeleted=true` returns `isDeleted: true` rows, past-last page 200 empty `data` + real `meta.total`, 401, 403 in `server/api/src/modules/projects/projects.controller.spec.ts`
-- [ ] T012 [P] [US1] Add admin RTL tests: columns שם / לקוח / סטטוס (פעיל / לא פעיל), loading state, empty copy **אין מידע קיים עד כה**, no page-size control, search and client filter reset to page 1, include-removed shows distinguishable removed rows, sort by client name resets to page 1 in `apps/admin/src/features/projects/projects-page.spec.tsx`
+- [x] T010 [P] [US1] Add contract tests for list defaults, `q` trim, `clientId`, `includeDeleted`, `sort=clientName`, and `ProjectListItemSchema` requiring `isDeleted` in `packages/contracts/src/projects/list.spec.ts`
+- [x] T011 [P] [US1] Add API tests for `GET /api/v1/projects`: 200 with `clientName` join, default limit 20 / `sort=name` asc, search `q`, filter `clientId`, default excludes removed, `includeDeleted=true` returns `isDeleted: true` rows, past-last page 200 empty `data` + real `meta.total`, 401, 403 in `server/api/src/modules/projects/projects.controller.spec.ts`
+- [x] T012 [P] [US1] Add admin RTL tests: columns שם / לקוח / סטטוס (פעיל / לא פעיל), loading state, empty copy **אין מידע קיים עד כה**, no page-size control, search and client filter reset to page 1, include-removed shows distinguishable removed rows, sort by client name resets to page 1 in `apps/admin/src/features/projects/projects-page.spec.tsx`
 
 ### Implementation for User Story 1
 
-- [ ] T013 [US1] Implement `ProjectsService.list` in `server/api/src/modules/projects/projects.service.ts`: join `client.name` as `clientName`, map `isDeleted` from `deleted_at`, `includeDeleted` middleware bypass, search name insensitive, filter `clientId` / `isActive`, sort `name` | `clientName` (`orderBy: { client: { name } }`) | `isActive`, offset pagination
-- [ ] T014 [US1] Implement `GET /` and `GET /:id` in `server/api/src/modules/projects/projects.controller.ts`: parse `ProjectsListQuerySchema`, 200 list envelope, 200 `{ data }` for get-one, 404 Hebrew for missing/removed on get-one, Swagger operations
-- [ ] T015 [P] [US1] Implement columns in `apps/admin/src/features/projects/projects-columns.tsx`: sortable `name`, sortable `clientName`, sortable `isActive` (פעיל / לא פעיל); when `isDeleted` show a distinct removed marker (e.g. הוסר) — **do not** add a task-count column or require משימות as KAN-51 AC
-- [ ] T016 [US1] Implement catalog UI in `apps/admin/src/features/projects/projects-page.tsx`: `apiFetch` list with `limit=20`, search `q`, client filter from `GET /clients?limit=100` (non-deleted), include-removed labeled as including **removed** (not “כולל מושבתים”), loading, empty **אין מידע קיים עד כה**, Hebrew RTL; changing search/filter/sort sets page 1
-- [ ] T017 [US1] Keep `/admin/projects` behind admin session in `apps/admin/src/App.tsx` and `apps/admin/src/components/layout/admin-sidebar.tsx` (label פרויקטים); employees cannot open the console; unauthenticated `GET /projects` remains 401 via existing guards
+- [x] T013 [US1] Implement `ProjectsService.list` in `server/api/src/modules/projects/projects.service.ts`: join `client.name` as `clientName`, map `isDeleted` from `deleted_at`, `includeDeleted` middleware bypass, search name insensitive, filter `clientId` / `isActive`, sort `name` | `clientName` (`orderBy: { client: { name } }`) | `isActive`, offset pagination
+- [x] T014 [US1] Implement `GET /` and `GET /:id` in `server/api/src/modules/projects/projects.controller.ts`: parse `ProjectsListQuerySchema`, 200 list envelope, 200 `{ data }` for get-one, 404 Hebrew for missing/removed on get-one, Swagger operations
+- [x] T015 [P] [US1] Implement columns in `apps/admin/src/features/projects/projects-columns.tsx`: sortable `name`, sortable `clientName`, sortable `isActive` (פעיל / לא פעיל); when `isDeleted` show a distinct removed marker (e.g. הוסר) — **do not** add a task-count column or require משימות as KAN-51 AC
+- [x] T016 [US1] Implement catalog UI in `apps/admin/src/features/projects/projects-page.tsx`: `apiFetch` list with `limit=20`, search `q`, client filter from `GET /clients?limit=100` (non-deleted), include-removed labeled as including **removed** (not “כולל מושבתים”), loading, empty **אין מידע קיים עד כה**, Hebrew RTL; changing search/filter/sort sets page 1
+- [x] T017 [US1] Keep `/admin/projects` behind admin session in `apps/admin/src/App.tsx` and `apps/admin/src/components/layout/admin-sidebar.tsx` (label פרויקטים); employees cannot open the console; unauthenticated `GET /projects` remains 401 via existing guards
 
 **Checkpoint**: User Story 1 fully functional and independently testable (MVP catalog)
 
@@ -85,16 +85,16 @@ description: 'Task list for Admin Projects CRUD (KAN-51)'
 
 ### Tests for User Story 2
 
-- [ ] T018 [P] [US2] Add contract tests for valid `CreateProjectBodySchema` (trim name) and `ProjectCreateSuccessSchema` requiring `isActive: true` / `isDeleted: false` in `packages/contracts/src/projects/create.spec.ts`
-- [ ] T019 [P] [US2] Add API tests for `POST /api/v1/projects`: 201 with `isActive: true`, `clientName` joined, 401, 403 in `server/api/src/modules/projects/projects.controller.spec.ts`
-- [ ] T020 [P] [US2] Add admin RTL tests: create title **יצירת פרויקט**, fields **שם הפרויקט** / **שם הלקוח**, primary **צור פרויקט**, picker only active clients, success closes modal and refetches the **current** page (page/query unchanged) in `apps/admin/src/features/projects/project-create-form.spec.tsx` and/or `apps/admin/src/features/projects/projects-page.spec.tsx`
+- [x] T018 [P] [US2] Add contract tests for valid `CreateProjectBodySchema` (trim name) and `ProjectCreateSuccessSchema` requiring `isActive: true` / `isDeleted: false` in `packages/contracts/src/projects/create.spec.ts`
+- [x] T019 [P] [US2] Add API tests for `POST /api/v1/projects`: 201 with `isActive: true`, `clientName` joined, 401, 403 in `server/api/src/modules/projects/projects.controller.spec.ts`
+- [x] T020 [P] [US2] Add admin RTL tests: create title **יצירת פרויקט**, fields **שם הפרויקט** / **שם הלקוח**, primary **צור פרויקט**, picker only active clients, success closes modal and refetches the **current** page (page/query unchanged) in `apps/admin/src/features/projects/project-create-form.spec.tsx` and/or `apps/admin/src/features/projects/projects-page.spec.tsx`
 
 ### Implementation for User Story 2
 
-- [ ] T021 [US2] Implement `ProjectsService.create` in `server/api/src/modules/projects/projects.service.ts`: trim name, `validateClientId` (active, not removed), Prisma create with `is_active` default true / `deleted_at` null, return `ProjectListItem` (do **not** enforce unique names)
-- [ ] T022 [US2] Add `POST /` in `server/api/src/modules/projects/projects.controller.ts`: admin guards, `CreateProjectBodySchema.safeParse`, HTTP 201 `{ data }`, Swagger operation
-- [ ] T023 [US2] Implement Hebrew RTL create form in `apps/admin/src/features/projects/project-create-form.tsx` using `CrudModal` and `CreateProjectBodySchema`: copy **יצירת פרויקט** / **שם הפרויקט** / **שם הלקוח** / **צור פרויקט**; load picker via `GET /clients?limit=100&isActive=true`; no lead-manager/dates/description fields
-- [ ] T024 [US2] Wire create trigger on `apps/admin/src/features/projects/projects-page.tsx`: on 201 close modal and refetch the existing list `path` — **do not** `setPage(1)` or clear search/filters/sort
+- [x] T021 [US2] Implement `ProjectsService.create` in `server/api/src/modules/projects/projects.service.ts`: trim name, `validateClientId` (active, not removed), Prisma create with `is_active` default true / `deleted_at` null, return `ProjectListItem` (do **not** enforce unique names)
+- [x] T022 [US2] Add `POST /` in `server/api/src/modules/projects/projects.controller.ts`: admin guards, `CreateProjectBodySchema.safeParse`, HTTP 201 `{ data }`, Swagger operation
+- [x] T023 [US2] Implement Hebrew RTL create form in `apps/admin/src/features/projects/project-create-form.tsx` using `CrudModal` and `CreateProjectBodySchema`: copy **יצירת פרויקט** / **שם הפרויקט** / **שם הלקוח** / **צור פרויקט**; load picker via `GET /clients?limit=100&isActive=true`; no lead-manager/dates/description fields
+- [x] T024 [US2] Wire create trigger on `apps/admin/src/features/projects/projects-page.tsx`: on 201 close modal and refetch the existing list `path` — **do not** `setPage(1)` or clear search/filters/sort
 
 **Checkpoint**: User Stories 1 and 2 both work independently
 
@@ -108,15 +108,15 @@ description: 'Task list for Admin Projects CRUD (KAN-51)'
 
 ### Tests for User Story 3
 
-- [ ] T025 [P] [US3] Add contract tests for VAL-22 (missing / whitespace name) and VAL-23 (missing / non-uuid `clientId`) in `packages/contracts/src/projects/create.spec.ts`
-- [ ] T026 [P] [US3] Add API tests: 400 VAL-22; 400 VAL-23 malformed/missing client; 422 VAL-23 for inactive, removed, or unknown client; 201 when a second project reuses an existing name in `server/api/src/modules/projects/projects.controller.spec.ts`
-- [ ] T027 [P] [US3] Add admin RTL tests for Hebrew VAL-22 / VAL-23 field errors (form stays open, no row added) and empty picker when `GET /clients?isActive=true` returns no clients in `apps/admin/src/features/projects/project-create-form.spec.tsx`
+- [x] T025 [P] [US3] Add contract tests for VAL-22 (missing / whitespace name) and VAL-23 (missing / non-uuid `clientId`) in `packages/contracts/src/projects/create.spec.ts`
+- [x] T026 [P] [US3] Add API tests: 400 VAL-22; 400 VAL-23 malformed/missing client; 422 VAL-23 for inactive, removed, or unknown client; 201 when a second project reuses an existing name in `server/api/src/modules/projects/projects.controller.spec.ts`
+- [x] T027 [P] [US3] Add admin RTL tests for Hebrew VAL-22 / VAL-23 field errors (form stays open, no row added) and empty picker when `GET /clients?isActive=true` returns no clients in `apps/admin/src/features/projects/project-create-form.spec.tsx`
 
 ### Implementation for User Story 3
 
-- [ ] T028 [US3] Map Zod failures to `BadRequestException` with `zodIssuesToDetails` and Hebrew `VAL_MESSAGES` in `server/api/src/modules/projects/projects.controller.ts`
-- [ ] T029 [US3] In `server/api/src/modules/projects/projects.service.ts` `validateClientId`: missing row, `deleted_at` set, or `is_active=false` → `UnprocessableEntityException` 422 with `details[{ field: 'clientId', rule: 'VAL-23', message: VAL_MESSAGES['VAL-23'] }]`
-- [ ] T030 [US3] Render Hebrew field errors from `details[].rule` + `VAL_MESSAGES` on `apps/admin/src/features/projects/project-create-form.tsx`; keep modal open; do not POST when picker is empty (submit still yields VAL-23)
+- [x] T028 [US3] Map Zod failures to `BadRequestException` with `zodIssuesToDetails` and Hebrew `VAL_MESSAGES` in `server/api/src/modules/projects/projects.controller.ts`
+- [x] T029 [US3] In `server/api/src/modules/projects/projects.service.ts` `validateClientId`: missing row, `deleted_at` set, or `is_active=false` → `UnprocessableEntityException` 422 with `details[{ field: 'clientId', rule: 'VAL-23', message: VAL_MESSAGES['VAL-23'] }]`
+- [x] T030 [US3] Render Hebrew field errors from `details[].rule` + `VAL_MESSAGES` on `apps/admin/src/features/projects/project-create-form.tsx`; keep modal open; do not POST when picker is empty (submit still yields VAL-23)
 
 **Checkpoint**: User Stories 1–3 independently functional
 
@@ -130,17 +130,17 @@ description: 'Task list for Admin Projects CRUD (KAN-51)'
 
 ### Tests for User Story 4
 
-- [ ] T031 [P] [US4] Add contract tests for optional `UpdateProjectBodySchema` (whitespace name → VAL-22; bad `clientId` → VAL-23) and `ProjectUpdateSuccessSchema` in `packages/contracts/src/projects/update.spec.ts`
-- [ ] T032 [P] [US4] Add API tests in `server/api/src/modules/projects/projects.controller.spec.ts`: PATCH name 200; PATCH new active client 200; PATCH inactive/removed client 422 VAL-23; PATCH name/`isActive` with **same** `clientId` when parent client is inactive → 200; PATCH `{ isActive: false }` leaves child tasks open and not soft-deleted; 404 for unknown/removed id
-- [ ] T033 [P] [US4] Add picker-hide test: after PATCH `isActive=false`, `GET /api/v1/me/assignments` as the assigned employee omits that `projectId` in `server/api/src/modules/me/me.controller.spec.ts`
-- [ ] T034 [P] [US4] Add admin RTL tests: edit pre-fill, save name, `isActive` toggle calls **PATCH** not DELETE, keep current inactive client as selected option, VAL-22/VAL-23 keep modal open in `apps/admin/src/features/projects/project-edit-modal.spec.tsx` and/or `apps/admin/src/features/projects/projects-page.spec.tsx`
+- [x] T031 [P] [US4] Add contract tests for optional `UpdateProjectBodySchema` (whitespace name → VAL-22; bad `clientId` → VAL-23) and `ProjectUpdateSuccessSchema` in `packages/contracts/src/projects/update.spec.ts`
+- [x] T032 [P] [US4] Add API tests in `server/api/src/modules/projects/projects.controller.spec.ts`: PATCH name 200; PATCH new active client 200; PATCH inactive/removed client 422 VAL-23; PATCH name/`isActive` with **same** `clientId` when parent client is inactive → 200; PATCH `{ isActive: false }` leaves child tasks open and not soft-deleted; 404 for unknown/removed id
+- [x] T033 [P] [US4] Add picker-hide test: after PATCH `isActive=false`, `GET /api/v1/me/assignments` as the assigned employee omits that `projectId` in `server/api/src/modules/me/me.controller.spec.ts`
+- [x] T034 [P] [US4] Add admin RTL tests: edit pre-fill, save name, `isActive` toggle calls **PATCH** not DELETE, keep current inactive client as selected option, VAL-22/VAL-23 keep modal open in `apps/admin/src/features/projects/project-edit-modal.spec.tsx` and/or `apps/admin/src/features/projects/projects-page.spec.tsx`
 
 ### Implementation for User Story 4
 
-- [ ] T035 [US4] Implement `ProjectsService.update` in `server/api/src/modules/projects/projects.service.ts`: 404 if missing/removed; call `validateClientId` **only when** `payload.clientId` is present **and different** from stored `client_id`; `isActive` updates `is_active` only (no task writes)
-- [ ] T036 [US4] Add `PATCH /:id` in `server/api/src/modules/projects/projects.controller.ts`: `UpdateProjectBodySchema.safeParse`, Hebrew 400 on VAL-22, 200 `{ data }`
-- [ ] T037 [US4] Implement edit form in `apps/admin/src/features/projects/project-edit-modal.tsx`: pre-fill name/client/`isActive`; picker `GET /clients?limit=100&isActive=true` **plus** current client option if it is missing from that list; submit PATCH `{ name, clientId, isActive }`; **do not** call DELETE for השבת
-- [ ] T038 [US4] Confirm `GET /api/v1/me/assignments` in `server/api/src/modules/me/me.controller.ts` already filters `project.is_active=true` and `deleted_at=null`; if not, add those predicates (do not build a new picker API)
+- [x] T035 [US4] Implement `ProjectsService.update` in `server/api/src/modules/projects/projects.service.ts`: 404 if missing/removed; call `validateClientId` **only when** `payload.clientId` is present **and different** from stored `client_id`; `isActive` updates `is_active` only (no task writes)
+- [x] T036 [US4] Add `PATCH /:id` in `server/api/src/modules/projects/projects.controller.ts`: `UpdateProjectBodySchema.safeParse`, Hebrew 400 on VAL-22, 200 `{ data }`
+- [x] T037 [US4] Implement edit form in `apps/admin/src/features/projects/project-edit-modal.tsx`: pre-fill name/client/`isActive`; picker `GET /clients?limit=100&isActive=true` **plus** current client option if it is missing from that list; submit PATCH `{ name, clientId, isActive }`; **do not** call DELETE for השבת
+- [x] T038 [US4] Confirm `GET /api/v1/me/assignments` in `server/api/src/modules/me/me.controller.ts` already filters `project.is_active=true` and `deleted_at=null`; if not, add those predicates (do not build a new picker API)
 
 **Checkpoint**: User Stories 1–4 independently functional; inactive ≠ removed
 
@@ -154,16 +154,16 @@ description: 'Task list for Admin Projects CRUD (KAN-51)'
 
 ### Tests for User Story 5
 
-- [ ] T039 [P] [US5] Add API tests in `server/api/src/modules/projects/projects.controller.spec.ts` (and service tests in `server/api/src/modules/projects/projects.service.spec.ts` if needed): DELETE 204; row still in DB with `deleted_at` set; default list excludes it; `includeDeleted=true` returns `isDeleted: true`; child tasks unchanged (`status` / `deleted_at`); 404 for unknown id
-- [ ] T040 [US5] Add tests that after DELETE (and after deactivate from US4) a TimeEntry fixture still resolves `project.name` when the Prisma read **explicitly includes** deleted related Project/Task rows in `server/api/src/modules/projects/projects.service.spec.ts`; add `GET /me/assignments` omits removed `projectId` in `server/api/src/modules/me/me.controller.spec.ts`
-- [ ] T041 [P] [US5] Add admin RTL tests: remove confirmation **ביטול** / **מחיקה** (cancel leaves the row); confirm hides from default list; include-removed still shows name and client as removed — distinct from inactive — in `apps/admin/src/features/projects/projects-page.spec.tsx`
+- [x] T039 [P] [US5] Add API tests in `server/api/src/modules/projects/projects.controller.spec.ts` (and service tests in `server/api/src/modules/projects/projects.service.spec.ts` if needed): DELETE 204; row still in DB with `deleted_at` set; default list excludes it; `includeDeleted=true` returns `isDeleted: true`; child tasks unchanged (`status` / `deleted_at`); 404 for unknown id
+- [x] T040 [US5] Add tests that after DELETE (and after deactivate from US4) a TimeEntry fixture still resolves `project.name` when the Prisma read **explicitly includes** deleted related Project/Task rows in `server/api/src/modules/projects/projects.service.spec.ts`; add `GET /me/assignments` omits removed `projectId` in `server/api/src/modules/me/me.controller.spec.ts`
+- [x] T041 [P] [US5] Add admin RTL tests: remove confirmation **ביטול** / **מחיקה** (cancel leaves the row); confirm hides from default list; include-removed still shows name and client as removed — distinct from inactive — in `apps/admin/src/features/projects/projects-page.spec.tsx`
 
 ### Implementation for User Story 5
 
-- [ ] T042 [US5] Implement `ProjectsService.softDelete` in `server/api/src/modules/projects/projects.service.ts`: 404 if missing; set `deleted_at` only; **do not** write tasks
-- [ ] T043 [US5] Implement `DELETE /:id` in `server/api/src/modules/projects/projects.controller.ts` with HTTP 204 empty body
-- [ ] T044 [US5] Replace conflated השבת→DELETE on `apps/admin/src/features/projects/projects-page.tsx` / `apps/admin/src/features/projects/projects-columns.tsx` with a dedicated remove action that opens Hebrew confirmation (ביטול / מחיקה) then `DELETE /projects/:id`; keep deactivate on the edit `isActive` control from US4
-- [ ] T045 [US5] When include-removed is on, show name + client for removed rows using `isDeleted` in `apps/admin/src/features/projects/projects-columns.tsx` so the admin can tell what was removed
+- [x] T042 [US5] Implement `ProjectsService.softDelete` in `server/api/src/modules/projects/projects.service.ts`: 404 if missing; set `deleted_at` only; **do not** write tasks
+- [x] T043 [US5] Implement `DELETE /:id` in `server/api/src/modules/projects/projects.controller.ts` with HTTP 204 empty body
+- [x] T044 [US5] Replace conflated השבת→DELETE on `apps/admin/src/features/projects/projects-page.tsx` / `apps/admin/src/features/projects/projects-columns.tsx` with a dedicated remove action that opens Hebrew confirmation (ביטול / מחיקה) then `DELETE /projects/:id`; keep deactivate on the edit `isActive` control from US4
+- [x] T045 [US5] When include-removed is on, show name + client for removed rows using `isDeleted` in `apps/admin/src/features/projects/projects-columns.tsx` so the admin can tell what was removed
 
 **Checkpoint**: User Stories 1–5 independently functional; historical name + picker hide proven
 
@@ -177,13 +177,13 @@ description: 'Task list for Admin Projects CRUD (KAN-51)'
 
 ### Tests for User Story 6
 
-- [ ] T046 [P] [US6] Add admin RTL tests for in-flight saving (submit disabled) on create and edit, 400/422 stay open, 401 → `/login`, 500/network Hebrew retry with values preserved in `apps/admin/src/features/projects/project-create-form.spec.tsx`, `apps/admin/src/features/projects/project-edit-modal.spec.tsx`, and/or `apps/admin/src/features/projects/projects-page.spec.tsx`
+- [x] T046 [P] [US6] Add admin RTL tests for in-flight saving (submit disabled) on create and edit, 400/422 stay open, 401 → `/login`, 500/network Hebrew retry with values preserved in `apps/admin/src/features/projects/project-create-form.spec.tsx`, `apps/admin/src/features/projects/project-edit-modal.spec.tsx`, and/or `apps/admin/src/features/projects/projects-page.spec.tsx`
 
 ### Implementation for User Story 6
 
-- [ ] T047 [US6] Drive `CrudModal` saving state from in-flight POST/PATCH/DELETE in `apps/admin/src/features/projects/project-create-form.tsx`, `apps/admin/src/features/projects/project-edit-modal.tsx`, and the remove confirmation on `apps/admin/src/features/projects/projects-page.tsx` so the admin cannot send a second submit for the same action
-- [ ] T048 [US6] Submit create/edit/remove only through `apiFetch` in `apps/admin/src/lib/api/client.ts` so 401 clears the token and assigns `/login` (not a generic failure as the final state)
-- [ ] T049 [US6] On non-401/400/422 failures, keep the modal/confirmation open with a Hebrew retry message, preserve typed values, and do not redirect to sign-in in `apps/admin/src/features/projects/project-create-form.tsx` and `apps/admin/src/features/projects/project-edit-modal.tsx`
+- [x] T047 [US6] Drive `CrudModal` saving state from in-flight POST/PATCH/DELETE in `apps/admin/src/features/projects/project-create-form.tsx`, `apps/admin/src/features/projects/project-edit-modal.tsx`, and the remove confirmation on `apps/admin/src/features/projects/projects-page.tsx` so the admin cannot send a second submit for the same action
+- [x] T048 [US6] Submit create/edit/remove only through `apiFetch` in `apps/admin/src/lib/api/client.ts` so 401 clears the token and assigns `/login` (not a generic failure as the final state)
+- [x] T049 [US6] On non-401/400/422 failures, keep the modal/confirmation open with a Hebrew retry message, preserve typed values, and do not redirect to sign-in in `apps/admin/src/features/projects/project-create-form.tsx` and `apps/admin/src/features/projects/project-edit-modal.tsx`
 
 **Checkpoint**: All six user stories independently functional; UX matches FR-015 / FR-016 / SC-010 / SC-011
 
@@ -193,10 +193,10 @@ description: 'Task list for Admin Projects CRUD (KAN-51)'
 
 **Purpose**: Same-phase verification and cleanup across stories
 
-- [ ] T050 [P] Run and fix failures for `pnpm --filter @abra/contracts test`, `pnpm --filter @abra/api test`, and `pnpm --filter @abra/admin test` (touched files under `packages/contracts/src/projects/`, `server/api/src/modules/projects/`, `server/api/src/modules/me/`, `apps/admin/src/features/projects/`)
-- [ ] T051 Confirm out-of-scope UI absent (no lead manager, start/end dates, or project description on create/edit; no combined ניהול לקוחות/פרויקטים table; do not treat task CRUD or hour-report type as this feature) on `apps/admin/src/features/projects/project-create-form.tsx` and `apps/admin/src/features/projects/project-edit-modal.tsx`
-- [ ] T052 Execute manual scenarios in `specs/006-admin-projects-crud/quickstart.md` against seeded DB
-- [ ] T053 Run `pnpm test:coverage` and address coverage gaps to meet ≥70% gate for touched packages (`@abra/contracts`, `@abra/api`, `@abra/admin`)
+- [x] T050 [P] Run and fix failures for `pnpm --filter @abra/contracts test`, `pnpm --filter @abra/api test`, and `pnpm --filter @abra/admin test` (touched files under `packages/contracts/src/projects/`, `server/api/src/modules/projects/`, `server/api/src/modules/me/`, `apps/admin/src/features/projects/`)
+- [x] T051 Confirm out-of-scope UI absent (no lead manager, start/end dates, or project description on create/edit; no combined ניהול לקוחות/פרויקטים table; do not treat task CRUD or hour-report type as this feature) on `apps/admin/src/features/projects/project-create-form.tsx` and `apps/admin/src/features/projects/project-edit-modal.tsx`
+- [x] T052 Execute manual scenarios in `specs/006-admin-projects-crud/quickstart.md` against seeded DB
+- [x] T053 Run `pnpm test:coverage` and address coverage gaps to meet ≥70% gate for touched packages (`@abra/contracts`, `@abra/api`, `@abra/admin`)
 
 ---
 

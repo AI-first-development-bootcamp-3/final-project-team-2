@@ -50,7 +50,7 @@ export class ProjectsController {
         statusCode: 400,
         message: 'Validation failed',
         error: 'Bad Request',
-        details: zodIssuesToDetails(parsed.error.issues),
+        details: hebrewDetails(parsed.error.issues),
       });
     }
     return this.projectsService.list(parsed.data);
@@ -64,6 +64,7 @@ export class ProjectsController {
   }
 
   @Post()
+  @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create project (admin)' })
   async create(@Body() body: unknown) {
     const parsed = CreateProjectBodySchema.safeParse(body);

@@ -11,14 +11,14 @@ Related: [data-model.md](../data-model.md). List conventions match Users (KAN-69
 
 Used in list rows, `GET :id`, create `201`, and update `200`.
 
-| Field | Type | Notes |
-| ----- | ---- | ----- |
-| `id` | uuid string | |
-| `name` | string | |
-| `clientId` | uuid string | Parent client |
-| `clientName` | string | Joined from parent client |
-| `isActive` | boolean | UI: פעיל / לא פעיל |
-| `isDeleted` | boolean | `true` when `deleted_at` is set; always `false` on create |
+| Field        | Type        | Notes                                                     |
+| ------------ | ----------- | --------------------------------------------------------- |
+| `id`         | uuid string |                                                           |
+| `name`       | string      |                                                           |
+| `clientId`   | uuid string | Parent client                                             |
+| `clientName` | string      | Joined from parent client                                 |
+| `isActive`   | boolean     | UI: פעיל / לא פעיל                                        |
+| `isDeleted`  | boolean     | `true` when `deleted_at` is set; always `false` on create |
 
 ```json
 {
@@ -39,16 +39,16 @@ Used in list rows, `GET :id`, create `201`, and update `200`.
 
 ### Query parameters
 
-| Param | Type | Required | Default | Description |
-| ----- | ---- | -------- | ------- | ----------- |
-| `page` | integer | no | `1` | 1-based page index |
-| `limit` | integer | no | `20` | Page size; max `100` |
-| `q` | string | no | — | Trimmed; case-insensitive partial match on **name** |
-| `clientId` | uuid | no | — | Exact parent client filter |
-| `isActive` | boolean | no | — | Filter by `is_active` |
-| `includeDeleted` | boolean | no | `false` | When true, include soft-removed projects |
-| `sort` | `name` \| `clientName` \| `isActive` | no | `name` | Sort field |
-| `order` | `asc` \| `desc` | no | `asc` | Sort direction |
+| Param            | Type                                 | Required | Default | Description                                         |
+| ---------------- | ------------------------------------ | -------- | ------- | --------------------------------------------------- |
+| `page`           | integer                              | no       | `1`     | 1-based page index                                  |
+| `limit`          | integer                              | no       | `20`    | Page size; max `100`                                |
+| `q`              | string                               | no       | —       | Trimmed; case-insensitive partial match on **name** |
+| `clientId`       | uuid                                 | no       | —       | Exact parent client filter                          |
+| `isActive`       | boolean                              | no       | —       | Filter by `is_active`                               |
+| `includeDeleted` | boolean                              | no       | `false` | When true, include soft-removed projects            |
+| `sort`           | `name` \| `clientName` \| `isActive` | no       | `name`  | Sort field                                          |
+| `order`          | `asc` \| `desc`                      | no       | `asc`   | Sort direction                                      |
 
 Invalid query (page/limit/sort/order/uuid) → `400` with standard error envelope.
 
@@ -79,15 +79,24 @@ Past-last page: `200` with `data: []` and `meta.total` equal to the real match c
 ### Success — `200`
 
 ```json
-{ "data": { "id": "…", "name": "…", "clientId": "…", "clientName": "…", "isActive": true, "isDeleted": false } }
+{
+  "data": {
+    "id": "…",
+    "name": "…",
+    "clientId": "…",
+    "clientName": "…",
+    "isActive": true,
+    "isDeleted": false
+  }
+}
 ```
 
 ### Errors
 
-| Status | When |
-| ------ | ---- |
-| `404` | Unknown id, or soft-removed (default read path) |
-| `401` / `403` | Auth |
+| Status        | When                                            |
+| ------------- | ----------------------------------------------- |
+| `404`         | Unknown id, or soft-removed (default read path) |
+| `401` / `403` | Auth                                            |
 
 ---
 
@@ -95,10 +104,10 @@ Past-last page: `200` with `data: []` and `meta.total` equal to the real match c
 
 ### Request body
 
-| Field | Type | Required | Notes |
-| ----- | ---- | -------- | ----- |
-| `name` | string | yes | Trim; empty after trim → VAL-22 |
-| `clientId` | uuid | yes | Must be an active, non-removed client → else VAL-23 |
+| Field      | Type   | Required | Notes                                               |
+| ---------- | ------ | -------- | --------------------------------------------------- |
+| `name`     | string | yes      | Trim; empty after trim → VAL-22                     |
+| `clientId` | uuid   | yes      | Must be an active, non-removed client → else VAL-23 |
 
 ```json
 {
@@ -130,11 +139,11 @@ Names need not be unique. `isActive` is **not** accepted on create (always true)
 
 ### Request body (all fields optional)
 
-| Field | Type | Notes |
-| ----- | ---- | ----- |
-| `name` | string | Trim; empty after trim → VAL-22 |
-| `clientId` | uuid | VAL-23 **only if different** from current `client_id` |
-| `isActive` | boolean | Deactivate/reactivate; does not cascade to tasks |
+| Field      | Type    | Notes                                                 |
+| ---------- | ------- | ----------------------------------------------------- |
+| `name`     | string  | Trim; empty after trim → VAL-22                       |
+| `clientId` | uuid    | VAL-23 **only if different** from current `client_id` |
+| `isActive` | boolean | Deactivate/reactivate; does not cascade to tasks      |
 
 ```json
 { "name": "Updated Project", "isActive": false }
@@ -175,14 +184,14 @@ Standard envelope (GENERAL_SPEC §6.5):
 }
 ```
 
-| Status | When | `details[].rule` |
-| ------ | ---- | ---------------- |
-| `400` | Missing / whitespace name | VAL-22 on `name` |
-| `400` | Missing or non-UUID `clientId` | VAL-23 on `clientId` |
-| `422` | Client inactive, removed, or unknown (create or **changed** client) | VAL-23 on `clientId` |
-| `401` | Missing/invalid token | — |
-| `403` | Authenticated non-admin | — |
-| `404` | Get/update/remove unknown (or removed on get/update) | — |
+| Status | When                                                                | `details[].rule`     |
+| ------ | ------------------------------------------------------------------- | -------------------- |
+| `400`  | Missing / whitespace name                                           | VAL-22 on `name`     |
+| `400`  | Missing or non-UUID `clientId`                                      | VAL-23 on `clientId` |
+| `422`  | Client inactive, removed, or unknown (create or **changed** client) | VAL-23 on `clientId` |
+| `401`  | Missing/invalid token                                               | —                    |
+| `403`  | Authenticated non-admin                                             | —                    |
+| `404`  | Get/update/remove unknown (or removed on get/update)                | —                    |
 
 422 example:
 
@@ -191,9 +200,7 @@ Standard envelope (GENERAL_SPEC §6.5):
   "statusCode": 422,
   "message": "Validation failed",
   "error": "Unprocessable Entity",
-  "details": [
-    { "field": "clientId", "rule": "VAL-23", "message": "יש לבחור לקוח תקין ופעיל" }
-  ]
+  "details": [{ "field": "clientId", "rule": "VAL-23", "message": "יש לבחור לקוח תקין ופעיל" }]
 }
 ```
 
