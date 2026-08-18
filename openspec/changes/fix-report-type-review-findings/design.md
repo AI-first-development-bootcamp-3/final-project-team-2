@@ -16,7 +16,7 @@ See proposal.md — Why. Relevant current state:
 **Goals**
 
 - Every fix is behavior-preserving for the success paths: same URLs, same success payloads, same UI happy path.
-- Kill the *bug class*, not just the instance (guard consolidation; single write path).
+- Kill the _bug class_, not just the instance (guard consolidation; single write path).
 - Keep review tractable: two independently revertable PRs.
 
 **Non-Goals**

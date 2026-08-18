@@ -10,7 +10,7 @@ The per-project report type feature (`project-report-type` change) shipped the s
   - `TOTAL_HOURS` → manual total-hours entry form.
   - `CLOCK_IN_OUT` → punch-clock (clock-in / clock-out) timer UI.
 - Unit tests assert the correct flow renders per report type; a Playwright e2e verifies an admin's report-type change is reflected in the employee flow.
-- Prerequisite reality check: the mobile time-entry UI these flows switch *between* barely exists — scoping that groundwork is part of planning this change.
+- Prerequisite reality check: the mobile time-entry UI these flows switch _between_ barely exists — scoping that groundwork is part of planning this change.
 
 ## Capabilities
 
