@@ -17,6 +17,7 @@ const mockAssignments = [
     projectName: 'Mobile App',
     clientId: '770e8400-e29b-41d4-a716-446655440000',
     clientName: 'Acme Corp',
+    reportType: 'TOTAL_HOURS' as const,
   },
   {
     taskId: '550e8400-e29b-41d4-a716-446655440002',
@@ -25,6 +26,7 @@ const mockAssignments = [
     projectName: 'Mobile App',
     clientId: '770e8400-e29b-41d4-a716-446655440000',
     clientName: 'Acme Corp',
+    reportType: 'CLOCK_IN_OUT' as const,
   },
 ];
 
@@ -76,6 +78,23 @@ describe('TaskPicker (Employee App)', () => {
     const openOnly = filterOpenAssignments(mixedList);
     expect(openOnly).toHaveLength(1);
     expect(openOnly[0]!.taskId).toBe(mockAssignments[0]!.taskId);
+  });
+
+  it('passes project reportType (TOTAL_HOURS vs CLOCK_IN_OUT) on selection', async () => {
+    const onSelect = vi.fn();
+    render(<TaskPicker onSelectTask={onSelect} />);
+
+    await screen.findByLabelText('בחירת משימה לדיווח');
+    fireEvent.change(screen.getByRole('combobox'), {
+      target: { value: mockAssignments[1]!.taskId },
+    });
+
+    expect(onSelect).toHaveBeenCalledWith(
+      expect.objectContaining({
+        taskId: mockAssignments[1]!.taskId,
+        reportType: 'CLOCK_IN_OUT',
+      }),
+    );
   });
 
   it('verifies unassigned user time-entry write attempt returns 403 Forbidden (§8.2 access control)', async () => {

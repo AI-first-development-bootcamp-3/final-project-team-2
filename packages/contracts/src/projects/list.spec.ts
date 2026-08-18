@@ -54,6 +54,7 @@ describe('ProjectListItemSchema', () => {
       clientName: 'Acme Corp',
       isActive: true,
       isDeleted: false,
+      reportType: 'TOTAL_HOURS' as const,
     };
     expect(ProjectListItemSchema.parse(item)).toEqual(item);
   });
@@ -81,6 +82,7 @@ describe('ProjectsListSuccessSchema', () => {
           clientName: 'Acme Corp',
           isActive: true,
           isDeleted: false,
+          reportType: 'TOTAL_HOURS' as const,
         },
       ],
       meta: { page: 1, limit: 20, total: 1 },

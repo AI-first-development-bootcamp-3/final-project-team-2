@@ -1,97 +1,74 @@
-import { test, expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
+import { SEEDED_EMPLOYEE } from '../fixtures/users';
+import {
+  assignEmployeeViaConsole,
+  createClientViaConsole,
+  createProjectViaConsole,
+  createTaskViaConsole,
+  fetchMyAssignments,
+} from '../helpers/catalog-chain';
+import { CREATED_EMPLOYEE_PASSWORD } from '../helpers/credentials';
+import { uniqueEmail } from '../helpers/unique-email';
+import { uniqueName } from '../helpers/unique-name';
+import { createEmployeeViaUsers, signInAsAdmin } from '../helpers/users-directory';
 
-test.describe.skip('Entity catalog chain E2E', () => {
-  test('admin creates client, project, task, assignment and employee sees it in /me/assignments', async ({
+test.describe('Entity catalog chain E2E', () => {
+  test('admin creates client → project → task → assignment on the console; dedicated picker is exactly that chain', async ({
+    page,
     request,
   }) => {
-    const timestamp = Date.now();
-    const adminEmail = 'admin@abra.co';
-    const adminPassword = 'Admin123!';
-    const employeeEmail = `employee_e2e_${timestamp}@abra.co`;
-    const employeePassword = 'Employee123!';
+    test.setTimeout(240_000);
 
-    // 1. Admin login
-    const adminLogin = await request.post('/api/v1/auth/login', {
-      data: { email: adminEmail, password: adminPassword },
+    const email = uniqueEmail();
+    const fullName = `E2E ${email.replace('@abra.co', '')}`;
+    const clientName = uniqueName('client');
+    const projectName = uniqueName('project');
+    const taskName = uniqueName('task');
+
+    await signInAsAdmin(page);
+    await expect(page, 'Admin must leave /login after seed credentials (FR-012).').not.toHaveURL(
+      /\/login/,
+    );
+
+    await createEmployeeViaUsers(page, { fullName, email, password: CREATED_EMPLOYEE_PASSWORD });
+
+    await page.getByRole('link', { name: 'לקוחות' }).click();
+    await expect(page.getByRole('heading', { name: 'לקוחות' })).toBeVisible();
+    await createClientViaConsole(page, clientName);
+
+    await page.getByRole('link', { name: 'פרויקטים' }).click();
+    await expect(page.getByRole('heading', { name: 'פרויקטים' })).toBeVisible();
+    await createProjectViaConsole(page, { name: projectName, clientName });
+
+    await page.getByRole('link', { name: 'משימות' }).click();
+    await expect(page.getByRole('heading', { name: 'משימות' })).toBeVisible();
+    await createTaskViaConsole(page, { name: taskName, projectName, clientName });
+
+    await page.getByRole('link', { name: 'שיוכים' }).click();
+    await expect(page.getByRole('heading', { name: 'שיוכים' })).toBeVisible();
+    await assignEmployeeViaConsole(page, {
+      fullName,
+      email,
+      taskName,
+      projectName,
+      clientName,
     });
-    expect(adminLogin.ok()).toBe(true);
-    const adminToken = (await adminLogin.json()).data.accessToken;
 
-    // 2. Admin creates employee
-    const createEmpRes = await request.post('/api/v1/users', {
-      headers: { Authorization: `Bearer ${adminToken}` },
-      data: {
-        fullName: `E2E Employee ${timestamp}`,
-        email: employeeEmail,
-        password: employeePassword,
-        role: 'employee',
-      },
+    const dedicated = await fetchMyAssignments(request, email, CREATED_EMPLOYEE_PASSWORD);
+    expect(dedicated.status).toBe(200);
+    expect(dedicated.data).toHaveLength(1);
+    expect(dedicated.data[0]).toMatchObject({
+      clientName,
+      projectName,
+      taskName,
     });
-    expect(createEmpRes.status()).toBe(201);
-    const employeeUser = (await createEmpRes.json()).data;
 
-    // 3. Employee login
-    const employeeLogin = await request.post('/api/v1/auth/login', {
-      data: { email: employeeEmail, password: employeePassword },
-    });
-    expect(employeeLogin.ok()).toBe(true);
-    const employeeToken = (await employeeLogin.json()).data.accessToken;
-
-    // 4. Admin creates client
-    const clientRes = await request.post('/api/v1/clients', {
-      headers: { Authorization: `Bearer ${adminToken}` },
-      data: {
-        name: `E2E Client ${timestamp}`,
-        contactInfo: 'e2e@client.com',
-      },
-    });
-    expect(clientRes.status()).toBe(201);
-    const client = (await clientRes.json()).data;
-
-    // 5. Admin creates project
-    const projectRes = await request.post('/api/v1/projects', {
-      headers: { Authorization: `Bearer ${adminToken}` },
-      data: {
-        name: `E2E Project ${timestamp}`,
-        clientId: client.id,
-      },
-    });
-    expect(projectRes.status()).toBe(201);
-    const project = (await projectRes.json()).data;
-
-    // 6. Admin creates task
-    const taskRes = await request.post('/api/v1/tasks', {
-      headers: { Authorization: `Bearer ${adminToken}` },
-      data: {
-        name: `E2E Task ${timestamp}`,
-        projectId: project.id,
-        description: 'E2E task description',
-      },
-    });
-    expect(taskRes.status()).toBe(201);
-    const task = (await taskRes.json()).data;
-
-    // 7. Admin creates assignment
-    const assignmentRes = await request.post('/api/v1/assignments', {
-      headers: { Authorization: `Bearer ${adminToken}` },
-      data: {
-        userId: employeeUser.id,
-        taskId: task.id,
-      },
-    });
-    expect(assignmentRes.status()).toBe(201);
-
-    // 8. Employee fetches /me/assignments
-    const myAssignmentsRes = await request.get('/api/v1/me/assignments', {
-      headers: { Authorization: `Bearer ${employeeToken}` },
-    });
-    expect(myAssignmentsRes.status()).toBe(200);
-    const assignments = (await myAssignmentsRes.json()).data;
-
-    const found = assignments.find((a: { taskId: string }) => a.taskId === task.id);
-    expect(found).toBeDefined();
-    expect(found.clientName).toBe(client.name);
-    expect(found.projectName).toBe(project.name);
-    expect(found.taskName).toBe(task.name);
+    const seeded = await fetchMyAssignments(
+      request,
+      SEEDED_EMPLOYEE.email,
+      SEEDED_EMPLOYEE.password,
+    );
+    expect(seeded.status).toBe(200);
+    expect(seeded.data.some((item) => item.taskName === taskName)).toBe(false);
   });
 });
