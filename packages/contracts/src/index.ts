@@ -106,7 +106,8 @@ export type ValCode =
   | 'VAL-36'
   | 'VAL-38'
   | 'VAL-DATE-RANGE'
-  | 'VAL-EMPTY-UPDATE';
+  | 'VAL-EMPTY-UPDATE'
+  | 'VAL-RUNNING-ENTRY';
 
 export const VAL_MESSAGES: Record<ValCode, string> = {
   'VAL-01': 'כתובת האימייל היא שדה חובה',
@@ -137,6 +138,9 @@ export const VAL_MESSAGES: Record<ValCode, string> = {
   'VAL-38': 'התאריך אינו תואם את יום תחילת הדיווח',
   'VAL-DATE-RANGE': 'יש לציין תאריך יחיד או טווח תאריכים תקין',
   'VAL-EMPTY-UPDATE': 'לא נשלחו שדות לעדכון',
+  // A running entry is completed or cancelled through the timer, not edited
+  // here (§8.6) — the Punch Clock epic owns that flow.
+  'VAL-RUNNING-ENTRY': 'לא ניתן לערוך או למחוק דיווח שעות פעיל',
 };
 
 // --- Clients ---
