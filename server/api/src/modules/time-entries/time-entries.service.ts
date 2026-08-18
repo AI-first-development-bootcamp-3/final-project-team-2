@@ -1,5 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import {
+  OVERLAP_CANDIDATE_WINDOW_DAYS,
+  VAL_MESSAGES,
+  findOverlap,
   toYearMonth,
   type CreateTimeEntryBody,
   type TimeEntriesListQuery,
@@ -69,6 +72,8 @@ function toDateColumnValue(localDate: string): Date {
   return new Date(`${localDate}T00:00:00.000Z`);
 }
 
+const OVERLAP_WINDOW_MS = OVERLAP_CANDIDATE_WINDOW_DAYS * 24 * 60 * 60 * 1000;
+
 function toListItem(row: TimeEntryRow): TimeEntryListItem {
   return {
     id: row.id,
@@ -107,6 +112,7 @@ export class TimeEntriesService {
     // required before any write reaches the database.
     await this.monthLock.assertMonthNotLocked(year, month);
     await this.assignmentScope.assertUserAssignedToTask(userId, body.taskId);
+    await this.assertNoOverlap(userId, body.startAt, body.endAt);
 
     const row = await this.prisma.timeEntry.create({
       data: {
@@ -141,6 +147,68 @@ export class TimeEntriesService {
     });
 
     return (rows as TimeEntryRow[]).map(toListItem);
+  }
+
+  /**
+   * Rejects an entry that would occupy time the employee has already reported
+   * (VAL-32).
+   *
+   * The query filters on an existing entry's *start*, so a night shift begun
+   * the previous evening would slip past a naive same-day filter; the window is
+   * widened by a day on each side to keep it in the candidate set. The
+   * comparison itself is the pure helper from contracts, which treats touching
+   * boundaries as non-overlapping.
+   *
+   * Soft-deleted rows are filtered by the Prisma extension and other employees'
+   * entries by `user_id`, so neither can produce a false collision.
+   *
+   * @param excludeEntryId the entry being edited, which must not collide with
+   * itself.
+   */
+  private async assertNoOverlap(
+    userId: string,
+    startAt: string,
+    endAt: string,
+    excludeEntryId?: string,
+  ): Promise<void> {
+    const start = new Date(startAt);
+    const end = new Date(endAt);
+
+    const candidates = await this.prisma.timeEntry.findMany({
+      where: {
+        user_id: userId,
+        ...(excludeEntryId === undefined ? {} : { id: { not: excludeEntryId } }),
+        start_at: {
+          gte: new Date(start.getTime() - OVERLAP_WINDOW_MS),
+          lte: new Date(end.getTime() + OVERLAP_WINDOW_MS),
+        },
+      },
+      select: { id: true, start_at: true, end_at: true },
+    });
+
+    const clash = findOverlap(
+      { startAt: start, endAt: end },
+      candidates.map((candidate) => ({
+        id: candidate.id,
+        startAt: candidate.start_at,
+        endAt: candidate.end_at,
+      })),
+    );
+
+    if (clash !== undefined) {
+      throw new ConflictException({
+        statusCode: 409,
+        message: 'Conflict',
+        error: 'Conflict',
+        details: [
+          {
+            field: 'startAt',
+            rule: 'VAL-32',
+            message: VAL_MESSAGES['VAL-32'],
+          },
+        ],
+      });
+    }
   }
 
   private buildDateFilter(query: TimeEntriesListQuery): Date | { gte: Date; lte: Date } {

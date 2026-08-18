@@ -137,7 +137,9 @@ afterAll(async () => {
 beforeEach(() => {
   vi.clearAllMocks();
   prismaMock.timeEntry.create.mockResolvedValue(ROW);
-  prismaMock.timeEntry.findMany.mockResolvedValue([ROW]);
+  // findMany serves both the list read and the overlap-candidate lookup, so it
+  // defaults to "no neighbours"; the GET suite supplies rows explicitly.
+  prismaMock.timeEntry.findMany.mockResolvedValue([]);
   monthIsOpen();
   taskIsAssigned();
   signedInAsEmployee();
@@ -243,9 +245,28 @@ describe('POST /api/v1/time-entries', () => {
     );
     expect(prismaMock.timeEntry.create).not.toHaveBeenCalled();
   });
+  it('rejects an overlapping entry with VAL-32', async () => {
+    prismaMock.timeEntry.findMany.mockResolvedValue([
+      { id: 'existing-1', start_at: ROW.start_at, end_at: ROW.end_at },
+    ]);
+
+    const response = await request(app.getHttpServer())
+      .post('/api/v1/time-entries')
+      .send(validBody)
+      .expect(409);
+
+    expect(response.body.details).toEqual(
+      expect.arrayContaining([expect.objectContaining({ rule: 'VAL-32' })]),
+    );
+    expect(prismaMock.timeEntry.create).not.toHaveBeenCalled();
+  });
 });
 
 describe('GET /api/v1/time-entries', () => {
+  beforeEach(() => {
+    prismaMock.timeEntry.findMany.mockResolvedValue([ROW]);
+  });
+
   it('returns the caller own entries for a day', async () => {
     const response = await request(app.getHttpServer())
       .get('/api/v1/time-entries?date=2026-08-10')

@@ -36,9 +36,9 @@
 
 ## 5. Overlap enforcement in the API (KAN-78)
 
-- [ ] 5.1 In the service, fetch overlap candidates for the user with a start-time window widened by one day on each side of the candidate interval; name and comment the widening constant (D6).
-- [ ] 5.2 Reject overlapping writes with `VAL-32` via the pure comparison from task 3.4; exclude the entry being edited from its own candidate set.
-- [ ] 5.3 Integration-test overlap against the database, including both night-shift orderings, an adjacent (touching) entry accepted, an overlap with another user's entry accepted, and an overlap with a soft-deleted entry accepted.
+- [x] 5.1 In the service, fetch overlap candidates for the user with a start-time window widened by one day on each side of the candidate interval; name and comment the widening constant (D6).
+- [x] 5.2 Reject overlapping writes with `VAL-32` via the pure comparison from task 3.4; exclude the entry being edited from its own candidate set.
+- [x] 5.3 Integration-test overlap against the database, including both night-shift orderings, an adjacent (touching) entry accepted, an overlap with another user's entry accepted, and an overlap with a soft-deleted entry accepted.
 - [x] 5.4 Add the guard test asserting the candidate window's documented bound.
 
 ## 6. Time-entries API: edit and delete (KAN-79)
