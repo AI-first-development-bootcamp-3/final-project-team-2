@@ -27,12 +27,12 @@
 
 ## 4. Time-entries API: create and read (KAN-77)
 
-- [ ] 4.1 Scaffold `server/api/src/modules/time-entries/` (module, controller, service) following the tasks module; guard with `JwtGuard` + `RolesGuard` and `@Roles('employee')`; register in `app.module.ts`.
-- [ ] 4.2 Implement `POST /api/v1/time-entries`: validate through the zod pipe, force ownership to the JWT `userId`, then call `assertUserAssignedToTask` and `assertMonthNotLocked` before writing.
-- [ ] 4.3 Implement `GET /api/v1/time-entries` for a single date and for a date range, scoped to the caller, returning denormalised task, project, and client names (D10).
-- [ ] 4.4 Confirm reads and writes are rejected for the admin role and for unauthenticated requests.
-- [ ] 4.5 Document every endpoint in Swagger with request and response schemas and the bearer requirement.
-- [ ] 4.6 Test create and read against the scenarios in `specs/time-entries-api/spec.md`: ownership cannot be forged, another employee's entries are never returned, multiple entries per day, locked-month write refused but read allowed, historical entries still render after their task is closed.
+- [x] 4.1 Scaffold `server/api/src/modules/time-entries/` (module, controller, service) following the tasks module; guard with `JwtGuard` + `RolesGuard` and `@Roles('employee')`; register in `app.module.ts`.
+- [x] 4.2 Implement `POST /api/v1/time-entries`: validate through the zod pipe, force ownership to the JWT `userId`, then call `assertUserAssignedToTask` and `assertMonthNotLocked` before writing.
+- [x] 4.3 Implement `GET /api/v1/time-entries` for a single date and for a date range, scoped to the caller, returning denormalised task, project, and client names (D10).
+- [x] 4.4 Confirm reads and writes are rejected for the admin role and for unauthenticated requests.
+- [x] 4.5 Document every endpoint in Swagger with request and response schemas and the bearer requirement.
+- [x] 4.6 Test create and read against the scenarios in `specs/time-entries-api/spec.md`: ownership cannot be forged, another employee's entries are never returned, multiple entries per day, locked-month write refused but read allowed, historical entries still render after their task is closed.
 
 ## 5. Overlap enforcement in the API (KAN-78)
 
