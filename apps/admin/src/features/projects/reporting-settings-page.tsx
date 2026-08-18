@@ -73,6 +73,8 @@ export function ReportingSettingsPage() {
           <button
             type="button"
             onClick={() => setSuccessMessage(null)}
+            aria-label="סגור הודעה"
+            title="סגור הודעה"
             className="text-xs font-bold"
           >
             ✕
@@ -123,7 +125,7 @@ export function ReportingSettingsPage() {
                           name={`report-type-${proj.id}`}
                           value="TOTAL_HOURS"
                           checked={proj.reportType === 'TOTAL_HOURS'}
-                          disabled={updatingId === proj.id}
+                          disabled={updatingId !== null}
                           onChange={() => handleReportTypeChange(proj, 'TOTAL_HOURS')}
                           className="h-4 w-4 text-neutral-900 focus:ring-neutral-900"
                         />
@@ -135,7 +137,7 @@ export function ReportingSettingsPage() {
                           name={`report-type-${proj.id}`}
                           value="CLOCK_IN_OUT"
                           checked={proj.reportType === 'CLOCK_IN_OUT'}
-                          disabled={updatingId === proj.id}
+                          disabled={updatingId !== null}
                           onChange={() => handleReportTypeChange(proj, 'CLOCK_IN_OUT')}
                           className="h-4 w-4 text-neutral-900 focus:ring-neutral-900"
                         />
