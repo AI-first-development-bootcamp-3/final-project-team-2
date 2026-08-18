@@ -72,9 +72,24 @@ describe('ProjectsPage', () => {
     expect(await screen.findByText('Acme Mobile App')).toBeInTheDocument();
     expect(screen.getByText('Old Project')).toBeInTheDocument();
     expect(screen.getAllByText('Acme Corp').length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('button', { name: '+ הוספת משימה' }).length).toBeGreaterThan(0);
     expect(screen.getAllByRole('button', { name: 'משימות' }).length).toBeGreaterThan(0);
     expect(screen.getAllByRole('button', { name: 'ערוך' }).length).toBeGreaterThan(0);
     expect(screen.getByRole('button', { name: 'השבת' })).toBeInTheDocument();
+  });
+
+  it('opens TaskCreateForm pre-populated with project ID when + הוספת משימה is clicked', async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    expect(await screen.findByText('Acme Mobile App')).toBeInTheDocument();
+    const addTaskButtons = screen.getAllByRole('button', { name: '+ הוספת משימה' });
+    await user.click(addTaskButtons[0]!);
+
+    const dialog = screen.getByRole('dialog');
+    expect(dialog).toBeInTheDocument();
+    expect(within(dialog).getByRole('heading', { name: 'משימה חדשה' })).toBeInTheDocument();
+    expect(within(dialog).getByLabelText('פרויקט')).toHaveValue(activeProject.id);
   });
 
   it('opens ProjectCreateForm with client picker dropdown', async () => {

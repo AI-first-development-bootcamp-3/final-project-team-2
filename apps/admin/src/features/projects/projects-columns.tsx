@@ -5,6 +5,7 @@ export function createProjectsColumns(params: {
   onEdit: (project: ProjectListItem) => void;
   onDeactivate: (project: ProjectListItem) => void;
   onViewTasks: (project: ProjectListItem) => void;
+  onAddTask?: (project: ProjectListItem) => void;
 }): DataTableColumn<ProjectListItem>[] {
   return [
     {
@@ -39,6 +40,15 @@ export function createProjectsColumns(params: {
       sortable: false,
       cell: (row) => (
         <div className="flex items-center gap-2">
+          {params.onAddTask ? (
+            <button
+              type="button"
+              onClick={() => params.onAddTask!(row)}
+              className="rounded border border-green-300 bg-green-50 px-2 py-1 text-xs font-medium text-green-700 hover:bg-green-100"
+            >
+              + הוספת משימה
+            </button>
+          ) : null}
           <button
             type="button"
             onClick={() => params.onViewTasks(row)}
