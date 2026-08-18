@@ -71,6 +71,7 @@ jobs:
     needs: [guard, migrate]
     if: |
       always() &&
+      github.event_name == 'push' &&
       needs.guard.result == 'success' &&
       needs.guard.outputs.should-deploy == 'true' &&
       (needs.migrate.result == 'success' || needs.migrate.result == 'skipped')
