@@ -77,6 +77,23 @@ describe('TaskPicker (Employee App)', () => {
     expect(openOnly).toHaveLength(1);
     expect(openOnly[0]!.taskId).toBe(mockAssignments[0]!.taskId);
   });
+
+  it('verifies unassigned user time-entry write attempt returns 403 Forbidden (§8.2 access control)', async () => {
+    authFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 403,
+      json: async () => ({ statusCode: 403, message: 'User is not assigned to this task' }),
+    });
+
+    const res = await authFetch('/time-entries', {
+      method: 'POST',
+      body: JSON.stringify({ taskId: 'unassigned-task-id', hours: 4 }),
+    });
+
+    expect(res.status).toBe(403);
+    const body = await res.json();
+    expect(body.message).toContain('not assigned');
+  });
 });
 
 describe('HistoricalEntries (Employee App)', () => {
