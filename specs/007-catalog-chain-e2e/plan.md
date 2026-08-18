@@ -8,7 +8,7 @@
 
 ## Summary
 
-Deliver Jira KAN-54 (Epic KAN-44): one required Playwright journey that proves Epic 4’s catalog done — an admin signs into the console, creates a client, a project under it, a task under that project, and assigns a dedicated employee — all on the console screens — then that employee’s picker data contains **exactly** that chain, and an unassigned employee does not see the new task. Approach: rewrite the skipped API-only `e2e/specs/entity-chain.spec.ts` to drive the real admin UI, reuse the existing `@abra/e2e` harness (admin 5174 + CI seed already present), and load picker data via `GET /api/v1/me/assignments`. This feature does **not** add API endpoints or change catalog/picker product rules.
+Deliver Jira KAN-54 (Epic KAN-44): one required Playwright journey that proves Epic 4’s catalog done — an admin signs into the console, creates a client, a project under it, a task under that project, and assigns a dedicated employee — all on the console screens — then that employee’s picker data contains **exactly** that chain, and an unassigned employee does not see the new task. Approach: rewrite the skipped API-only `e2e/specs/entity-chain.spec.ts` to drive the real admin UI, reuse the existing `@abra/e2e` harness (admin 5174 + CI seed already present), and load picker data via `GET /api/v1/me/assignments`. The catalog-chain journey itself does **not** add API endpoints or change catalog/picker product rules; the `PATCH /projects/:id/report-type` endpoint, Prisma schema/migration, and `GET /me/assignments` payload changes travelling in the same branch belong to the sibling per-project report-type feature (KAN-63), not this journey.
 
 ## Technical Context
 
