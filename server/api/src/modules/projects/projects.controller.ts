@@ -11,7 +11,6 @@ import {
   Patch,
   Post,
   Query,
-  UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import {
@@ -23,9 +22,7 @@ import {
   zodIssuesToDetails,
   type ValCode,
 } from '@abra/contracts';
-import { Roles } from '../../common/decorators/roles.decorator';
-import { JwtGuard } from '../../common/guards/jwt.guard';
-import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../auth/auth.decorators';
 import { ProjectsService } from './projects.service';
 
 function hebrewDetails(issues: Parameters<typeof zodIssuesToDetails>[0]) {
@@ -50,7 +47,6 @@ const projectIdPipe = new ParseUUIDPipe({
 @ApiTags('projects')
 @ApiBearerAuth()
 @Controller('projects')
-@UseGuards(JwtGuard, RolesGuard)
 @Roles('admin')
 export class ProjectsController {
   constructor(private readonly projectsService: ProjectsService) {}
