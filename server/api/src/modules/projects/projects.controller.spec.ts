@@ -12,6 +12,7 @@ const PROJECT = {
   name: 'Project Alpha',
   client_id: '660e8400-e29b-41d4-a716-446655440000',
   is_active: true,
+  report_type: 'TOTAL_HOURS' as const,
   deleted_at: null as Date | null,
   client: { name: 'Acme Corp' },
 };
@@ -92,6 +93,7 @@ const ITEM = {
   clientName: 'Acme Corp',
   isActive: true,
   isDeleted: false,
+  reportType: 'TOTAL_HOURS',
 };
 
 describe('GET /api/v1/projects', () => {
@@ -566,6 +568,43 @@ describe('PATCH /api/v1/projects/:id', () => {
     expect(response.body.details).toEqual(
       expect.arrayContaining([expect.objectContaining({ field: 'name', rule: 'VAL-22' })]),
     );
+  });
+});
+
+describe('PATCH /api/v1/projects/:id/report-type', () => {
+  let app: INestApplication;
+
+  afterEach(async () => {
+    await app?.close();
+  });
+
+  it('updates project reportType to CLOCK_IN_OUT and returns 200', async () => {
+    const created = await createApp('admin');
+    app = created.app;
+    created.prisma.project.update.mockResolvedValue({
+      ...PROJECT,
+      report_type: 'CLOCK_IN_OUT',
+    });
+
+    const response = await request(app.getHttpServer())
+      .patch(`/api/v1/projects/${PROJECT.id}/report-type`)
+      .set('Authorization', 'Bearer admin-token')
+      .send({ reportType: 'CLOCK_IN_OUT' })
+      .expect(200);
+
+    expect(response.body.data).toMatchObject({
+      id: PROJECT.id,
+      reportType: 'CLOCK_IN_OUT',
+    });
+  });
+
+  it('returns 400 on invalid reportType enum value', async () => {
+    ({ app } = await createApp('admin'));
+    await request(app.getHttpServer())
+      .patch(`/api/v1/projects/${PROJECT.id}/report-type`)
+      .set('Authorization', 'Bearer admin-token')
+      .send({ reportType: 'INVALID_ENUM' })
+      .expect(400);
   });
 });
 

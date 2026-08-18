@@ -12,6 +12,7 @@ const item = {
   clientName: 'Acme Corp',
   isActive: true,
   isDeleted: false,
+  reportType: 'TOTAL_HOURS' as const,
 };
 
 describe('UpdateProjectBodySchema', () => {

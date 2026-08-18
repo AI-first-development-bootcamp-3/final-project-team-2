@@ -7,6 +7,7 @@ const NAV_ITEMS = [
   { to: '/admin/projects', label: 'פרויקטים' },
   { to: '/admin/tasks', label: 'משימות' },
   { to: '/admin/assignments', label: 'שיוכים' },
+  { to: '/admin/reporting-settings', label: 'הגדרת דיווחי שעות' },
 ];
 
 export function AdminSidebar() {
