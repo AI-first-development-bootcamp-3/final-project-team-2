@@ -37,7 +37,7 @@ export default defineConfig({
       cwd: '..',
       env: {
         ...process.env,
-        VITE_API_URL: `http://localhost:${API_PORT}/api/v1`,
+        VITE_API_URL: process.env.VITE_API_URL || API_BASE_URL,
       },
     },
     {
@@ -48,7 +48,7 @@ export default defineConfig({
       cwd: '..',
       env: {
         ...process.env,
-        VITE_API_URL: `http://localhost:${API_PORT}/api/v1`,
+        VITE_API_URL: process.env.VITE_API_URL || API_BASE_URL,
       },
     },
     {
@@ -62,7 +62,8 @@ export default defineConfig({
       env: {
         ...process.env,
         DATABASE_URL: process.env.DATABASE_URL || 'postgresql://test:test@localhost:5432/abra_test',
-        JWT_SECRET: process.env.JWT_SECRET || 'ci-e2e-jwt-signing-key',
+        JWT_SECRET: process.env.JWT_SECRET || 'e2e-only-access-secret',
+        JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET || 'e2e-only-refresh-secret',
       },
     },
   ],

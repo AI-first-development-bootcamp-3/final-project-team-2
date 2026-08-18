@@ -89,7 +89,7 @@ CI (GitHub Actions) runs Prettier, ESLint, typecheck, the coverage-gated tests, 
 
 ## Deployments
 
-Production deploys to Vercel on merge to `main` (three projects: mobile, admin, API as a serverless function). URLs will be filled in when the Vercel CD story ships:
+Production deploys to Vercel on push to `dev` (three projects: mobile, admin, API as a serverless function). PR previews are deployed automatically. URLs will be filled in when the Vercel CD story ships:
 
 | Target        | URL                       |
 | ------------- | ------------------------- |

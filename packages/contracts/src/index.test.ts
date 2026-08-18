@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { UserRole, WorkLocation, LoginSchema, LoginResponse } from './index';
+import { UserRole, WorkLocation, LoginSchema, LoginResponse, RefreshResponse } from './index';
 
 describe('Contracts Smoke Test', () => {
   it('should validate roles correctly', () => {
@@ -68,16 +68,66 @@ describe('Contracts Smoke Test', () => {
     }
   });
 
-  it('parses a login response with an access token and user', () => {
-    const parsed = LoginResponse.safeParse({
-      accessToken: 'tok',
+  it('should default rememberMe to false when omitted', () => {
+    const parsed = LoginSchema.safeParse({ email: 'user@example.com', password: 'password123' });
+    expect(parsed.success).toBe(true);
+    if (parsed.success) {
+      expect(parsed.data.rememberMe).toBe(false);
+    }
+  });
+});
+
+describe('Auth response contracts', () => {
+  it('should validate a login response with access token and user summary', () => {
+    const valid = LoginResponse.safeParse({
+      accessToken: 'header.payload.signature',
       user: {
-        id: '550e8400-e29b-41d4-a716-446655440000',
-        email: 'admin@abra.co',
-        fullName: 'Admin',
-        role: 'admin',
+        id: '7d9d2c8e-8f9a-4b6e-9d3e-2f1a5b8c9d0e',
+        email: 'user@example.com',
+        fullName: 'ישראל ישראלי',
+        role: 'employee',
       },
     });
-    expect(parsed.success).toBe(true);
+    expect(valid.success).toBe(true);
+  });
+
+  it('should reject a login response missing the access token or with a bad user', () => {
+    expect(
+      LoginResponse.safeParse({
+        accessToken: '',
+        user: {
+          id: '7d9d2c8e-8f9a-4b6e-9d3e-2f1a5b8c9d0e',
+          email: 'user@example.com',
+          fullName: 'ישראל ישראלי',
+          role: 'employee',
+        },
+      }).success,
+    ).toBe(false);
+
+    expect(
+      LoginResponse.safeParse({
+        accessToken: 'header.payload.signature',
+        user: { id: 'not-a-uuid', email: 'user@example.com', fullName: 'x', role: 'boss' },
+      }).success,
+    ).toBe(false);
+  });
+
+  it('should validate a refresh response carrying the token and user summary', () => {
+    const user = {
+      id: '7d9d2c8e-8f9a-4b6e-9d3e-2f1a5b8c9d0e',
+      email: 'user@example.com',
+      fullName: 'ישראל ישראלי',
+      role: 'employee',
+    };
+    expect(
+      RefreshResponse.safeParse({ accessToken: 'header.payload.signature', user }).success,
+    ).toBe(true);
+    // Clients bootstrap sessions from this response, so the user summary is
+    // required — a token alone is not a valid refresh payload.
+    expect(RefreshResponse.safeParse({ accessToken: 'header.payload.signature' }).success).toBe(
+      false,
+    );
+    expect(RefreshResponse.safeParse({ accessToken: '', user }).success).toBe(false);
+    expect(RefreshResponse.safeParse({}).success).toBe(false);
   });
 });

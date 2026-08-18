@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { UserListItem, UsersListQuery, UsersListSuccess } from '@abra/contracts';
 import { DataTable, type SortOrder } from '@/components/ui/data-table';
-import { apiFetch, clearAccessToken } from '@/lib/api/client';
+import { logout } from '@/lib/api';
+import { apiFetch } from '@/lib/api/client';
 import { DeactivateUserModal } from './deactivate-user-modal';
 import { EditUserModal } from './edit-user-modal';
 import { ResetPasswordModal } from './reset-password-modal';
@@ -110,8 +111,9 @@ export function UsersPage() {
             type="button"
             className="rounded border px-3 py-1"
             onClick={() => {
-              clearAccessToken();
-              window.location.assign('/admin/login');
+              void logout().finally(() => {
+                window.location.assign('/login');
+              });
             }}
           >
             התנתק

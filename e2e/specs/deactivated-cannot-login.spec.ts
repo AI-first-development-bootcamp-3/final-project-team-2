@@ -29,11 +29,8 @@ test.describe('Deactivated cannot login', () => {
     await page.getByLabel('סיסמה').fill(CREATED_EMPLOYEE_PASSWORD);
     await page.getByRole('button', { name: 'התחבר' }).click();
 
-    await expect(page).toHaveURL(/\/login/);
-    const loginError = page
-      .getByRole('alert')
-      .or(page.locator('form').getByText(/שם המשתמש או הסיסמה|אינם נכונים|מושבת|לא פעיל|שגיאה/));
-    await expect(loginError.first()).toBeVisible();
+    await expect(page).toHaveURL(/\/login$/);
+    await expect(page.getByText('שם המשתמש או הסיסמה שהוזנו אינם נכונים.')).toBeVisible();
     await expect(page.getByRole('heading', { name: 'עמוד ראשי - דיווח יומי' })).toHaveCount(0);
   });
 });

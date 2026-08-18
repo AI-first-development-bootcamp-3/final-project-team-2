@@ -74,6 +74,15 @@ export const LoginResponse = z.object({
 
 export type LoginResponse = z.infer<typeof LoginResponse>;
 
+export const RefreshResponse = z.object({
+  accessToken: z.string().min(1),
+  // The refresh already loads the full user row server-side; returning the
+  // summary lets clients bootstrap a session from the cookie alone.
+  user: AuthUser,
+});
+
+export type RefreshResponse = z.infer<typeof RefreshResponse>;
+
 export type ValCode =
   'VAL-01' | 'VAL-02' | 'VAL-03' | 'VAL-04' | 'VAL-10' | 'VAL-11' | 'VAL-12' | 'VAL-13';
 

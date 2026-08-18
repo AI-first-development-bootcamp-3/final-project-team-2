@@ -52,7 +52,8 @@ jobs:
           --health-retries=5
     env:
       DATABASE_URL: postgresql://test:test@localhost:5432/abra_test
-      JWT_SECRET: ci-e2e-jwt-signing-key
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
@@ -63,7 +64,7 @@ jobs:
       - name: Run migrations
         run: pnpm --filter @abra/api exec prisma migrate deploy
 
-      - name: Seed demo org
+      - name: Seed database
         run: pnpm --filter @abra/api exec prisma db seed
 
       - name: Cache Playwright browsers

@@ -1,20 +1,16 @@
 import { Module } from '@nestjs/common';
-import { parseEnv } from '../env';
+import { JwtModule } from '@nestjs/jwt';
 import { PrismaModule } from '../prisma/prisma.module';
-import { JWT_SECRET } from './auth.constants';
+import { envProvider } from '../env.provider';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 
 @Module({
-  imports: [PrismaModule],
+  // Secrets are passed per-sign/per-verify from the injected env, so the
+  // JwtModule itself carries no global secret.
+  imports: [PrismaModule, JwtModule.register({})],
   controllers: [AuthController],
-  providers: [
-    {
-      provide: JWT_SECRET,
-      useFactory: () => parseEnv().JWT_SECRET,
-    },
-    AuthService,
-  ],
-  exports: [JWT_SECRET],
+  providers: [AuthService, envProvider],
+  exports: [AuthService],
 })
 export class AuthModule {}

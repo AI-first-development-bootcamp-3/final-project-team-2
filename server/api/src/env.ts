@@ -23,7 +23,10 @@ const envSchema = z.object({
       // browser origin — fail loudly instead.
       .refine((origins) => origins.length > 0, 'must contain at least one origin'),
   ),
+  // Signing keys for access/refresh JWTs — no safe default exists, so boot
+  // must fail without them. Set-but-empty is normalized to missing above.
   JWT_SECRET: z.preprocess(emptyToUndefined, z.string().min(1)),
+  JWT_REFRESH_SECRET: z.preprocess(emptyToUndefined, z.string().min(1)),
   // Both postgresql:// and postgres:// are valid schemes (Neon issues both).
   DATABASE_URL: z
     .string()

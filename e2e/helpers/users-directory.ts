@@ -3,27 +3,25 @@ import { ADMIN_BASE_URL } from '../playwright.config';
 import { ADMIN_EMAIL, ADMIN_PASSWORD, CREATED_EMPLOYEE_PASSWORD } from './credentials';
 
 export async function signInAsAdmin(page: Page): Promise<void> {
-  await page.goto(ADMIN_BASE_URL);
+  await page.goto(`${ADMIN_BASE_URL}/login`);
   await expect(
     page.getByLabel('אימייל'),
-    'Admin sign-in form must exist (KAN-39). Seed admin is required (FR-012).',
+    'Admin sign-in form must exist (KAN-70). Seed admin is required (FR-012).',
   ).toBeVisible({ timeout: 15_000 });
   await page.getByLabel('אימייל').fill(ADMIN_EMAIL);
   await page.getByLabel('סיסמה').fill(ADMIN_PASSWORD);
-  await page.getByRole('button', { name: 'התחבר' }).click();
+  await page.getByRole('button', { name: 'התחבר למערכת' }).click();
   await expect(
     page.getByRole('heading', { name: 'משתמשים' }),
     'Seed admin must reach Users. Run prisma db seed (admin@abra.co).',
   ).toBeVisible({ timeout: 30_000 });
-  await expect(page).not.toHaveURL(/\/admin\/login/);
+  await expect(page).not.toHaveURL(/\/login/);
 }
 
 export async function signOutAdmin(page: Page): Promise<void> {
-  const logout = page
-    .getByRole('button', { name: /התנתק|יציאה/ })
-    .or(page.getByRole('link', { name: /התנתק|יציאה/ }));
-  await logout.click();
-  await expect(page).toHaveURL(/\/admin\/login/);
+  await page.getByRole('button', { name: 'התנתק' }).click();
+  await expect(page).toHaveURL(/\/login/);
+  await expect(page.getByRole('heading', { name: /ברוכים הבאים למערכת/ })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'משתמשים' })).toHaveCount(0);
 }
 

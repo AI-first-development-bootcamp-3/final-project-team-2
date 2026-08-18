@@ -6,6 +6,7 @@ import { LoginSchema, LoginFormData, VAL_MESSAGES, ValCode } from '@abra/contrac
 import { InputField } from '../../components/ui/InputField';
 import { LoginButton } from '../../components/ui/LoginButton';
 import { setAuthSession } from '../../lib/auth';
+import { login } from '../../lib/api';
 
 interface LoginFormProps {
   onSuccess?: () => void;
@@ -34,25 +35,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
     setIsLoading(true);
 
     try {
-      // Store authenticated session
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1';
-      const response = await fetch(`${apiUrl}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: data.email, password: data.password }),
-      });
-      if (!response.ok) {
-        throw new Error('INVALID_CREDENTIALS');
-      }
-      const body = (await response.json()) as { accessToken?: string };
-      if (!body.accessToken) {
-        throw new Error('INVALID_CREDENTIALS');
-      }
-
-      setAuthSession({
-        email: data.email,
-        token: body.accessToken,
-      });
+      const session = await login(data);
+      setAuthSession(session);
 
       if (onSuccess) {
         onSuccess();
@@ -82,10 +66,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
       noValidate
     >
       {serverError && (
-        <div
-          role="alert"
-          className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm text-right font-medium animate-fadeIn"
-        >
+        <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm text-right font-medium animate-fadeIn">
           {serverError}
         </div>
       )}
