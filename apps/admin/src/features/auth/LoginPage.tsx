@@ -16,7 +16,9 @@ export const LoginPage: React.FC = () => {
 
   const handleLogin = async (data: LoginFormData) => {
     const session = await login(data);
-    setAuthSession(session, data.rememberMe);
+    // The session lives in memory only; durability comes from the httpOnly
+    // refresh cookie (1-day vs 30-day per rememberMe, server-side).
+    setAuthSession(session);
     // Return to the page the guard bounced the visitor from, if any.
     navigate(requestedPathFrom(location) ?? '/', { replace: true });
   };

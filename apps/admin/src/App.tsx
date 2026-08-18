@@ -1,12 +1,13 @@
-import React, { useEffect, useSyncExternalStore } from 'react';
+import React, { useEffect, useState, useSyncExternalStore } from 'react';
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { LoginPage } from './features/auth/LoginPage';
 import { UsersPage } from './features/users/users-page';
 import { clearAuthSession, getAuthSession, isAdmin, subscribeToAuthChanges } from './lib/auth';
+import { bootstrapSession } from './lib/api';
 
 // Reactive session read: consumers re-render when the session is written or
-// cleared (login, logout, a future 401 interceptor), instead of trusting a
-// one-shot storage read at mount.
+// cleared (login, logout, the 401 interceptor), instead of trusting a
+// one-shot read at mount.
 function useAuthSession() {
   return useSyncExternalStore(subscribeToAuthChanges, getAuthSession);
 }
@@ -97,6 +98,20 @@ export function AppRoutes() {
 }
 
 function App() {
+  // Session bootstrap gate: the refresh cookie is the durable credential, so
+  // routing must wait for one POST /auth/refresh round-trip before deciding
+  // whether the visitor is logged in (in-memory session ↔ cold load).
+  const [booted, setBooted] = useState(false);
+  useEffect(() => {
+    void bootstrapSession().finally(() => setBooted(true));
+  }, []);
+  if (!booted) {
+    return (
+      <div dir="rtl" className="flex min-h-screen items-center justify-center text-slate-500">
+        טוען…
+      </div>
+    );
+  }
   return (
     <BrowserRouter>
       <AppRoutes />

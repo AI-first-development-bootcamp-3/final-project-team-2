@@ -116,7 +116,7 @@ describe('Admin LoginPage — submit to the auth API (KAN-70 3.2)', () => {
     expect(getAuthSession()).toEqual({ accessToken: 'header.payload.sig', user: ADMIN_USER });
   });
 
-  it('persists the session in localStorage when remember-me is ticked', async () => {
+  it('keeps the session out of web storage — memory only', async () => {
     mockLoginSuccess();
 
     renderLogin();
@@ -126,22 +126,11 @@ describe('Admin LoginPage — submit to the auth API (KAN-70 3.2)', () => {
       expect(screen.getByText('PORTAL HOME')).toBeInTheDocument();
     });
 
-    expect(localStorage.getItem('abra_admin_auth_session')).not.toBeNull();
-    expect(sessionStorage.getItem('abra_admin_auth_session')).toBeNull();
-  });
-
-  it('keeps the session in sessionStorage when remember-me is not ticked', async () => {
-    mockLoginSuccess();
-
-    renderLogin();
-    fillAndSubmit('admin@abra.co', 'Admin123!');
-
-    await waitFor(() => {
-      expect(screen.getByText('PORTAL HOME')).toBeInTheDocument();
-    });
-
-    expect(sessionStorage.getItem('abra_admin_auth_session')).not.toBeNull();
-    expect(localStorage.getItem('abra_admin_auth_session')).toBeNull();
+    // Even with remember-me ticked, durability comes from the httpOnly
+    // refresh cookie — the token itself must not be XSS-readable.
+    expect(getAuthSession()).not.toBeNull();
+    expect(localStorage.length).toBe(0);
+    expect(sessionStorage.length).toBe(0);
   });
 
   it('shows the generic Hebrew error on 401 and stays on the login screen', async () => {

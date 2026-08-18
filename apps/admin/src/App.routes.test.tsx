@@ -54,8 +54,11 @@ describe('Admin route protection (KAN-70 3.3)', () => {
     });
   });
 
-  it('treats a malformed stored session as logged out', () => {
-    sessionStorage.setItem('abra_admin_auth_session', '{"accessToken":"x"}');
+  it('never reads web storage: a session-shaped blob in storage stays logged out', () => {
+    // The session is in-memory only; anything an attacker (or a stale build)
+    // plants in storage must not authenticate the console.
+    sessionStorage.setItem('abra_admin_auth_session', JSON.stringify(makeSession(ADMIN_USER)));
+    localStorage.setItem('abra_admin_auth_session', JSON.stringify(makeSession(ADMIN_USER)));
 
     render(
       <MemoryRouter initialEntries={['/']}>
@@ -65,6 +68,9 @@ describe('Admin route protection (KAN-70 3.3)', () => {
 
     expect(screen.getByRole('heading', { name: /ברוכים הבאים למערכת/ })).toBeInTheDocument();
     expect(screen.queryByText('Abra Timesheet - Admin Console')).not.toBeInTheDocument();
+
+    sessionStorage.clear();
+    localStorage.clear();
   });
 
   it('sends an unknown URL straight to the login screen when unauthenticated', () => {
