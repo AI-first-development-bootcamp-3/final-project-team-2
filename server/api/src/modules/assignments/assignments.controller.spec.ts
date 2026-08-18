@@ -56,14 +56,44 @@ async function createApp() {
   return { app, prisma };
 }
 
-describe('POST /api/v1/assignments', () => {
+describe('AssignmentsController', () => {
   let app: INestApplication;
 
   afterEach(async () => {
     await app?.close();
   });
 
-  it('returns 409 on duplicate assignment', async () => {
+  it('GET /api/v1/assignments returns paginated assignments', async () => {
+    ({ app } = await createApp());
+    const response = await request(app.getHttpServer())
+      .get('/api/v1/assignments')
+      .set('Authorization', 'Bearer admin-token')
+      .expect(200);
+
+    expect(response.body.data).toHaveLength(1);
+    expect(response.body.data[0].userFullName).toBe('Alice Cohen');
+  });
+
+  it('GET /api/v1/assignments fails on invalid query params', async () => {
+    ({ app } = await createApp());
+    await request(app.getHttpServer())
+      .get('/api/v1/assignments?userId=invalid')
+      .set('Authorization', 'Bearer admin-token')
+      .expect(400);
+  });
+
+  it('POST /api/v1/assignments creates a valid assignment', async () => {
+    ({ app } = await createApp());
+    const response = await request(app.getHttpServer())
+      .post('/api/v1/assignments')
+      .set('Authorization', 'Bearer admin-token')
+      .send({ userId: ASSIGNMENT.user_id, taskId: ASSIGNMENT.task_id })
+      .expect(201);
+
+    expect(response.body.data.id).toBe(ASSIGNMENT.id);
+  });
+
+  it('POST /api/v1/assignments returns 409 on duplicate assignment', async () => {
     const created = await createApp();
     app = created.app;
     created.prisma.taskAssignment.create.mockRejectedValue(
@@ -85,7 +115,7 @@ describe('POST /api/v1/assignments', () => {
     );
   });
 
-  it('returns 422 on invalid refs', async () => {
+  it('POST /api/v1/assignments returns 422 on invalid refs', async () => {
     const created = await createApp();
     app = created.app;
     created.prisma.user.findUnique.mockResolvedValue(null);
@@ -100,16 +130,8 @@ describe('POST /api/v1/assignments', () => {
       expect.arrayContaining([expect.objectContaining({ rule: 'VAL-26' })]),
     );
   });
-});
 
-describe('DELETE /api/v1/assignments/:id', () => {
-  let app: INestApplication;
-
-  afterEach(async () => {
-    await app?.close();
-  });
-
-  it('returns 204 on successful delete', async () => {
+  it('DELETE /api/v1/assignments/:id returns 204 on successful delete', async () => {
     const created = await createApp();
     app = created.app;
     await request(app.getHttpServer())
