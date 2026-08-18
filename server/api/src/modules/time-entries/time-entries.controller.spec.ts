@@ -58,6 +58,9 @@ const prismaMock = {
   timeEntry: {
     create: vi.fn(),
     findMany: vi.fn(),
+    findFirst: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
   },
   monthLock: {
     findUnique: vi.fn(),
@@ -320,5 +323,105 @@ describe('GET /api/v1/time-entries', () => {
     signedInAsAdmin();
 
     await request(app.getHttpServer()).get('/api/v1/time-entries?date=2026-08-10').expect(403);
+  });
+});
+
+describe('PATCH /api/v1/time-entries/:id', () => {
+  beforeEach(() => {
+    prismaMock.timeEntry.findFirst.mockResolvedValue(ROW);
+    prismaMock.timeEntry.update.mockResolvedValue(ROW);
+  });
+
+  it('updates the entry and returns it', async () => {
+    const response = await request(app.getHttpServer())
+      .patch(`/api/v1/time-entries/${ROW.id}`)
+      .send({ location: 'home' })
+      .expect(200);
+
+    expect(response.body.data).toMatchObject({ id: ROW.id });
+  });
+
+  it('rejects an empty patch', async () => {
+    await request(app.getHttpServer()).patch(`/api/v1/time-entries/${ROW.id}`).send({}).expect(400);
+  });
+
+  it('answers 404 for an entry the caller does not own', async () => {
+    prismaMock.timeEntry.findFirst.mockResolvedValue(null);
+
+    await request(app.getHttpServer())
+      .patch(`/api/v1/time-entries/${ROW.id}`)
+      .send({ location: 'home' })
+      .expect(404);
+  });
+
+  it('answers 409 for a running entry, naming VAL-RUNNING-ENTRY', async () => {
+    prismaMock.timeEntry.findFirst.mockResolvedValue({ ...ROW, end_at: null });
+
+    const response = await request(app.getHttpServer())
+      .patch(`/api/v1/time-entries/${ROW.id}`)
+      .send({ description: 'typo fix' })
+      .expect(409);
+
+    expect(response.body.details).toEqual(
+      expect.arrayContaining([expect.objectContaining({ rule: 'VAL-RUNNING-ENTRY' })]),
+    );
+  });
+
+  it('answers 403 in a locked month', async () => {
+    monthIs({ is_locked: true });
+
+    await request(app.getHttpServer())
+      .patch(`/api/v1/time-entries/${ROW.id}`)
+      .send({ location: 'home' })
+      .expect(403);
+  });
+
+  it('refuses an admin', async () => {
+    signedInAsAdmin();
+
+    await request(app.getHttpServer())
+      .patch(`/api/v1/time-entries/${ROW.id}`)
+      .send({ location: 'home' })
+      .expect(403);
+  });
+});
+
+describe('DELETE /api/v1/time-entries/:id', () => {
+  beforeEach(() => {
+    prismaMock.timeEntry.findFirst.mockResolvedValue(ROW);
+    prismaMock.timeEntry.delete.mockResolvedValue(ROW);
+  });
+
+  it('deletes the entry and answers 204 with no body', async () => {
+    const response = await request(app.getHttpServer())
+      .delete(`/api/v1/time-entries/${ROW.id}`)
+      .expect(204);
+
+    expect(response.body).toEqual({});
+    expect(prismaMock.timeEntry.delete).toHaveBeenCalledOnce();
+  });
+
+  it('answers 404 for an entry the caller does not own', async () => {
+    prismaMock.timeEntry.findFirst.mockResolvedValue(null);
+
+    await request(app.getHttpServer()).delete(`/api/v1/time-entries/${ROW.id}`).expect(404);
+  });
+
+  it('answers 403 in a locked month', async () => {
+    monthIs({ is_locked: true });
+
+    await request(app.getHttpServer()).delete(`/api/v1/time-entries/${ROW.id}`).expect(403);
+  });
+
+  it('answers 409 for a running entry', async () => {
+    prismaMock.timeEntry.findFirst.mockResolvedValue({ ...ROW, end_at: null });
+
+    await request(app.getHttpServer()).delete(`/api/v1/time-entries/${ROW.id}`).expect(409);
+  });
+
+  it('refuses an admin', async () => {
+    signedInAsAdmin();
+
+    await request(app.getHttpServer()).delete(`/api/v1/time-entries/${ROW.id}`).expect(403);
   });
 });

@@ -238,6 +238,11 @@ The system SHALL allow an employee to update their own entry while its month is 
 - **WHEN** an employee attempts to update an unknown entry
 - **THEN** the request is rejected as not found
 
+#### Scenario: Another user's entry is indistinguishable from a missing one
+
+- **WHEN** an employee attempts to update an entry belonging to somebody else
+- **THEN** the response is the same as for an unknown entry, so the caller cannot learn that the entry exists
+
 ### Requirement: Employee deletes own entries
 
 The system SHALL allow an employee to delete their own entry while its month is open. Deletion SHALL be soft: the record SHALL be retained and excluded from all subsequent reads, day totals, and overlap checks.
@@ -255,7 +260,26 @@ The system SHALL allow an employee to delete their own entry while its month is 
 #### Scenario: Delete of another user's entry
 
 - **WHEN** an employee attempts to delete an entry they do not own
-- **THEN** the request is rejected
+- **THEN** the request is rejected as not found, revealing nothing about its existence
+
+### Requirement: Running entries are not edited or deleted here
+
+An entry with no end time SHALL NOT be editable or deletable through the ordinary entry endpoints. The system SHALL refuse such a request with a rule identifying the entry as running, rather than reporting a rule against a field the caller did not supply. Completing or cancelling a running entry is the timer's responsibility.
+
+#### Scenario: Editing a running entry
+
+- **WHEN** an employee attempts to update an entry that has no end time
+- **THEN** the request is refused and the response identifies the entry as running
+
+#### Scenario: Editing a running entry reports no misleading rule
+
+- **WHEN** that refusal is returned
+- **THEN** it does not report a missing or invalid end time against a field the caller never sent
+
+#### Scenario: Deleting a running entry
+
+- **WHEN** an employee attempts to delete an entry that has no end time
+- **THEN** the request is refused and the response identifies the entry as running
 
 ### Requirement: Field-level validation errors
 

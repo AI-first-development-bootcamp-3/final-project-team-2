@@ -2,7 +2,12 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
   Post,
   Query,
   Req,
@@ -12,6 +17,7 @@ import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagg
 import {
   CreateTimeEntryBodySchema,
   TimeEntriesListQuerySchema,
+  UpdateTimeEntryBodySchema,
   VAL_MESSAGES,
   zodIssuesToDetails,
   type ValCode,
@@ -85,5 +91,44 @@ export class TimeEntriesController {
 
     const data = await this.timeEntries.list(req.user.userId, parsed.data);
     return { data };
+  }
+
+  @Patch(':id')
+  @ApiOperation({ summary: "Edit one of the signed-in employee's own entries" })
+  @ApiResponse({ status: 200, description: 'The updated entry.' })
+  @ApiResponse({ status: 400, description: 'The merged entry breaks a rule (VAL-30/31/35/36/38).' })
+  @ApiResponse({ status: 403, description: 'Month locked (VAL-34) or task not assigned (VAL-33).' })
+  @ApiResponse({ status: 404, description: 'No such entry belonging to the caller.' })
+  @ApiResponse({
+    status: 409,
+    description: 'Overlaps another entry (VAL-32), or the entry is running (VAL-RUNNING-ENTRY).',
+  })
+  async update(
+    @Req() req: { user: AuthenticatedUser },
+    @Param('id') id: string,
+    @Body() body: unknown,
+  ) {
+    const parsed = UpdateTimeEntryBodySchema.safeParse(body);
+    if (!parsed.success) {
+      badRequest(parsed.error.issues);
+    }
+
+    const data = await this.timeEntries.update(req.user.userId, id, parsed.data);
+    return { data };
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: "Delete one of the signed-in employee's own entries",
+    description:
+      'Soft delete: the row is retained and excluded from every subsequent read, day total, and overlap check.',
+  })
+  @ApiResponse({ status: 204, description: 'Deleted.' })
+  @ApiResponse({ status: 403, description: 'Month locked (VAL-34).' })
+  @ApiResponse({ status: 404, description: 'No such entry belonging to the caller.' })
+  @ApiResponse({ status: 409, description: 'The entry is running (VAL-RUNNING-ENTRY).' })
+  async remove(@Req() req: { user: AuthenticatedUser }, @Param('id') id: string): Promise<void> {
+    await this.timeEntries.remove(req.user.userId, id);
   }
 }

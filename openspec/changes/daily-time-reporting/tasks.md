@@ -43,12 +43,12 @@
 
 ## 6. Time-entries API: edit and delete (KAN-79)
 
-- [ ] 6.1 Implement `PATCH /api/v1/time-entries/:id`: owner only, re-running VAL-31, VAL-32, and VAL-33 on the updated values.
-- [ ] 6.2 Call `assertMonthNotLocked` for both the entry's existing month and its target month, so an edit cannot move an entry across a lock boundary (D5).
-- [ ] 6.3 Implement `DELETE /api/v1/time-entries/:id`: owner only, month open. Deletion is soft via the existing Prisma extension — no new delete logic.
-- [ ] 6.4 Return not-found for an unknown entry and reject any attempt to edit or delete another user's entry, without revealing that it exists.
-- [ ] 6.5 Test edit and delete: valid edit, edit creating an overlap, edit onto an unassigned task, edit and delete refused in a locked month, deleted entries excluded from reads, totals, and overlap checks while the row is retained.
-- [ ] 6.6 Verify `pnpm --filter @abra/api test:coverage` passes the 70% gate.
+- [x] 6.1 Implement `PATCH /api/v1/time-entries/:id`: owner only, re-running VAL-31, VAL-32, and VAL-33 on the updated values.
+- [x] 6.2 Call `assertMonthNotLocked` for both the entry's existing month and its target month, so an edit cannot move an entry across a lock boundary (D5).
+- [x] 6.3 Implement `DELETE /api/v1/time-entries/:id`: owner only, month open. Deletion is soft via the existing Prisma extension — no new delete logic.
+- [x] 6.4 Return not-found for an unknown entry and reject any attempt to edit or delete another user's entry, without revealing that it exists.
+- [x] 6.5 Test edit and delete: valid edit, edit creating an overlap, edit onto an unassigned task, edit and delete refused in a locked month, deleted entries excluded from reads, totals, and overlap checks while the row is retained.
+- [x] 6.6 Verify `pnpm --filter @abra/api test:coverage` passes the 70% gate.
 
 ## 7. Entry form (KAN-73)
 
