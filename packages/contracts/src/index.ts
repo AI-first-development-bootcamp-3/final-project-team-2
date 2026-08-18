@@ -193,3 +193,28 @@ export type { CreateAssignmentBody, AssignmentCreateSuccess } from './assignment
 // --- Me ---
 export { MyAssignmentSchema, MyAssignmentsResponseSchema } from './me/assignments.js';
 export type { MyAssignment, MyAssignmentsResponse } from './me/assignments.js';
+
+// --- Day status ---
+// Computed, never stored (§2.4). Exported from here so the daily quota bar and
+// the monthly calendar share one implementation of the thresholds.
+export {
+  DayStatus,
+  FULL_DAY_MINUTES,
+  computeDayStatus,
+  minutesForDay,
+  isCoveredByAbsence,
+} from './day-status/day-status.js';
+export type {
+  DayStatusEntry,
+  DayStatusAbsence,
+  DayStatusInput,
+  DayStatusResult,
+} from './day-status/day-status.js';
+
+export {
+  APP_TIME_ZONE,
+  LOCAL_DATE_PATTERN,
+  toLocalDate,
+  isSameLocalDate,
+  toYearMonth,
+} from './day-status/local-date.js';
