@@ -13,6 +13,7 @@ const ASSIGNMENT_ROW = {
     project: {
       id: '00000000-0000-0000-0000-000000000013',
       name: 'Project Alpha',
+      report_type: 'TOTAL_HOURS' as const,
       client: {
         id: '00000000-0000-0000-0000-000000000014',
         name: 'Acme Corp',
@@ -24,7 +25,8 @@ const ASSIGNMENT_ROW = {
 function employeeJwtGuard(userId = 'emp-1') {
   return {
     canActivate(context: ExecutionContext) {
-      context.switchToHttp().getRequest().user = { id: userId, role: 'employee' };
+      // Match production auth/jwt.guard.ts: { userId, role } — not { id, role }.
+      context.switchToHttp().getRequest().user = { userId, role: 'employee' };
       return true;
     },
   };
@@ -33,7 +35,7 @@ function employeeJwtGuard(userId = 'emp-1') {
 function adminJwtGuard() {
   return {
     canActivate(context: ExecutionContext) {
-      context.switchToHttp().getRequest().user = { id: 'admin-1', role: 'admin' };
+      context.switchToHttp().getRequest().user = { userId: 'admin-1', role: 'admin' };
       return true;
     },
   };
@@ -84,8 +86,26 @@ describe('GET /api/v1/me/assignments', () => {
         projectName: 'Project Alpha',
         clientId: '00000000-0000-0000-0000-000000000014',
         clientName: 'Acme Corp',
+        reportType: 'TOTAL_HOURS',
       },
     ]);
+  });
+
+  it('scopes the query to the authenticated employee userId from the JWT', async () => {
+    const created = await createApp(employeeJwtGuard('emp-42'));
+    app = created.app;
+    await request(app.getHttpServer())
+      .get('/api/v1/me/assignments')
+      .set('Authorization', 'Bearer emp-token')
+      .expect(200);
+
+    expect(created.prisma.taskAssignment.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          user_id: 'emp-42',
+        }),
+      }),
+    );
   });
 
   it('filters to active entities only', async () => {

@@ -1,6 +1,7 @@
 import { Controller, Get, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { MyAssignment } from '@abra/contracts';
+import type { AuthenticatedUser } from '../../auth/jwt.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -16,10 +17,10 @@ export class MeController {
 
   @Get('assignments')
   @ApiOperation({ summary: 'Get my task assignments (employee)' })
-  async myAssignments(@Req() req: { user: { id: string } }) {
+  async myAssignments(@Req() req: { user: AuthenticatedUser }) {
     const rows = await this.prisma.taskAssignment.findMany({
       where: {
-        user_id: req.user.id,
+        user_id: req.user.userId,
         task: {
           status: 'open',
           deleted_at: null,

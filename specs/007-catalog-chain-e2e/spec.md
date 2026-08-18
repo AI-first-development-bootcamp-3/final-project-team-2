@@ -8,7 +8,7 @@
 
 **Input**: User description: "Jira KAN-54 (Epic KAN-44 — Entity Management). Playwright e2e: full catalog chain. Acceptance: (1) admin creates client → project under it → task under that → assigns an employee — all via the console UI; (2) the assigned employee's picker data now contains exactly that chain; (3) runs in CI as part of the required e2e check. Confluence Epic 4 spec and Figma time-report file provided as context."
 
-## User Scenarios & Testing *(mandatory)*
+## User Scenarios & Testing _(mandatory)_
 
 ### User Story 1 - Prove the catalog chain in the admin console (Priority: P1)
 
@@ -78,7 +78,7 @@ The catalog-chain journey runs as part of the project’s required automated end
 - Per-project hour-report type (סכום שעות vs כניסה/יציאה): out of scope (KAN-63).
 - Driving the employee app’s on-screen cascading pickers (בחר פרויקט / בחר משימה): not required; this check proves picker **data**, which is what scopes those pickers.
 
-## Requirements *(mandatory)*
+## Requirements _(mandatory)_
 
 ### Functional Requirements
 
@@ -104,7 +104,7 @@ The catalog-chain journey runs as part of the project’s required automated end
 - **Dedicated employee**: The active employee used for the assignment and picker check in one run; uniquely identified; has no other live assignments at the check.
 - **Catalog chain**: The uniquely named client, its project, that project’s task, and the assignment of the dedicated employee to that task, created during the run.
 
-## Success Criteria *(mandatory)*
+## Success Criteria _(mandatory)_
 
 ### Measurable Outcomes
 

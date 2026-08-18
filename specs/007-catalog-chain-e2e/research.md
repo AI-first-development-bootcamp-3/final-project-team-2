@@ -56,16 +56,16 @@ Dedicated-employee **person** setup MAY use the Users console (already proven by
 
 Admin origin is `ADMIN_BASE_URL` (default `http://localhost:5174`). Sign-in path is **`/login` on that origin**, not `/admin/login` (the SPA has no `/admin/login` route). After sign-in the seed admin lands on Users (`/admin/users`, heading `משתמשים`) via existing `signInAsAdmin`.
 
-| Step | Target |
-| --- | --- |
-| Admin sign-in | `${ADMIN_BASE_URL}/login`; labels `אימייל`, `סיסמה`; button `התחבר למערכת`; fail fast if the form never appears (FR-012) |
-| Nav | sidebar links `לקוחות`, `פרויקטים`, `משימות`, `שיוכים` (also `משתמשים` for employee setup) |
-| Users setup | heading `משתמשים`; button `יצירת משתמש`; dialog labels from KAN-49 helper |
-| Clients | heading `לקוחות`; button `לקוח חדש`; dialog `לקוח חדש`; label `שם לקוח`; submit `שמירה`; success `הלקוח נוצר בהצלחה`; row status `פעיל` |
-| Projects | heading `פרויקטים`; button `פרויקט חדש`; dialog `יצירת פרויקט`; labels `שם הפרויקט`, `שם הלקוח` (select option = client name); submit `צור פרויקט`; success `הפרויקט נוצר בהצלחה`; row shows project name + parent client + `פעיל` |
-| Tasks | heading `משימות`; button `משימה חדשה`; dialog `משימה חדשה`; labels `שם משימה`, `פרויקט` (option text `{project} ({client})`); submit `שמירה`; success `המשימה נוצרה בהצלחה`; row status `פתוחה` |
-| Assignments | heading `שיוכים`; button `שיוך חדש`; dialog `שיוך חדש`; labels `עובד` (option `{fullName} ({email})`), `משימה` (option `{task} ({project} - {client})`); submit `שמירה`; success `השיוך נוצר בהצלחה`; row shows employee name/email + task name |
-| Find row | catalog search label `חיפוש` with the unique name (page size 20; seed data already exists — do not assume an empty org) |
+| Step          | Target                                                                                                                                                                                                                                          |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Admin sign-in | `${ADMIN_BASE_URL}/login`; labels `אימייל`, `סיסמה`; button `התחבר למערכת`; fail fast if the form never appears (FR-012)                                                                                                                        |
+| Nav           | sidebar links `לקוחות`, `פרויקטים`, `משימות`, `שיוכים` (also `משתמשים` for employee setup)                                                                                                                                                      |
+| Users setup   | heading `משתמשים`; button `יצירת משתמש`; dialog labels from KAN-49 helper                                                                                                                                                                       |
+| Clients       | heading `לקוחות`; button `לקוח חדש`; dialog `לקוח חדש`; label `שם לקוח`; submit `שמירה`; success `הלקוח נוצר בהצלחה`; row status `פעיל`                                                                                                         |
+| Projects      | heading `פרויקטים`; button `פרויקט חדש`; dialog `יצירת פרויקט`; labels `שם הפרויקט`, `שם הלקוח` (select option = client name); submit `צור פרויקט`; success `הפרויקט נוצר בהצלחה`; row shows project name + parent client + `פעיל`              |
+| Tasks         | heading `משימות`; button `משימה חדשה`; dialog `משימה חדשה`; labels `שם משימה`, `פרויקט` (option text `{project} ({client})`); submit `שמירה`; success `המשימה נוצרה בהצלחה`; row status `פתוחה`                                                 |
+| Assignments   | heading `שיוכים`; button `שיוך חדש`; dialog `שיוך חדש`; labels `עובד` (option `{fullName} ({email})`), `משימה` (option `{task} ({project} - {client})`); submit `שמירה`; success `השיוך נוצר בהצלחה`; row shows employee name/email + task name |
+| Find row      | catalog search label `חיפוש` with the unique name (page size 20; seed data already exists — do not assume an empty org)                                                                                                                         |
 
 Add-task-from-project (`+ הוספת משימה` on a Projects row) is **allowed** by the spec but **not required**. Create from Tasks is enough.
 
