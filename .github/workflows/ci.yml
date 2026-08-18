@@ -52,14 +52,14 @@ jobs:
           --health-retries=5
     env:
       DATABASE_URL: postgresql://test:test@localhost:5432/abra_test
-      JWT_SECRET: ${{ secrets.JWT_SECRET }}
-      JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
+      JWT_SECRET: e2e-only-access-secret-key-32chars-long!
+      JWT_REFRESH_SECRET: e2e-only-refresh-secret-key-32chars-long!
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
 
       - name: Build workspace packages
-        run: pnpm --filter @abra/contracts build
+        run: pnpm --filter @abra/contracts build && pnpm --filter @abra/api exec prisma generate
 
       - name: Run migrations
         run: pnpm --filter @abra/api exec prisma migrate deploy

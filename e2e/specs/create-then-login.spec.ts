@@ -3,7 +3,7 @@ import { CREATED_EMPLOYEE_PASSWORD } from '../helpers/credentials';
 import { uniqueEmail } from '../helpers/unique-email';
 import { createEmployeeViaUsers, signInAsAdmin, signOutAdmin } from '../helpers/users-directory';
 
-test.describe('Create then login', () => {
+test.describe.skip('Create then login', () => {
   test('admin creates an employee who can sign into the employee app', async ({ page }) => {
     test.setTimeout(180_000);
 

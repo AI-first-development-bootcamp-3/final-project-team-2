@@ -12,9 +12,6 @@ export type AbsenceType = z.infer<typeof AbsenceType>;
 export const HalfDayPeriod = z.enum(['morning', 'afternoon']);
 export type HalfDayPeriod = z.infer<typeof HalfDayPeriod>;
 
-export const TaskStatus = z.enum(['open', 'closed']);
-export type TaskStatus = z.infer<typeof TaskStatus>;
-
 export const AuditAction = z.enum(['create', 'update', 'delete', 'lock_month', 'unlock_month']);
 export type AuditAction = z.infer<typeof AuditAction>;
 
@@ -84,7 +81,22 @@ export const RefreshResponse = z.object({
 export type RefreshResponse = z.infer<typeof RefreshResponse>;
 
 export type ValCode =
-  'VAL-01' | 'VAL-02' | 'VAL-03' | 'VAL-04' | 'VAL-10' | 'VAL-11' | 'VAL-12' | 'VAL-13';
+  | 'VAL-01'
+  | 'VAL-02'
+  | 'VAL-03'
+  | 'VAL-04'
+  | 'VAL-10'
+  | 'VAL-11'
+  | 'VAL-12'
+  | 'VAL-13'
+  | 'VAL-20'
+  | 'VAL-21'
+  | 'VAL-22'
+  | 'VAL-23'
+  | 'VAL-24'
+  | 'VAL-25'
+  | 'VAL-26'
+  | 'VAL-27';
 
 export const VAL_MESSAGES: Record<ValCode, string> = {
   'VAL-01': 'כתובת האימייל היא שדה חובה',
@@ -95,4 +107,79 @@ export const VAL_MESSAGES: Record<ValCode, string> = {
   'VAL-11': 'כתובת האימייל כבר בשימוש (VAL-11)',
   'VAL-12': 'יש לבחור תפקיד תקין',
   'VAL-13': 'הסיסמה הראשונית היא שדה חובה',
+  'VAL-20': 'שם הלקוח הוא שדה חובה',
+  'VAL-21': 'שם הלקוח כבר קיים במערכת',
+  'VAL-22': 'שם הפרויקט הוא שדה חובה',
+  'VAL-23': 'יש לבחור לקוח תקין ופעיל',
+  'VAL-24': 'שם המשימה הוא שדה חובה',
+  'VAL-25': 'יש לבחור פרויקט תקין ופעיל',
+  'VAL-26': 'יש לבחור משתמש ומשימה תקינים',
+  'VAL-27': 'השיוך כבר קיים במערכת',
 };
+
+// --- Clients ---
+export {
+  ClientsListQuerySchema,
+  ClientsListSortSchema,
+  ClientsListOrderSchema,
+  ClientListItemSchema,
+  ClientsListSuccessSchema,
+} from './clients/list.js';
+export type { ClientsListQuery, ClientListItem, ClientsListSuccess } from './clients/list.js';
+
+export { CreateClientBodySchema, ClientCreateSuccessSchema } from './clients/create.js';
+export type { CreateClientBody, ClientCreateSuccess } from './clients/create.js';
+
+export { UpdateClientBodySchema } from './clients/update.js';
+export type { UpdateClientBody } from './clients/update.js';
+
+// --- Projects ---
+export {
+  ProjectsListQuerySchema,
+  ProjectsListSortSchema,
+  ProjectsListOrderSchema,
+  ProjectListItemSchema,
+  ProjectsListSuccessSchema,
+} from './projects/list.js';
+export type { ProjectsListQuery, ProjectListItem, ProjectsListSuccess } from './projects/list.js';
+
+export { CreateProjectBodySchema, ProjectCreateSuccessSchema } from './projects/create.js';
+export type { CreateProjectBody, ProjectCreateSuccess } from './projects/create.js';
+
+export { UpdateProjectBodySchema } from './projects/update.js';
+export type { UpdateProjectBody } from './projects/update.js';
+
+// --- Tasks ---
+export {
+  TasksListQuerySchema,
+  TasksListSortSchema,
+  TasksListOrderSchema,
+  TaskListItemSchema,
+  TasksListSuccessSchema,
+} from './tasks/list.js';
+export type { TasksListQuery, TaskListItem, TasksListSuccess } from './tasks/list.js';
+
+export { CreateTaskBodySchema, TaskCreateSuccessSchema } from './tasks/create.js';
+export type { CreateTaskBody, TaskCreateSuccess } from './tasks/create.js';
+
+export { UpdateTaskBodySchema } from './tasks/update.js';
+export type { UpdateTaskBody } from './tasks/update.js';
+
+// --- Assignments ---
+export {
+  AssignmentsListQuerySchema,
+  AssignmentListItemSchema,
+  AssignmentsListSuccessSchema,
+} from './assignments/list.js';
+export type {
+  AssignmentsListQuery,
+  AssignmentListItem,
+  AssignmentsListSuccess,
+} from './assignments/list.js';
+
+export { CreateAssignmentBodySchema, AssignmentCreateSuccessSchema } from './assignments/create.js';
+export type { CreateAssignmentBody, AssignmentCreateSuccess } from './assignments/create.js';
+
+// --- Me ---
+export { MyAssignmentSchema, MyAssignmentsResponseSchema } from './me/assignments.js';
+export type { MyAssignment, MyAssignmentsResponse } from './me/assignments.js';

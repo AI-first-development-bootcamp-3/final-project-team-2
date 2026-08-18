@@ -1,19 +1,19 @@
 import React, { useEffect, useState, useSyncExternalStore } from 'react';
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { LoginPage } from './features/auth/LoginPage';
+import { AdminLayout } from './components/layout/admin-layout';
 import { UsersPage } from './features/users/users-page';
+import { ClientsPage } from './features/clients/clients-page';
+import { ProjectsPage } from './features/projects/projects-page';
+import { TasksPage } from './features/tasks/tasks-page';
+import { AssignmentsPage } from './features/assignments/assignments-page';
 import { clearAuthSession, getAuthSession, isAdmin, subscribeToAuthChanges } from './lib/auth';
 import { bootstrapSession } from './lib/api';
 
-// Reactive session read: consumers re-render when the session is written or
-// cleared (login, logout, the 401 interceptor), instead of trusting a
-// one-shot read at mount.
 function useAuthSession() {
   return useSyncExternalStore(subscribeToAuthChanges, getAuthSession);
 }
 
-// An authenticated non-admin is rejected, not admitted: the spec is explicit
-// that an employee never accesses the admin console (GENERAL_SPEC §5.5).
 function DenyNonAdmin() {
   useEffect(() => {
     clearAuthSession();
@@ -25,7 +25,6 @@ function RequireAdmin({ children }: { children: React.ReactElement }) {
   const session = useAuthSession();
   const location = useLocation();
   if (!session) {
-    // Remember where the visitor was headed so login can return them there.
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
   if (!isAdmin(session)) {
@@ -34,8 +33,6 @@ function RequireAdmin({ children }: { children: React.ReactElement }) {
   return children;
 }
 
-// A logged-in admin has no business on /login (e.g. pressing Back after
-// logging in) — send them home instead of re-showing the credential form.
 function RedirectIfAdmin({ children }: { children: React.ReactElement }) {
   const session = useAuthSession();
   if (isAdmin(session)) {
@@ -44,23 +41,9 @@ function RedirectIfAdmin({ children }: { children: React.ReactElement }) {
   return children;
 }
 
-// Resolve the catch-all destination in one hop instead of bouncing unknown
-// URLs through the protected route.
 function CatchAll() {
   const session = useAuthSession();
-  return <Navigate to={isAdmin(session) ? '/' : '/login'} replace />;
-}
-
-// Console shell around admin screens; grows a sidebar with later epics.
-function ConsoleLayout({ children }: { children: React.ReactElement }) {
-  return (
-    <div dir="rtl" className="min-h-screen bg-white text-neutral-900">
-      <header className="border-b px-6 py-4">
-        <h1 className="text-2xl font-bold">Abra Timesheet - Admin Console</h1>
-      </header>
-      <main className="px-6 py-6">{children}</main>
-    </div>
-  );
+  return <Navigate to={isAdmin(session) ? '/admin/users' : '/login'} replace />;
 }
 
 export function AppRoutes() {
@@ -75,15 +58,18 @@ export function AppRoutes() {
         }
       />
       <Route
-        path="/admin/users"
         element={
           <RequireAdmin>
-            <ConsoleLayout>
-              <UsersPage />
-            </ConsoleLayout>
+            <AdminLayout />
           </RequireAdmin>
         }
-      />
+      >
+        <Route path="/admin/users" element={<UsersPage />} />
+        <Route path="/admin/clients" element={<ClientsPage />} />
+        <Route path="/admin/projects" element={<ProjectsPage />} />
+        <Route path="/admin/tasks" element={<TasksPage />} />
+        <Route path="/admin/assignments" element={<AssignmentsPage />} />
+      </Route>
       <Route
         path="/"
         element={
@@ -98,9 +84,6 @@ export function AppRoutes() {
 }
 
 function App() {
-  // Session bootstrap gate: the refresh cookie is the durable credential, so
-  // routing must wait for one POST /auth/refresh round-trip before deciding
-  // whether the visitor is logged in (in-memory session ↔ cold load).
   const [booted, setBooted] = useState(false);
   useEffect(() => {
     void bootstrapSession().finally(() => setBooted(true));
