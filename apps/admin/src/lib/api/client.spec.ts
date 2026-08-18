@@ -1,5 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { apiFetch, ApiClientError, setAccessToken, clearAccessToken } from './client';
+import { apiFetch, ApiClientError } from './client';
+import { clearAuthSession, getAuthSession, setAuthSession } from '../auth';
+import { ADMIN_USER } from '../../test/fixtures';
+
+const ADMIN_SESSION = { accessToken: 'tok-1', user: ADMIN_USER };
 
 describe('apiFetch', () => {
   const assign = vi.fn();
@@ -14,17 +18,17 @@ describe('apiFetch', () => {
       }),
     );
     vi.stubGlobal('location', { ...window.location, assign });
-    window.localStorage.clear();
+    clearAuthSession();
     assign.mockReset();
   });
 
   afterEach(() => {
     vi.unstubAllGlobals();
-    window.localStorage.clear();
+    clearAuthSession();
   });
 
-  it('sends the stored bearer token', async () => {
-    setAccessToken('tok-1');
+  it('sends the bearer token from the auth session', async () => {
+    setAuthSession(ADMIN_SESSION);
     await apiFetch('/users');
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('/users'),
@@ -36,17 +40,16 @@ describe('apiFetch', () => {
     expect(new Headers(init.headers).get('Authorization')).toBe('Bearer tok-1');
   });
 
-  it('redirects to admin sign-in on 401', async () => {
+  it('clears the session and redirects to login on 401', async () => {
     vi.mocked(fetch).mockResolvedValue({
       status: 401,
       ok: false,
       json: async () => ({}),
     } as Response);
-    setAccessToken('expired');
+    setAuthSession({ ...ADMIN_SESSION, accessToken: 'expired' });
     await expect(apiFetch('/users')).rejects.toBeInstanceOf(ApiClientError);
-    expect(assign).toHaveBeenCalledWith('/admin/login');
-    expect(window.localStorage.getItem('abra.admin.accessToken')).toBeNull();
-    clearAccessToken();
+    expect(assign).toHaveBeenCalledWith('/login');
+    expect(getAuthSession()).toBeNull();
   });
 
   it('throws ApiClientError for non-auth failures', async () => {

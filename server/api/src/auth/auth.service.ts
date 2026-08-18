@@ -6,7 +6,11 @@ import { PrismaService } from '../prisma/prisma.service';
 import { ENV } from '../env.provider';
 import type { Env } from '../env';
 import type { User } from '@prisma/client';
-import { ACCESS_TOKEN_TTL, REFRESH_TTL_DEFAULT_MS } from './auth.constants';
+import {
+  ACCESS_TOKEN_TTL,
+  REFRESH_TTL_DEFAULT_MS,
+  REFRESH_TTL_REMEMBER_ME_MS,
+} from './auth.constants';
 
 export interface LoginResult {
   response: LoginResponse;
@@ -35,8 +39,11 @@ export class AuthService {
     }
 
     const accessToken = await this.signAccessToken(user.id, user.role);
-    // Fixed default TTL for now; remember-me extends this when KAN-40 lands.
-    const refreshMaxAgeMs = REFRESH_TTL_DEFAULT_MS;
+    // ADR-16: remember-me unchecked = 1 day, checked = 30 days — enforced in
+    // both the cookie Max-Age and the token's own expiry claim.
+    const refreshMaxAgeMs = credentials.rememberMe
+      ? REFRESH_TTL_REMEMBER_ME_MS
+      : REFRESH_TTL_DEFAULT_MS;
     const refreshToken = await this.jwt.signAsync(
       { userId: user.id, tokenVersion: user.token_version },
       { secret: this.env.JWT_REFRESH_SECRET, expiresIn: Math.floor(refreshMaxAgeMs / 1000) },
@@ -71,7 +78,10 @@ export class AuthService {
     if (user.token_version !== payload.tokenVersion) {
       throw new UnauthorizedException('Invalid refresh token');
     }
-    return { accessToken: await this.signAccessToken(user.id, user.role) };
+    return {
+      accessToken: await this.signAccessToken(user.id, user.role),
+      user: { id: user.id, email: user.email, fullName: user.full_name, role: user.role },
+    };
   }
 
   /**

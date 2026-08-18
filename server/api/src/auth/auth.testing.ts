@@ -1,10 +1,13 @@
 import { Test } from '@nestjs/testing';
 import type { INestApplication } from '@nestjs/common';
+import { APP_GUARD, Reflector } from '@nestjs/core';
 import cookieParser from 'cookie-parser';
 import type { Response } from 'supertest';
 import * as bcrypt from 'bcrypt';
 import type { UserRole } from '@abra/contracts';
 import { AuthModule } from './auth.module';
+import { JwtGuard } from './jwt.guard';
+import { RolesGuard } from './roles.guard';
 import { REFRESH_COOKIE } from './auth.constants';
 import { PrismaService } from '../prisma/prisma.service';
 import { ENV } from '../env.provider';
@@ -83,13 +86,24 @@ export function makeFakePrisma(users: FakeUser[]) {
   };
 }
 
-export async function makeAuthApp(users: FakeUser[]): Promise<{
+export async function makeAuthApp(
+  users: FakeUser[],
+  extraControllers: Parameters<typeof Test.createTestingModule>[0]['controllers'] = [],
+): Promise<{
   app: INestApplication;
   prisma: ReturnType<typeof makeFakePrisma>;
 }> {
   const prisma = makeFakePrisma(users);
   const moduleRef = await Test.createTestingModule({
     imports: [AuthModule],
+    controllers: extraControllers,
+    // Mirror production (app.module.ts): the global JwtGuard → RolesGuard
+    // pipeline is part of the surface under test, not an add-on.
+    providers: [
+      Reflector,
+      { provide: APP_GUARD, useClass: JwtGuard },
+      { provide: APP_GUARD, useClass: RolesGuard },
+    ],
   })
     .overrideProvider(PrismaService)
     .useValue(prisma)
