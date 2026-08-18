@@ -266,6 +266,13 @@ export { UpdateTimeEntryBodySchema, MergedTimeEntrySchema } from './time-entries
 export type { UpdateTimeEntryBody, MergedTimeEntry } from './time-entries/update.js';
 
 export {
+  intervalsOverlap,
+  findOverlap,
+  OVERLAP_CANDIDATE_WINDOW_DAYS,
+} from './time-entries/overlap.js';
+export type { TimeInterval } from './time-entries/overlap.js';
+
+export {
   TimeEntriesListQuerySchema,
   TimeEntryListItemSchema,
   TimeEntriesListSuccessSchema,

@@ -19,11 +19,11 @@
 
 ## 3. Enforcement seams (KAN-77)
 
-- [ ] 3.1 Add `assertUserAssignedToTask(userId, taskId)` — throws forbidden with `VAL-33` when no `TaskAssignment` row exists (§8.2).
-- [ ] 3.2 Add `assertMonthNotLocked(year, month)` reading `MonthLock`: no row is open, `is_locked: true` is locked, `is_locked: false` is reopened. Throws forbidden with `VAL-34` (D5).
-- [ ] 3.3 Unit-test both guards, including the reopened-month case and the pass-through case where no lock row exists.
-- [ ] 3.4 Add `packages/contracts/src/time-entries/overlap.ts`: a pure `intervalsOverlap` / `findOverlap` comparison using `newStart < existingEnd && existingStart < newEnd`, skipping entries with no end time (D6, D7).
-- [ ] 3.5 Unit-test the overlap comparison across the full matrix — contained, containing, partial-left, partial-right, touching boundaries allowed, 22:00–06:00 vs 05:00–07:00 in both insertion orders.
+- [x] 3.1 Add `assertUserAssignedToTask(userId, taskId)` — throws forbidden with `VAL-33` when no `TaskAssignment` row exists (§8.2).
+- [x] 3.2 Add `assertMonthNotLocked(year, month)` reading `MonthLock`: no row is open, `is_locked: true` is locked, `is_locked: false` is reopened. Throws forbidden with `VAL-34` (D5).
+- [x] 3.3 Unit-test both guards, including the reopened-month case and the pass-through case where no lock row exists.
+- [x] 3.4 Add `packages/contracts/src/time-entries/overlap.ts`: a pure `intervalsOverlap` / `findOverlap` comparison using `newStart < existingEnd && existingStart < newEnd`, skipping entries with no end time (D6, D7).
+- [x] 3.5 Unit-test the overlap comparison across the full matrix — contained, containing, partial-left, partial-right, touching boundaries allowed, 22:00–06:00 vs 05:00–07:00 in both insertion orders.
 
 ## 4. Time-entries API: create and read (KAN-77)
 
@@ -39,7 +39,7 @@
 - [ ] 5.1 In the service, fetch overlap candidates for the user with a start-time window widened by one day on each side of the candidate interval; name and comment the widening constant (D6).
 - [ ] 5.2 Reject overlapping writes with `VAL-32` via the pure comparison from task 3.4; exclude the entry being edited from its own candidate set.
 - [ ] 5.3 Integration-test overlap against the database, including both night-shift orderings, an adjacent (touching) entry accepted, an overlap with another user's entry accepted, and an overlap with a soft-deleted entry accepted.
-- [ ] 5.4 Add the guard test asserting the candidate window's documented bound.
+- [x] 5.4 Add the guard test asserting the candidate window's documented bound.
 
 ## 6. Time-entries API: edit and delete (KAN-79)
 
