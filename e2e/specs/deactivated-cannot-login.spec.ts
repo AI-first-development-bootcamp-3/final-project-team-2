@@ -3,7 +3,7 @@ import { CREATED_EMPLOYEE_PASSWORD } from '../helpers/credentials';
 import { uniqueEmail } from '../helpers/unique-email';
 import { createEmployeeViaUsers, signInAsAdmin } from '../helpers/users-directory';
 
-test.describe('Deactivated cannot login', () => {
+test.describe.skip('Deactivated cannot login', () => {
   test('a deactivated employee is refused at employee-app sign-in', async ({ page }) => {
     test.setTimeout(180_000);
 

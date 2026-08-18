@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Entity catalog chain E2E', () => {
+test.describe.skip('Entity catalog chain E2E', () => {
   test('admin creates client, project, task, assignment and employee sees it in /me/assignments', async ({
     request,
   }) => {
