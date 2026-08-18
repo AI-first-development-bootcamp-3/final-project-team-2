@@ -1,10 +1,11 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { Test } from '@nestjs/testing';
-import type { ExecutionContext, INestApplication } from '@nestjs/common';
+import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { MeModule } from './me.module';
 import { PrismaService } from '../../prisma/prisma.service';
-import { JwtGuard } from '../../common/guards/jwt.guard';
+import { stubAuthGuards } from '../../auth/auth.testing';
+import type { AuthenticatedUser } from '../../auth/jwt.guard';
 
 const ASSIGNMENT_ROW = {
   task: {
@@ -13,6 +14,7 @@ const ASSIGNMENT_ROW = {
     project: {
       id: '00000000-0000-0000-0000-000000000013',
       name: 'Project Alpha',
+      report_type: 'TOTAL_HOURS' as const,
       client: {
         id: '00000000-0000-0000-0000-000000000014',
         name: 'Acme Corp',
@@ -21,25 +23,15 @@ const ASSIGNMENT_ROW = {
   },
 };
 
-function employeeJwtGuard(userId = 'emp-1') {
-  return {
-    canActivate(context: ExecutionContext) {
-      context.switchToHttp().getRequest().user = { id: userId, role: 'employee' };
-      return true;
-    },
-  };
+function employee(userId = 'emp-1'): AuthenticatedUser {
+  return { userId, role: 'employee' };
 }
 
-function adminJwtGuard() {
-  return {
-    canActivate(context: ExecutionContext) {
-      context.switchToHttp().getRequest().user = { id: 'admin-1', role: 'admin' };
-      return true;
-    },
-  };
+function admin(): AuthenticatedUser {
+  return { userId: 'admin-1', role: 'admin' };
 }
 
-async function createApp(guard: ReturnType<typeof employeeJwtGuard | typeof adminJwtGuard>) {
+async function createApp(user: AuthenticatedUser) {
   const prisma = {
     taskAssignment: {
       findMany: vi.fn().mockResolvedValue([ASSIGNMENT_ROW]),
@@ -48,11 +40,11 @@ async function createApp(guard: ReturnType<typeof employeeJwtGuard | typeof admi
 
   const moduleRef = await Test.createTestingModule({
     imports: [MeModule],
+    // Mirror production: stub authenticator + REAL RolesGuard as APP_GUARDs.
+    providers: stubAuthGuards(user),
   })
     .overrideProvider(PrismaService)
     .useValue(prisma)
-    .overrideGuard(JwtGuard)
-    .useValue(guard)
     .compile();
 
   const app = moduleRef.createNestApplication();
@@ -69,7 +61,7 @@ describe('GET /api/v1/me/assignments', () => {
   });
 
   it('returns assignments for employee', async () => {
-    const created = await createApp(employeeJwtGuard());
+    const created = await createApp(employee());
     app = created.app;
     const response = await request(app.getHttpServer())
       .get('/api/v1/me/assignments')
@@ -84,12 +76,30 @@ describe('GET /api/v1/me/assignments', () => {
         projectName: 'Project Alpha',
         clientId: '00000000-0000-0000-0000-000000000014',
         clientName: 'Acme Corp',
+        reportType: 'TOTAL_HOURS',
       },
     ]);
   });
 
+  it('scopes the query to the authenticated employee userId from the JWT', async () => {
+    const created = await createApp(employee('emp-42'));
+    app = created.app;
+    await request(app.getHttpServer())
+      .get('/api/v1/me/assignments')
+      .set('Authorization', 'Bearer emp-token')
+      .expect(200);
+
+    expect(created.prisma.taskAssignment.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          user_id: 'emp-42',
+        }),
+      }),
+    );
+  });
+
   it('filters to active entities only', async () => {
-    const created = await createApp(employeeJwtGuard('emp-2'));
+    const created = await createApp(employee('emp-2'));
     app = created.app;
     await request(app.getHttpServer())
       .get('/api/v1/me/assignments')
@@ -117,7 +127,7 @@ describe('GET /api/v1/me/assignments', () => {
   });
 
   it('returns 403 for admin', async () => {
-    ({ app } = await createApp(adminJwtGuard()));
+    ({ app } = await createApp(admin()));
     await request(app.getHttpServer())
       .get('/api/v1/me/assignments')
       .set('Authorization', 'Bearer admin-token')
@@ -125,7 +135,7 @@ describe('GET /api/v1/me/assignments', () => {
   });
 
   it('omits a deactivated or removed projectId from the employee picker', async () => {
-    const created = await createApp(employeeJwtGuard());
+    const created = await createApp(employee());
     app = created.app;
     created.prisma.taskAssignment.findMany.mockResolvedValue([]);
 
@@ -154,7 +164,7 @@ describe('GET /api/v1/me/assignments', () => {
   });
 
   it('returns empty array when no assignments', async () => {
-    const created = await createApp(employeeJwtGuard());
+    const created = await createApp(employee());
     app = created.app;
     created.prisma.taskAssignment.findMany.mockResolvedValue([]);
 

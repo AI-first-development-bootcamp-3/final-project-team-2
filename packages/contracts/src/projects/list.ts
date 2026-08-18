@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { listSuccessSchema } from '../common/list-envelope.js';
+import { ReportType } from '../enums.js';
 
 const queryBoolean = z.preprocess((value) => {
   if (value === undefined || value === '') return undefined;
@@ -43,6 +44,9 @@ export const ProjectListItemSchema = z.object({
   clientName: z.string(),
   isActive: z.boolean(),
   isDeleted: z.boolean(),
+  // Required on purpose: the DB column is NOT NULL with a default, so a
+  // missing field is a contract violation — defaulting here would mask it.
+  reportType: ReportType,
 });
 
 export const ProjectsListSuccessSchema = listSuccessSchema(ProjectListItemSchema);

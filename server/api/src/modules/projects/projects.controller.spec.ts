@@ -1,17 +1,18 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { Test } from '@nestjs/testing';
-import type { ExecutionContext, INestApplication } from '@nestjs/common';
+import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { VAL_MESSAGES } from '@abra/contracts';
 import { ProjectsModule } from './projects.module';
 import { PrismaService } from '../../prisma/prisma.service';
-import { JwtGuard } from '../../common/guards/jwt.guard';
+import { stubAuthGuards } from '../../auth/auth.testing';
 
 const PROJECT = {
   id: '550e8400-e29b-41d4-a716-446655440000',
   name: 'Project Alpha',
   client_id: '660e8400-e29b-41d4-a716-446655440000',
   is_active: true,
+  report_type: 'TOTAL_HOURS' as const,
   deleted_at: null as Date | null,
   client: { name: 'Acme Corp' },
 };
@@ -24,22 +25,11 @@ const TASK = {
   deleted_at: null,
 };
 
-function adminJwtGuard() {
-  return {
-    canActivate(context: ExecutionContext) {
-      context.switchToHttp().getRequest().user = { id: 'admin-1', role: 'admin' };
-      return true;
-    },
-  };
-}
-
-function employeeJwtGuard() {
-  return {
-    canActivate(context: ExecutionContext) {
-      context.switchToHttp().getRequest().user = { id: 'emp-1', role: 'employee' };
-      return true;
-    },
-  };
+function userFor(auth: 'none' | 'admin' | 'employee') {
+  if (auth === 'none') return null;
+  return auth === 'admin'
+    ? { userId: 'admin-1', role: 'admin' as const }
+    : { userId: 'emp-1', role: 'employee' as const };
 }
 
 async function createApp(auth: 'none' | 'admin' | 'employee' = 'admin') {
@@ -68,15 +58,11 @@ async function createApp(auth: 'none' | 'admin' | 'employee' = 'admin') {
 
   const builder = Test.createTestingModule({
     imports: [ProjectsModule],
+    // Mirror production: stub authenticator + REAL RolesGuard as APP_GUARDs.
+    providers: stubAuthGuards(userFor(auth)),
   })
     .overrideProvider(PrismaService)
     .useValue(prisma);
-
-  if (auth === 'admin') {
-    builder.overrideGuard(JwtGuard).useValue(adminJwtGuard());
-  } else if (auth === 'employee') {
-    builder.overrideGuard(JwtGuard).useValue(employeeJwtGuard());
-  }
 
   const moduleRef = await builder.compile();
   const app = moduleRef.createNestApplication();
@@ -92,6 +78,7 @@ const ITEM = {
   clientName: 'Acme Corp',
   isActive: true,
   isDeleted: false,
+  reportType: 'TOTAL_HOURS',
 };
 
 describe('GET /api/v1/projects', () => {
@@ -565,6 +552,88 @@ describe('PATCH /api/v1/projects/:id', () => {
 
     expect(response.body.details).toEqual(
       expect.arrayContaining([expect.objectContaining({ field: 'name', rule: 'VAL-22' })]),
+    );
+  });
+});
+
+describe('PATCH /api/v1/projects/:id/report-type', () => {
+  let app: INestApplication;
+
+  afterEach(async () => {
+    await app?.close();
+  });
+
+  it('updates project reportType to CLOCK_IN_OUT and returns 200', async () => {
+    const created = await createApp('admin');
+    app = created.app;
+    created.prisma.project.update.mockResolvedValue({
+      ...PROJECT,
+      report_type: 'CLOCK_IN_OUT',
+    });
+
+    const response = await request(app.getHttpServer())
+      .patch(`/api/v1/projects/${PROJECT.id}/report-type`)
+      .set('Authorization', 'Bearer admin-token')
+      .send({ reportType: 'CLOCK_IN_OUT' })
+      .expect(200);
+
+    expect(response.body.data).toMatchObject({
+      id: PROJECT.id,
+      reportType: 'CLOCK_IN_OUT',
+    });
+  });
+
+  it('returns 400 with VAL-28 and a Hebrew message on invalid reportType enum value', async () => {
+    ({ app } = await createApp('admin'));
+    const response = await request(app.getHttpServer())
+      .patch(`/api/v1/projects/${PROJECT.id}/report-type`)
+      .set('Authorization', 'Bearer admin-token')
+      .send({ reportType: 'INVALID_ENUM' })
+      .expect(400);
+
+    expect(response.body.details).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          field: 'reportType',
+          rule: 'VAL-28',
+          message: 'יש לבחור אופן דיווח תקין',
+        }),
+      ]),
+    );
+  });
+
+  it('returns 400 VAL-25 for a malformed project id instead of a 500', async () => {
+    ({ app } = await createApp('admin'));
+    const response = await request(app.getHttpServer())
+      .patch('/api/v1/projects/not-a-uuid/report-type')
+      .set('Authorization', 'Bearer admin-token')
+      .send({ reportType: 'CLOCK_IN_OUT' })
+      .expect(400);
+
+    expect(response.body.details).toEqual(
+      expect.arrayContaining([expect.objectContaining({ field: 'id', rule: 'VAL-25' })]),
+    );
+  });
+
+  it('mutates report_type through the same prisma update path as the generic PATCH', async () => {
+    const created = await createApp('admin');
+    app = created.app;
+    created.prisma.project.update.mockResolvedValue({
+      ...PROJECT,
+      report_type: 'CLOCK_IN_OUT',
+    });
+
+    await request(app.getHttpServer())
+      .patch(`/api/v1/projects/${PROJECT.id}/report-type`)
+      .set('Authorization', 'Bearer admin-token')
+      .send({ reportType: 'CLOCK_IN_OUT' })
+      .expect(200);
+
+    expect(created.prisma.project.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: PROJECT.id },
+        data: { report_type: 'CLOCK_IN_OUT' },
+      }),
     );
   });
 });

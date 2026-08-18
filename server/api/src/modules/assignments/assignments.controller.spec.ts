@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { Test } from '@nestjs/testing';
-import type { ExecutionContext, INestApplication } from '@nestjs/common';
+import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { Prisma } from '@prisma/client';
 import { AssignmentsModule } from './assignments.module';
 import { PrismaService } from '../../prisma/prisma.service';
-import { JwtGuard } from '../../common/guards/jwt.guard';
+import { stubAuthGuards } from '../../auth/auth.testing';
 
 const ASSIGNMENT = {
   id: 'a0000000-0000-0000-0000-000000000001',
@@ -14,15 +14,6 @@ const ASSIGNMENT = {
   user: { full_name: 'Alice Cohen', email: 'alice@abra.co' },
   task: { name: 'Task One', project: { name: 'Project Alpha', client: { name: 'Acme Corp' } } },
 };
-
-function adminJwtGuard() {
-  return {
-    canActivate(context: ExecutionContext) {
-      context.switchToHttp().getRequest().user = { id: 'admin-1', role: 'admin' };
-      return true;
-    },
-  };
-}
 
 async function createApp() {
   const prisma = {
@@ -43,11 +34,11 @@ async function createApp() {
 
   const moduleRef = await Test.createTestingModule({
     imports: [AssignmentsModule],
+    // Mirror production: stub authenticator + REAL RolesGuard as APP_GUARDs.
+    providers: stubAuthGuards({ userId: 'admin-1', role: 'admin' }),
   })
     .overrideProvider(PrismaService)
     .useValue(prisma)
-    .overrideGuard(JwtGuard)
-    .useValue(adminJwtGuard())
     .compile();
 
   const app = moduleRef.createNestApplication();

@@ -8,11 +8,18 @@ const validAssignment = {
   projectName: 'Project Alpha',
   clientId: '770e8400-e29b-41d4-a716-446655440000',
   clientName: 'Acme Corp',
+  reportType: 'TOTAL_HOURS' as const,
 };
 
 describe('MyAssignmentSchema', () => {
   it('accepts a valid assignment', () => {
     expect(MyAssignmentSchema.parse(validAssignment)).toEqual(validAssignment);
+  });
+
+  it('requires reportType (missing field is a contract violation, not a default)', () => {
+    const withoutReportType: Record<string, unknown> = { ...validAssignment };
+    delete withoutReportType.reportType;
+    expect(MyAssignmentSchema.safeParse(withoutReportType).success).toBe(false);
   });
 });
 

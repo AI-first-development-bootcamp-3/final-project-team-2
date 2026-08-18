@@ -96,7 +96,8 @@ export type ValCode =
   | 'VAL-24'
   | 'VAL-25'
   | 'VAL-26'
-  | 'VAL-27';
+  | 'VAL-27'
+  | 'VAL-28';
 
 export const VAL_MESSAGES: Record<ValCode, string> = {
   'VAL-01': 'כתובת האימייל היא שדה חובה',
@@ -115,6 +116,7 @@ export const VAL_MESSAGES: Record<ValCode, string> = {
   'VAL-25': 'יש לבחור פרויקט תקין ופעיל',
   'VAL-26': 'יש לבחור משתמש ומשימה תקינים',
   'VAL-27': 'השיוך כבר קיים במערכת',
+  'VAL-28': 'יש לבחור אופן דיווח תקין',
 };
 
 // --- Clients ---
@@ -148,11 +150,13 @@ export type { CreateProjectBody, ProjectCreateSuccess } from './projects/create.
 
 export {
   UpdateProjectBodySchema,
+  UpdateProjectReportTypeBodySchema,
   ProjectGetSuccessSchema,
   ProjectUpdateSuccessSchema,
 } from './projects/update.js';
 export type {
   UpdateProjectBody,
+  UpdateProjectReportTypeBody,
   ProjectGetSuccess,
   ProjectUpdateSuccess,
 } from './projects/update.js';

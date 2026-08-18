@@ -1,12 +1,16 @@
 import { Test } from '@nestjs/testing';
-import type { INestApplication } from '@nestjs/common';
+import {
+  UnauthorizedException,
+  type ExecutionContext,
+  type INestApplication,
+} from '@nestjs/common';
 import { APP_GUARD, Reflector } from '@nestjs/core';
 import cookieParser from 'cookie-parser';
 import type { Response } from 'supertest';
 import * as bcrypt from 'bcrypt';
 import type { UserRole } from '@abra/contracts';
 import { AuthModule } from './auth.module';
-import { JwtGuard } from './jwt.guard';
+import { JwtGuard, type AuthenticatedUser } from './jwt.guard';
 import { RolesGuard } from './roles.guard';
 import { REFRESH_COOKIE } from './auth.constants';
 import { PrismaService } from '../prisma/prisma.service';
@@ -116,6 +120,28 @@ export async function makeAuthApp(
   app.use(cookieParser());
   await app.init();
   return { app, prisma };
+}
+
+/**
+ * APP_GUARD providers for module specs, mirroring production's guard order:
+ * a stub authenticator that attaches `user` (or rejects when null, like the
+ * real JwtGuard with no token) followed by the REAL RolesGuard, so @Roles()
+ * enforcement is part of what module tests exercise.
+ */
+export function stubAuthGuards(user: AuthenticatedUser | null) {
+  return [
+    {
+      provide: APP_GUARD,
+      useValue: {
+        canActivate(context: ExecutionContext) {
+          if (!user) throw new UnauthorizedException();
+          context.switchToHttp().getRequest<{ user?: AuthenticatedUser }>().user = user;
+          return true;
+        },
+      },
+    },
+    { provide: APP_GUARD, useClass: RolesGuard },
+  ];
 }
 
 export function extractRefreshCookie(res: Response): string {
