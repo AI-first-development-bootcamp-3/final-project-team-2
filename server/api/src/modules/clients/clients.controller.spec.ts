@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { Test } from '@nestjs/testing';
-import type { ExecutionContext, INestApplication } from '@nestjs/common';
+import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { ClientsModule } from './clients.module';
 import { PrismaService } from '../../prisma/prisma.service';
-import { JwtGuard } from '../../common/guards/jwt.guard';
+import { stubAuthGuards } from '../../auth/auth.testing';
 
 const ACME = {
   id: '550e8400-e29b-41d4-a716-446655440000',
@@ -14,30 +14,11 @@ const ACME = {
   deleted_at: null,
 };
 
-function noAuthJwtGuard() {
-  return {
-    canActivate() {
-      return false;
-    },
-  };
-}
-
-function adminJwtGuard() {
-  return {
-    canActivate(context: ExecutionContext) {
-      context.switchToHttp().getRequest().user = { id: 'admin-1', role: 'admin' };
-      return true;
-    },
-  };
-}
-
-function employeeJwtGuard() {
-  return {
-    canActivate(context: ExecutionContext) {
-      context.switchToHttp().getRequest().user = { id: 'emp-1', role: 'employee' };
-      return true;
-    },
-  };
+function userFor(auth: 'none' | 'admin' | 'employee') {
+  if (auth === 'none') return null;
+  return auth === 'admin'
+    ? { userId: 'admin-1', role: 'admin' as const }
+    : { userId: 'emp-1', role: 'employee' as const };
 }
 
 async function createApp(auth: 'none' | 'admin' | 'employee') {
@@ -54,17 +35,11 @@ async function createApp(auth: 'none' | 'admin' | 'employee') {
 
   const builder = Test.createTestingModule({
     imports: [ClientsModule],
+    // Mirror production: stub authenticator + REAL RolesGuard as APP_GUARDs.
+    providers: stubAuthGuards(userFor(auth)),
   })
     .overrideProvider(PrismaService)
     .useValue(prisma);
-
-  if (auth === 'admin') {
-    builder.overrideGuard(JwtGuard).useValue(adminJwtGuard());
-  } else if (auth === 'employee') {
-    builder.overrideGuard(JwtGuard).useValue(employeeJwtGuard());
-  } else {
-    builder.overrideGuard(JwtGuard).useValue(noAuthJwtGuard());
-  }
 
   const moduleRef = await builder.compile();
   const app = moduleRef.createNestApplication();
@@ -82,7 +57,9 @@ describe('GET /api/v1/clients', () => {
 
   it('rejects unauthenticated requests', async () => {
     ({ app } = await createApp('none'));
-    await request(app.getHttpServer()).get('/api/v1/clients').expect(403);
+    // 401, matching the production JwtGuard (the old fake returned `false`,
+    // which Nest surfaces as 403 — not what the real pipeline does).
+    await request(app.getHttpServer()).get('/api/v1/clients').expect(401);
   });
 
   it('returns 403 for an employee', async () => {

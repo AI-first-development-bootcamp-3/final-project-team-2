@@ -1,16 +1,13 @@
-import { Controller, Get, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Req } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { MyAssignment } from '@abra/contracts';
 import type { AuthenticatedUser } from '../../auth/jwt.guard';
-import { Roles } from '../../common/decorators/roles.decorator';
-import { JwtGuard } from '../../common/guards/jwt.guard';
-import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../auth/auth.decorators';
 import { PrismaService } from '../../prisma/prisma.service';
 
 @ApiTags('me')
 @ApiBearerAuth()
 @Controller('me')
-@UseGuards(JwtGuard, RolesGuard)
 @Roles('employee')
 export class MeController {
   constructor(private readonly prisma: PrismaService) {}

@@ -25,11 +25,11 @@
 ## 4. Employee App Reporting Flow Switch (`apps/mobile`)
 
 - [x] 4.1 Update `MyAssignment` model usage in employee app to read `reportType`.
-- [x] 4.2 Add conditional rendering logic switching between manual total-hours reporting (`TOTAL_HOURS`) and punch-clock timer (`CLOCK_IN_OUT`).
-- [x] 4.3 Add unit tests in `apps/mobile` asserting that selected task's project `reportType` correctly renders the matching UI flow.
+- [ ] 4.2 Add conditional rendering logic switching between manual total-hours reporting (`TOTAL_HOURS`) and punch-clock timer (`CLOCK_IN_OUT`). _Deferred to the `employee-report-flow-switch` change — no flow switch exists in `apps/mobile` (review finding on PR #43)._
+- [ ] 4.3 Add unit tests in `apps/mobile` asserting that selected task's project `reportType` correctly renders the matching UI flow. _Deferred to `employee-report-flow-switch` (see 4.2)._
 
 ## 5. Verification & E2E
 
 - [x] 5.1 Run full workspace typechecks and linters (`pnpm lint && pnpm typecheck`).
 - [x] 5.2 Run workspace coverage tests (`pnpm test:coverage`) ensuring all projects exceed 70% threshold.
-- [x] 5.3 Run Playwright E2E verification specs for project report type changes reflected in employee app flow.
+- [ ] 5.3 Run Playwright E2E verification specs for project report type changes reflected in employee app flow. _Deferred to `employee-report-flow-switch` — depends on the unbuilt flow switch (4.2)._
