@@ -10,12 +10,12 @@
 
 ## 2. Time-entry contracts (KAN-76)
 
-- [ ] 2.1 Add `packages/contracts/src/time-entries/create.ts`: `CreateTimeEntryBodySchema` covering `taskId`, `date`, `startAt`, `endAt`, `location`, optional `description`, carrying `VAL-30` / `VAL-31` / `VAL-35` / `VAL-36` / `VAL-38` as issue messages in the `CreateTaskBodySchema` style.
-- [ ] 2.2 Enforce VAL-31 (end strictly after start, midnight crossing allowed) and VAL-38 (`date` equals the local start day) as cross-field refinements, reusing the helpers from task 1.1.
-- [ ] 2.3 Add `packages/contracts/src/time-entries/update.ts` (`UpdateTimeEntryBodySchema`, all fields optional, same rules when present) and `list.ts` (single-date and date-range query schemas, `TimeEntryListItemSchema` with denormalised task, project, and client names per D10).
-- [ ] 2.4 Extend the `ValCode` union and `VAL_MESSAGES` in `index.ts` with Hebrew messages for `VAL-30` through `VAL-38` (D9).
-- [ ] 2.5 Export the time-entry schemas and types from `packages/contracts/src/index.ts`.
-- [ ] 2.6 Unit-test each rule's code and each accepted edge case: night shift, one-minute entry, end equal to start rejected, `date` disagreeing with `startAt` rejected.
+- [x] 2.1 Add `packages/contracts/src/time-entries/create.ts`: `CreateTimeEntryBodySchema` covering `taskId`, `date`, `startAt`, `endAt`, `location`, optional `description`, carrying `VAL-30` / `VAL-31` / `VAL-35` / `VAL-36` / `VAL-38` as issue messages in the `CreateTaskBodySchema` style.
+- [x] 2.2 Enforce VAL-31 (end strictly after start, midnight crossing allowed) and VAL-38 (`date` equals the local start day) as cross-field refinements, reusing the helpers from task 1.1.
+- [x] 2.3 Add `packages/contracts/src/time-entries/update.ts` (`UpdateTimeEntryBodySchema`, all fields optional, same rules when present) and `list.ts` (single-date and date-range query schemas, `TimeEntryListItemSchema` with denormalised task, project, and client names per D10).
+- [x] 2.4 Extend the `ValCode` union and `VAL_MESSAGES` in `index.ts` with Hebrew messages for `VAL-30` through `VAL-38` (D9).
+- [x] 2.5 Export the time-entry schemas and types from `packages/contracts/src/index.ts`.
+- [x] 2.6 Unit-test each rule's code and each accepted edge case: night shift, one-minute entry, end equal to start rejected, `date` disagreeing with `startAt` rejected.
 
 ## 3. Enforcement seams (KAN-77)
 
