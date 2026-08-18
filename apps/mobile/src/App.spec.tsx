@@ -21,7 +21,15 @@ describe('App Routing & Guards', () => {
   });
 
   it('renders dashboard placeholder for authenticated visitor on /', () => {
-    setAuthSession({ email: 'user@example.com', token: 'valid-token' });
+    setAuthSession({
+      accessToken: 'valid-token',
+      user: {
+        id: '7d9d2c8e-8f9a-4b6e-9d3e-2f1a5b8c9d0e',
+        email: 'user@example.com',
+        fullName: 'Test User',
+        role: 'employee',
+      },
+    });
 
     render(
       <MemoryRouter initialEntries={['/']}>

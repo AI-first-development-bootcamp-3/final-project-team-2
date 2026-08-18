@@ -1,19 +1,19 @@
-const ACCESS_TOKEN_KEY = 'abra.admin.accessToken';
+import { clearAuthSession, getAuthSession } from '../auth';
+import { API_URL, refreshSession } from '../api';
 
+// Single session source of truth: the in-memory KAN-70 auth session. This
+// client reads it, refreshes it once on 401, and clears it when the refresh
+// cookie is dead too.
 export function getAccessToken(): string | null {
-  return window.localStorage.getItem(ACCESS_TOKEN_KEY);
-}
-
-export function setAccessToken(token: string): void {
-  window.localStorage.setItem(ACCESS_TOKEN_KEY, token);
+  return getAuthSession()?.accessToken ?? null;
 }
 
 export function clearAccessToken(): void {
-  window.localStorage.removeItem(ACCESS_TOKEN_KEY);
+  clearAuthSession();
 }
 
 export function redirectToSignIn(): void {
-  window.location.assign('/admin/login');
+  window.location.assign('/login');
 }
 
 export class ApiClientError extends Error {
@@ -27,21 +27,29 @@ export class ApiClientError extends Error {
 }
 
 export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const headers = new Headers(init.headers);
-  const token = getAccessToken();
-  if (token) {
-    headers.set('Authorization', `Bearer ${token}`);
-  }
+  const doFetch = (token: string | null) => {
+    const headers = new Headers(init.headers);
+    if (token) {
+      headers.set('Authorization', `Bearer ${token}`);
+    }
+    return fetch(`${API_URL}${path}`, { ...init, credentials: 'include', headers });
+  };
 
-  const response = await fetch(`${import.meta.env.VITE_API_URL}${path}`, {
-    ...init,
-    headers,
-  });
+  let response = await doFetch(getAccessToken());
 
+  // 401: the ~15-minute access token likely expired. Refresh once off the
+  // httpOnly cookie and retry; a second 401 (or failed refresh) means the
+  // session is genuinely dead — clear it and hand the user to /login.
   if (response.status === 401) {
-    clearAccessToken();
-    redirectToSignIn();
-    throw new ApiClientError(401, undefined);
+    const refreshed = await refreshSession();
+    if (refreshed) {
+      response = await doFetch(refreshed.accessToken);
+    }
+    if (response.status === 401) {
+      clearAccessToken();
+      redirectToSignIn();
+      throw new ApiClientError(401, undefined);
+    }
   }
 
   if (!response.ok) {
