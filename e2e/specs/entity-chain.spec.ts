@@ -5,45 +5,39 @@ test.describe('Entity catalog chain E2E', () => {
     request,
   }) => {
     const timestamp = Date.now();
-    const adminEmail = `admin_e2e_${timestamp}@example.com`;
-    const employeeEmail = `employee_e2e_${timestamp}@example.com`;
-    const password = 'Password123!';
+    const adminEmail = 'admin@abra.co';
+    const adminPassword = 'Admin123!';
+    const employeeEmail = `employee_e2e_${timestamp}@abra.co`;
+    const employeePassword = 'Employee123!';
 
-    const adminSignup = await request.post('/api/v1/auth/signup', {
-      data: {
-        firstName: 'E2E',
-        lastName: 'Admin',
-        email: adminEmail,
-        password,
-        role: 'admin',
-      },
-    });
-    expect(adminSignup.ok()).toBe(true);
-
+    // 1. Admin login
     const adminLogin = await request.post('/api/v1/auth/login', {
-      data: { email: adminEmail, password },
+      data: { email: adminEmail, password: adminPassword },
     });
     expect(adminLogin.ok()).toBe(true);
     const adminToken = (await adminLogin.json()).data.accessToken;
 
-    const employeeSignup = await request.post('/api/v1/auth/signup', {
+    // 2. Admin creates employee
+    const createEmpRes = await request.post('/api/v1/users', {
+      headers: { Authorization: `Bearer ${adminToken}` },
       data: {
-        firstName: 'E2E',
-        lastName: 'Employee',
+        fullName: `E2E Employee ${timestamp}`,
         email: employeeEmail,
-        password,
+        password: employeePassword,
         role: 'employee',
       },
     });
-    expect(employeeSignup.ok()).toBe(true);
-    const employeeUser = (await employeeSignup.json()).data.user;
+    expect(createEmpRes.status()).toBe(201);
+    const employeeUser = (await createEmpRes.json()).data;
 
+    // 3. Employee login
     const employeeLogin = await request.post('/api/v1/auth/login', {
-      data: { email: employeeEmail, password },
+      data: { email: employeeEmail, password: employeePassword },
     });
     expect(employeeLogin.ok()).toBe(true);
     const employeeToken = (await employeeLogin.json()).data.accessToken;
 
+    // 4. Admin creates client
     const clientRes = await request.post('/api/v1/clients', {
       headers: { Authorization: `Bearer ${adminToken}` },
       data: {
@@ -54,6 +48,7 @@ test.describe('Entity catalog chain E2E', () => {
     expect(clientRes.status()).toBe(201);
     const client = (await clientRes.json()).data;
 
+    // 5. Admin creates project
     const projectRes = await request.post('/api/v1/projects', {
       headers: { Authorization: `Bearer ${adminToken}` },
       data: {
@@ -64,6 +59,7 @@ test.describe('Entity catalog chain E2E', () => {
     expect(projectRes.status()).toBe(201);
     const project = (await projectRes.json()).data;
 
+    // 6. Admin creates task
     const taskRes = await request.post('/api/v1/tasks', {
       headers: { Authorization: `Bearer ${adminToken}` },
       data: {
@@ -75,6 +71,7 @@ test.describe('Entity catalog chain E2E', () => {
     expect(taskRes.status()).toBe(201);
     const task = (await taskRes.json()).data;
 
+    // 7. Admin creates assignment
     const assignmentRes = await request.post('/api/v1/assignments', {
       headers: { Authorization: `Bearer ${adminToken}` },
       data: {
@@ -84,6 +81,7 @@ test.describe('Entity catalog chain E2E', () => {
     });
     expect(assignmentRes.status()).toBe(201);
 
+    // 8. Employee fetches /me/assignments
     const myAssignmentsRes = await request.get('/api/v1/me/assignments', {
       headers: { Authorization: `Bearer ${employeeToken}` },
     });
