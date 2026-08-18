@@ -1,16 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { apiFetch, ApiClientError } from './client';
 import { clearAuthSession, getAuthSession, setAuthSession } from '../auth';
+import { ADMIN_USER } from '../../test/fixtures';
 
-const ADMIN_SESSION = {
-  accessToken: 'tok-1',
-  user: {
-    id: '7d9d2c8e-8f9a-4b6e-9d3e-2f1a5b8c9d0e',
-    email: 'admin@abra.co',
-    fullName: 'Admin User',
-    role: 'admin' as const,
-  },
-};
+const ADMIN_SESSION = { accessToken: 'tok-1', user: ADMIN_USER };
 
 describe('apiFetch', () => {
   const assign = vi.fn();
