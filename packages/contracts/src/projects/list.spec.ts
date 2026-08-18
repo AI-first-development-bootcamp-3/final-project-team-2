@@ -39,6 +39,10 @@ describe('ProjectsListQuerySchema', () => {
     expect(ProjectsListQuerySchema.parse({ includeDeleted: 'true' }).includeDeleted).toBe(true);
     expect(ProjectsListQuerySchema.parse({ includeDeleted: 'false' }).includeDeleted).toBe(false);
   });
+
+  it('accepts sort=clientName', () => {
+    expect(ProjectsListQuerySchema.parse({ sort: 'clientName' }).sort).toBe('clientName');
+  });
 });
 
 describe('ProjectListItemSchema', () => {
@@ -49,8 +53,20 @@ describe('ProjectListItemSchema', () => {
       clientId: '550e8400-e29b-41d4-a716-446655440000',
       clientName: 'Acme Corp',
       isActive: true,
+      isDeleted: false,
     };
     expect(ProjectListItemSchema.parse(item)).toEqual(item);
+  });
+
+  it('requires isDeleted', () => {
+    const result = ProjectListItemSchema.safeParse({
+      id: '550e8400-e29b-41d4-a716-446655440001',
+      name: 'Mobile App Redesign',
+      clientId: '550e8400-e29b-41d4-a716-446655440000',
+      clientName: 'Acme Corp',
+      isActive: true,
+    });
+    expect(result.success).toBe(false);
   });
 });
 
@@ -64,6 +80,7 @@ describe('ProjectsListSuccessSchema', () => {
           clientId: '550e8400-e29b-41d4-a716-446655440000',
           clientName: 'Acme Corp',
           isActive: true,
+          isDeleted: false,
         },
       ],
       meta: { page: 1, limit: 20, total: 1 },

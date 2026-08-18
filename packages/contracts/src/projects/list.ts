@@ -15,7 +15,7 @@ const includeDeletedQuery = z.preprocess((value) => {
   return value;
 }, z.boolean());
 
-export const ProjectsListSortSchema = z.enum(['name', 'isActive']);
+export const ProjectsListSortSchema = z.enum(['name', 'clientName', 'isActive']);
 export const ProjectsListOrderSchema = z.enum(['asc', 'desc']);
 
 export const ProjectsListQuerySchema = z.object({
@@ -42,6 +42,7 @@ export const ProjectListItemSchema = z.object({
   clientId: z.string().uuid(),
   clientName: z.string(),
   isActive: z.boolean(),
+  isDeleted: z.boolean(),
 });
 
 export const ProjectsListSuccessSchema = listSuccessSchema(ProjectListItemSchema);
