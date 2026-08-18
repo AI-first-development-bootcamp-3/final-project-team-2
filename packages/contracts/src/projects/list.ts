@@ -44,7 +44,9 @@ export const ProjectListItemSchema = z.object({
   clientName: z.string(),
   isActive: z.boolean(),
   isDeleted: z.boolean(),
-  reportType: ReportType.default('TOTAL_HOURS'),
+  // Required on purpose: the DB column is NOT NULL with a default, so a
+  // missing field is a contract violation — defaulting here would mask it.
+  reportType: ReportType,
 });
 
 export const ProjectsListSuccessSchema = listSuccessSchema(ProjectListItemSchema);

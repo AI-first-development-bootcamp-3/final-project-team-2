@@ -15,6 +15,12 @@ describe('MyAssignmentSchema', () => {
   it('accepts a valid assignment', () => {
     expect(MyAssignmentSchema.parse(validAssignment)).toEqual(validAssignment);
   });
+
+  it('requires reportType (missing field is a contract violation, not a default)', () => {
+    const withoutReportType: Record<string, unknown> = { ...validAssignment };
+    delete withoutReportType.reportType;
+    expect(MyAssignmentSchema.safeParse(withoutReportType).success).toBe(false);
+  });
 });
 
 describe('MyAssignmentsResponseSchema', () => {

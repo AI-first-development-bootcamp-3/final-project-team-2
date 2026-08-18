@@ -59,6 +59,18 @@ describe('ProjectListItemSchema', () => {
     expect(ProjectListItemSchema.parse(item)).toEqual(item);
   });
 
+  it('requires reportType (missing field is a contract violation, not a default)', () => {
+    const result = ProjectListItemSchema.safeParse({
+      id: '550e8400-e29b-41d4-a716-446655440001',
+      name: 'Mobile App Redesign',
+      clientId: '550e8400-e29b-41d4-a716-446655440000',
+      clientName: 'Acme Corp',
+      isActive: true,
+      isDeleted: false,
+    });
+    expect(result.success).toBe(false);
+  });
+
   it('requires isDeleted', () => {
     const result = ProjectListItemSchema.safeParse({
       id: '550e8400-e29b-41d4-a716-446655440001',
