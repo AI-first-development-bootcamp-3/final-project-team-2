@@ -52,8 +52,8 @@ jobs:
           --health-retries=5
     env:
       DATABASE_URL: postgresql://test:test@localhost:5432/abra_test
-      JWT_SECRET: ${{ secrets.JWT_SECRET || 'e2e-only-access-secret-key-32chars-long!' }}
-      JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET || 'e2e-only-refresh-secret-key-32chars-long!' }}
+      JWT_SECRET: e2e-only-access-secret-key-32chars-long!
+      JWT_REFRESH_SECRET: e2e-only-refresh-secret-key-32chars-long!
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
