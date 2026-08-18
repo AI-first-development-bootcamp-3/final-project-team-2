@@ -7,6 +7,10 @@ import { ApiClientError } from '@/lib/api/client';
 
 const apiFetch = vi.fn();
 
+vi.mock('@/lib/api', () => ({
+  logout: vi.fn().mockResolvedValue(undefined),
+}));
+
 vi.mock('@/lib/api/client', async () => {
   const actual = await vi.importActual<typeof import('@/lib/api/client')>('@/lib/api/client');
   return {

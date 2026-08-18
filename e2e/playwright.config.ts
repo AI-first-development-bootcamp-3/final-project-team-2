@@ -3,9 +3,11 @@ import { defineConfig } from '@playwright/test';
 const isCI = !!process.env.CI;
 
 const MOBILE_PORT = +(process.env.MOBILE_PORT || 5173);
+const ADMIN_PORT = +(process.env.ADMIN_PORT || 5174);
 const API_PORT = +(process.env.API_PORT || 3000);
 
 export const API_BASE_URL = `http://localhost:${API_PORT}/api/v1`;
+export const ADMIN_BASE_URL = `http://localhost:${ADMIN_PORT}`;
 
 export default defineConfig({
   testDir: './specs',
@@ -31,6 +33,17 @@ export default defineConfig({
     {
       command: 'pnpm --filter @abra/contracts build && pnpm --filter @abra/mobile dev',
       port: MOBILE_PORT,
+      reuseExistingServer: !isCI,
+      cwd: '..',
+      env: {
+        ...process.env,
+        VITE_API_URL: process.env.VITE_API_URL || API_BASE_URL,
+      },
+    },
+    {
+      command: 'pnpm --filter @abra/admin dev',
+      port: ADMIN_PORT,
+      timeout: 120_000,
       reuseExistingServer: !isCI,
       cwd: '..',
       env: {

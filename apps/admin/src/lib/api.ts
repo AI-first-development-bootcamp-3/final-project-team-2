@@ -1,5 +1,5 @@
 import { LoginResponse, RefreshResponse, type LoginFormData } from '@abra/contracts';
-import { getAuthSession, setAuthSession, type AuthSession } from './auth';
+import { clearAuthSession, getAuthSession, setAuthSession, type AuthSession } from './auth';
 
 // `||` (not `??`) so a set-but-empty VITE_API_URL also falls back — same
 // pitfall server/api/src/env.ts guards with emptyToUndefined.
@@ -74,4 +74,22 @@ export function refreshSession(): Promise<AuthSession | null> {
 export async function bootstrapSession(): Promise<void> {
   if (getAuthSession()) return;
   await refreshSession();
+}
+
+/**
+ * Revokes refresh tokens server-side and drops the in-memory session.
+ * The cookie is cleared even when the request fails so a dead session
+ * cannot bounce the visitor back in via bootstrap.
+ */
+export async function logout(): Promise<void> {
+  const token = getAuthSession()?.accessToken;
+  try {
+    await fetch(`${API_URL}/auth/logout`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+  } finally {
+    clearAuthSession();
+  }
 }
