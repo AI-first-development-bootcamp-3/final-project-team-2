@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { UserRole } from './enums.js';
 
 export * from './enums.js';
 
@@ -53,6 +54,31 @@ export const LoginSchema = z.object({
 });
 
 export type LoginFormData = z.infer<typeof LoginSchema>;
+
+export const AuthUser = z.object({
+  id: z.string().uuid(),
+  email: z.string().email(),
+  fullName: z.string().min(1),
+  role: UserRole,
+});
+
+export type AuthUser = z.infer<typeof AuthUser>;
+
+export const LoginResponse = z.object({
+  accessToken: z.string().min(1),
+  user: AuthUser,
+});
+
+export type LoginResponse = z.infer<typeof LoginResponse>;
+
+export const RefreshResponse = z.object({
+  accessToken: z.string().min(1),
+  // The refresh already loads the full user row server-side; returning the
+  // summary lets clients bootstrap a session from the cookie alone.
+  user: AuthUser,
+});
+
+export type RefreshResponse = z.infer<typeof RefreshResponse>;
 
 export type ValCode =
   | 'VAL-01'

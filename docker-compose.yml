@@ -29,6 +29,10 @@ services:
       PORT: 3000
       DATABASE_URL: postgresql://${POSTGRES_USER:-abra}:${POSTGRES_PASSWORD:-abra_dev_password}@postgres:5432/${POSTGRES_DB:-timesheet}
       CORS_ORIGINS: http://localhost:${MOBILE_PORT:-5173},http://localhost:${ADMIN_PORT:-5174}
+      # No default on purpose — the API's env validation fails boot with a
+      # message naming the variable; see .env.example for how to generate.
+      JWT_SECRET: ${JWT_SECRET:-}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-}
     ports:
       - '${API_PORT:-3000}:3000'
     depends_on:

@@ -1,6 +1,7 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import App from './App';
+import { clearAuthSession, setAuthSession } from './lib/auth';
 
 vi.mock('@/lib/api/client', async () => {
   const actual = await vi.importActual<typeof import('@/lib/api/client')>('@/lib/api/client');
@@ -11,15 +12,27 @@ vi.mock('@/lib/api/client', async () => {
 });
 
 describe('App', () => {
-  it('renders the admin console shell when authenticated', async () => {
-    window.localStorage.setItem('abra.admin.accessToken', 'mock-token');
-    render(<App />);
-    expect(await screen.findByText('Abra Timesheet - Admin Console')).toBeInTheDocument();
+  beforeEach(() => {
+    clearAuthSession();
   });
 
-  it('sends visitors without a session to sign-in', () => {
-    window.localStorage.clear();
+  it('lands an unauthenticated visitor on the login screen', async () => {
     render(<App />);
-    expect(screen.getByRole('heading', { name: 'התחברות' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /ברוכים הבאים למערכת/ })).toBeInTheDocument();
+  });
+
+  it('renders the admin console shell when authenticated', async () => {
+    setAuthSession({
+      accessToken: 'mock-token',
+      user: {
+        id: '1',
+        email: 'admin@example.com',
+        role: 'admin',
+        firstName: 'Admin',
+        lastName: 'User',
+      },
+    });
+    render(<App />);
+    expect(await screen.findByText('Abra Timesheet - Admin Console')).toBeInTheDocument();
   });
 });
