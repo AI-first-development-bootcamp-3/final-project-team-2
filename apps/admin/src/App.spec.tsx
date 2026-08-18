@@ -28,8 +28,7 @@ describe('App', () => {
         id: '1',
         email: 'admin@example.com',
         role: 'admin',
-        firstName: 'Admin',
-        lastName: 'User',
+        fullName: 'Admin User',
       },
     });
     render(<App />);

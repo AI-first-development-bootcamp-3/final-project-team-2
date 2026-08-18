@@ -23,13 +23,6 @@ const acme = {
   isActive: true,
 };
 
-const inactiveClient = {
-  id: '550e8400-e29b-41d4-a716-446655440011',
-  name: 'Old Client',
-  contactInfo: null,
-  isActive: false,
-};
-
 function renderPage() {
   return render(
     <MemoryRouter initialEntries={['/admin/clients']}>

@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type {
   AssignmentListItem,
-  AssignmentsListQuery,
   AssignmentsListSuccess,
   TaskListItem,
   TasksListSuccess,
