@@ -30,9 +30,16 @@ export default defineConfig({
   ],
 
   webServer: [
+    // The three servers boot in parallel. In CI the workflow already builds
+    // @abra/contracts (and generates the Prisma client) in a job step, so the
+    // per-server contracts builds are skipped there — they were duplicate
+    // work AND a flake source (concurrent tsc runs racing on the same dist/).
     {
-      command: 'pnpm --filter @abra/contracts build && pnpm --filter @abra/mobile dev',
+      command: isCI
+        ? 'pnpm --filter @abra/mobile dev'
+        : 'pnpm --filter @abra/contracts build && pnpm --filter @abra/mobile dev',
       port: MOBILE_PORT,
+      timeout: 120_000,
       reuseExistingServer: !isCI,
       cwd: '..',
       env: {
@@ -53,7 +60,7 @@ export default defineConfig({
     },
     {
       command: isCI
-        ? 'pnpm --filter @abra/contracts build && pnpm --filter @abra/api build && pnpm --filter @abra/api start'
+        ? 'pnpm --filter @abra/api build && pnpm --filter @abra/api start'
         : 'pnpm --filter @abra/contracts build && pnpm --filter @abra/api dev',
       port: API_PORT,
       timeout: 120_000,
