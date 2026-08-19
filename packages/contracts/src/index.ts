@@ -101,6 +101,7 @@ export type ValCode =
   | 'VAL-31'
   | 'VAL-32'
   | 'VAL-33'
+  | 'VAL-33A'
   | 'VAL-34'
   | 'VAL-35'
   | 'VAL-36'
@@ -132,6 +133,11 @@ export const VAL_MESSAGES: Record<ValCode, string> = {
   'VAL-31': 'שעת הסיום חייבת להיות מאוחרת משעת ההתחלה',
   'VAL-32': 'קיים כבר דיווח שעות חופף בטווח זה',
   'VAL-33': 'אינך משויך למשימה שנבחרה',
+  // The employee holds the assignment, but the task itself is no longer open
+  // for manual reporting — closed, removed, under an inactive project or
+  // client, or on a punch-clock project. VAL-33's message would blame the
+  // wrong thing.
+  'VAL-33A': 'המשימה שנבחרה אינה זמינה לדיווח',
   'VAL-34': 'החודש נעול ולא ניתן לעדכן דיווחי שעות',
   'VAL-35': 'יש לבחור משימה',
   'VAL-36': 'יש לבחור מיקום עבודה',
@@ -240,6 +246,7 @@ export type {
 export {
   APP_TIME_ZONE,
   LOCAL_DATE_PATTERN,
+  isCalendarDate,
   toLocalDate,
   isSameLocalDate,
   toYearMonth,
@@ -270,6 +277,7 @@ export {
 export type { TimeInterval } from './time-entries/overlap.js';
 
 export {
+  MAX_TIME_ENTRY_RANGE_DAYS,
   TimeEntriesListQuerySchema,
   TimeEntryListItemSchema,
   TimeEntriesListSuccessSchema,

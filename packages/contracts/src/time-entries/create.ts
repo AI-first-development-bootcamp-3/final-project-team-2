@@ -22,7 +22,11 @@ export const CreateTimeEntryBodySchema = z
     startAt: TimeEntryStartAtSchema,
     endAt: TimeEntryEndAtSchema,
     location: TimeEntryLocationSchema,
-    description: z.string().trim().optional(),
+    // Null and omitted both mean "no description". The read shape returns
+    // `null`, and the update body accepts it, so a client re-posting an entry
+    // it read back — duplicate-yesterday, offline sync — must not be rejected
+    // for echoing the shape we gave it.
+    description: z.string().trim().nullable().optional(),
   })
   .superRefine(refineTimeEntryTimes);
 

@@ -39,6 +39,20 @@ describe('CreateTimeEntryBodySchema — acceptance', () => {
     expect(result.description).toBe('notes');
   });
 
+  it('accepts a null description, the shape the read path hands back', () => {
+    // A client re-posting an entry it read from GET — duplicate-yesterday,
+    // offline sync — echoes `description: null`. Rejecting that would be a
+    // raw Zod message on a field the Hebrew UI has no rule to explain.
+    const result = CreateTimeEntryBodySchema.safeParse({ ...validBody, description: null });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects a well-formed date that names no real day', () => {
+    expect(CreateTimeEntryBodySchema.safeParse({ ...validBody, date: '2026-02-30' }).success).toBe(
+      false,
+    );
+  });
+
   it('accepts each permitted work location', () => {
     for (const location of ['office', 'client_site', 'home'] as const) {
       expect(CreateTimeEntryBodySchema.safeParse({ ...validBody, location }).success).toBe(true);

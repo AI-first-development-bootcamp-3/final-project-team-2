@@ -1,8 +1,36 @@
 import { z } from 'zod';
-import { LOCAL_DATE_PATTERN } from '../day-status/local-date.js';
+import { LOCAL_DATE_PATTERN, isCalendarDate } from '../day-status/local-date.js';
 import { TimeEntryLocationSchema } from './fields.js';
 
-const localDateQuery = z.string().regex(LOCAL_DATE_PATTERN, { message: 'VAL-DATE-RANGE' });
+/**
+ * Widest range a single read may ask for.
+ *
+ * The consumers are the daily screen (one day) and the monthly calendar (one
+ * month), so a year plus a leap day is generous. The cap is what keeps the
+ * unpaged response bounded: without it one schema-valid request could ask for
+ * every entry an employee ever recorded, each carrying a three-level
+ * task→project→client join.
+ */
+export const MAX_TIME_ENTRY_RANGE_DAYS = 366;
+
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+/**
+ * Shape *and* calendar validity — a regex alone lets `2026-13-01` through to
+ * `new Date()`, which answers with an Invalid Date, and `2026-02-30`, which
+ * quietly becomes March 2.
+ */
+const localDateQuery = z
+  .string()
+  .regex(LOCAL_DATE_PATTERN, { message: 'VAL-DATE-RANGE' })
+  .refine(isCalendarDate, { message: 'VAL-DATE-RANGE' });
+
+/** Inclusive day count between two dates already known to be real. */
+function rangeLengthInDays(from: string, to: string): number {
+  const start = new Date(`${from}T00:00:00.000Z`).getTime();
+  const end = new Date(`${to}T00:00:00.000Z`).getTime();
+  return (end - start) / MS_PER_DAY + 1;
+}
 
 /**
  * Reads take either a single day or an inclusive range.
@@ -57,6 +85,17 @@ export const TimeEntriesListQuerySchema = z
           path: ['to'],
           message: 'VAL-DATE-RANGE',
         });
+        return;
+      }
+
+      // The response is unpaged by design (see below), so the width of the
+      // range is the only thing bounding its size.
+      if (rangeLengthInDays(value.from, value.to) > MAX_TIME_ENTRY_RANGE_DAYS) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['to'],
+          message: 'VAL-DATE-RANGE',
+        });
       }
     }
   });
@@ -93,7 +132,9 @@ export const TimeEntryListItemSchema = z.object({
 /**
  * Entries are returned unpaged: a day holds a handful and a month a few dozen,
  * and both the daily screen and the monthly calendar need the whole period at
- * once to total it.
+ * once to total it. Paging is the wrong tool here — a half-delivered period
+ * would total wrongly and say nothing about it — so the size is bounded at the
+ * query instead, by `MAX_TIME_ENTRY_RANGE_DAYS`.
  */
 export const TimeEntriesListSuccessSchema = z.object({
   data: z.array(TimeEntryListItemSchema),

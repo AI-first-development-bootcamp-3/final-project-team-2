@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { LOCAL_DATE_PATTERN, toLocalDate } from '../day-status/local-date.js';
+import { LOCAL_DATE_PATTERN, isCalendarDate, toLocalDate } from '../day-status/local-date.js';
 
 /**
  * Field schemas and cross-field rules shared by the create body, the update
@@ -17,10 +17,19 @@ export const TimeEntryLocationSchema = z.enum(['office', 'client_site', 'home'],
   errorMap: () => ({ message: 'VAL-36' }),
 });
 
-/** `YYYY-MM-DD`, the local day the entry belongs to (VAL-38). */
+/**
+ * `YYYY-MM-DD`, the local day the entry belongs to (VAL-38).
+ *
+ * Calendar validity is checked alongside the shape so `2026-02-30` is refused
+ * here rather than rolling over to March 2 downstream. The VAL-38 cross-check
+ * already caught this on the write paths, but only as a side effect of the day
+ * never matching `startAt`; `toYearMonth` and the date column both assume a
+ * real date, so the guarantee belongs on the field itself.
+ */
 export const TimeEntryDateSchema = z
   .string({ required_error: 'VAL-38', invalid_type_error: 'VAL-38' })
-  .regex(LOCAL_DATE_PATTERN, { message: 'VAL-38' });
+  .regex(LOCAL_DATE_PATTERN, { message: 'VAL-38' })
+  .refine(isCalendarDate, { message: 'VAL-38' });
 
 /** Task reference (VAL-35). Required for any completed entry. */
 export const TimeEntryTaskIdSchema = z

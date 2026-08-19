@@ -51,6 +51,12 @@ function createScope(assigned = true) {
     assertUserAssignedToTask: vi.fn().mockImplementation(async () => {
       if (!assigned) throw new ForbiddenException({ details: [{ rule: 'VAL-33' }] });
     }),
+    // Create takes the stricter path: assignment plus the catalogue state the
+    // picker filters on. Refusals for an unavailable-but-assigned task are
+    // covered against the real service in assignment-scope.service.spec.ts.
+    assertTaskAvailableForReporting: vi.fn().mockImplementation(async () => {
+      if (!assigned) throw new ForbiddenException({ details: [{ rule: 'VAL-33' }] });
+    }),
   };
 }
 
@@ -120,7 +126,9 @@ describe('TimeEntriesService.create', () => {
       ForbiddenException,
     );
 
-    expect(scope.assertUserAssignedToTask).toHaveBeenCalledWith(USER_ID, TASK_ID);
+    // Assignment *and* the catalogue state the picker filters on — an
+    // assignment row alone outlives the task it points at.
+    expect(scope.assertTaskAvailableForReporting).toHaveBeenCalledWith(USER_ID, TASK_ID);
     expect(prisma.timeEntry.create).not.toHaveBeenCalled();
   });
 

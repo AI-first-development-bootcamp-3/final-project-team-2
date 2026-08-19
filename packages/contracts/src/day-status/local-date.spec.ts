@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { toLocalDate, isSameLocalDate, toYearMonth, APP_TIME_ZONE } from './local-date.js';
+import {
+  toLocalDate,
+  isSameLocalDate,
+  isCalendarDate,
+  toYearMonth,
+  APP_TIME_ZONE,
+} from './local-date.js';
 
 describe('toLocalDate', () => {
   it('formats an instant as a YYYY-MM-DD Asia/Jerusalem date', () => {
@@ -88,6 +94,45 @@ describe('toYearMonth', () => {
   it('rejects a value that is not a YYYY-MM-DD date', () => {
     expect(() => toYearMonth('2026-8-1')).toThrow(RangeError);
     expect(() => toYearMonth('2026-08-11T00:00:00Z')).toThrow(RangeError);
+  });
+
+  it('rejects a well-formed date that names no real day', () => {
+    expect(() => toYearMonth('2026-13-01')).toThrow(RangeError);
+    expect(() => toYearMonth('2026-02-30')).toThrow(RangeError);
+  });
+});
+
+describe('isCalendarDate', () => {
+  it('accepts real days', () => {
+    expect(isCalendarDate('2026-08-11')).toBe(true);
+    expect(isCalendarDate('2026-01-01')).toBe(true);
+    expect(isCalendarDate('2026-12-31')).toBe(true);
+  });
+
+  it('accepts 29 February only in a leap year', () => {
+    expect(isCalendarDate('2028-02-29')).toBe(true);
+    expect(isCalendarDate('2026-02-29')).toBe(false);
+  });
+
+  it('rejects an out-of-range month or day', () => {
+    // `new Date('2026-13-01')` is an Invalid Date; `new Date('2026-02-30')`
+    // silently becomes March 2. Neither may reach a query.
+    expect(isCalendarDate('2026-13-01')).toBe(false);
+    expect(isCalendarDate('2026-00-10')).toBe(false);
+    expect(isCalendarDate('2026-02-30')).toBe(false);
+    expect(isCalendarDate('2026-04-31')).toBe(false);
+    expect(isCalendarDate('2026-08-00')).toBe(false);
+    expect(isCalendarDate('2026-08-32')).toBe(false);
+  });
+
+  it('rejects anything not shaped YYYY-MM-DD', () => {
+    expect(isCalendarDate('2026-8-1')).toBe(false);
+    expect(isCalendarDate('11/08/2026')).toBe(false);
+    expect(isCalendarDate('')).toBe(false);
+  });
+
+  it('rejects a two-digit year rather than letting Date.UTC read it as 19xx', () => {
+    expect(isCalendarDate('0026-08-11')).toBe(false);
   });
 });
 

@@ -120,7 +120,7 @@ export class TimeEntriesService {
     // Order matters only for which message the employee sees first; both are
     // required before any write reaches the database.
     await this.monthLock.assertMonthNotLocked(year, month);
-    await this.assignmentScope.assertUserAssignedToTask(userId, body.taskId);
+    await this.assignmentScope.assertTaskAvailableForReporting(userId, body.taskId);
     await this.assertNoOverlap(userId, body.startAt, body.endAt);
 
     const row = await this.prisma.timeEntry.create({
@@ -209,7 +209,19 @@ export class TimeEntriesService {
       await this.monthLock.assertMonthNotLocked(to.year, to.month);
     }
 
-    await this.assignmentScope.assertUserAssignedToTask(userId, merged.data.taskId);
+    // Moving the entry onto a *different* task is a new report of hours against
+    // that task, so it faces the full availability check. Keeping the same task
+    // is only a correction, and is held to plain assignment: an entry logged
+    // while the task was open must stay fixable — and deletable — after the
+    // task is closed or its client deactivated, or a typo would be frozen into
+    // the month with no way out (§8.3, the same reason the read path keeps
+    // showing it).
+    if (merged.data.taskId === existing.task_id) {
+      await this.assignmentScope.assertUserAssignedToTask(userId, merged.data.taskId);
+    } else {
+      await this.assignmentScope.assertTaskAvailableForReporting(userId, merged.data.taskId);
+    }
+
     await this.assertNoOverlap(userId, merged.data.startAt, merged.data.endAt, entryId);
 
     const row = await this.prisma.timeEntry.update({

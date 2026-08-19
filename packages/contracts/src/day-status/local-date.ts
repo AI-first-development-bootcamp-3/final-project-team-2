@@ -53,11 +53,37 @@ export function isSameLocalDate(a: Date, b: Date): boolean {
 }
 
 /**
+ * Whether a `YYYY-MM-DD` string names a day that actually exists.
+ *
+ * `LOCAL_DATE_PATTERN` only proves the shape, and `new Date()` is forgiving in
+ * two different, both-wrong ways: `2026-13-01` yields an Invalid Date that
+ * surfaces as a 500 from whatever consumes it, while `2026-02-30` silently
+ * rolls over to March 2 and answers about a day the caller never asked for.
+ * Round-tripping the parts is what separates the two from a real date.
+ */
+export function isCalendarDate(localDate: string): boolean {
+  if (!LOCAL_DATE_PATTERN.test(localDate)) {
+    return false;
+  }
+
+  const [year, month, day] = localDate.split('-').map(Number) as [number, number, number];
+  const instant = new Date(Date.UTC(year, month - 1, day));
+
+  // `Date.UTC` maps years 0–99 onto 1900–1999, so the year has to be compared
+  // back too rather than trusting the month and day alone.
+  return (
+    instant.getUTCFullYear() === year &&
+    instant.getUTCMonth() === month - 1 &&
+    instant.getUTCDate() === day
+  );
+}
+
+/**
  * Splits a `YYYY-MM-DD` local date into the year and 1-based month that
  * identify a MonthLock row (VAL-34).
  */
 export function toYearMonth(localDate: string): { year: number; month: number } {
-  if (!LOCAL_DATE_PATTERN.test(localDate)) {
+  if (!isCalendarDate(localDate)) {
     throw new RangeError(`Expected a YYYY-MM-DD local date, received "${localDate}"`);
   }
 
