@@ -4,9 +4,8 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { AdminSidebar } from './admin-sidebar';
 
-vi.mock('@/lib/api/client', () => ({
-  clearAccessToken: vi.fn(),
-  redirectToSignIn: vi.fn(),
+vi.mock('@/lib/api', () => ({
+  logoutAndRedirect: vi.fn(),
 }));
 
 function renderSidebar(path = '/admin/users') {
@@ -34,11 +33,10 @@ describe('AdminSidebar', () => {
     expect(clientsLink?.className).toContain('bg-white/10');
   });
 
-  it('logout clears session', async () => {
-    const { clearAccessToken, redirectToSignIn } = await import('@/lib/api/client');
+  it('logout calls logoutAndRedirect', async () => {
+    const { logoutAndRedirect } = await import('@/lib/api');
     renderSidebar();
-    await userEvent.click(screen.getByText('התנתקות'));
-    expect(clearAccessToken).toHaveBeenCalled();
-    expect(redirectToSignIn).toHaveBeenCalled();
+    await userEvent.click(screen.getByRole('button', { name: 'התנתקות' }));
+    expect(logoutAndRedirect).toHaveBeenCalled();
   });
 });

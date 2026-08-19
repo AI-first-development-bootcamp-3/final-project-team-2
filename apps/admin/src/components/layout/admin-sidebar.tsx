@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { NavLink } from 'react-router-dom';
-import { clearAccessToken, redirectToSignIn } from '@/lib/api/client';
+import { logoutAndRedirect } from '@/lib/api';
 import { getAuthSession, subscribeToAuthChanges } from '@/lib/auth';
 
 // Figma "Manegment web portal" sidebar (node 1-32935): dark-navy 320px rail on
@@ -83,8 +83,7 @@ export function AdminSidebar() {
   const session = useAuthSession();
 
   function handleLogout() {
-    clearAccessToken();
-    redirectToSignIn();
+    void logoutAndRedirect();
   }
 
   return (

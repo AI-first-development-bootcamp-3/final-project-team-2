@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { ProjectListItemSchema } from './list.js';
 
-// KAN-120: native date inputs submit YYYY-MM-DD; anything else is VAL-30.
-const IsoDateString = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, { message: 'VAL-30' });
+// KAN-120: native date inputs submit YYYY-MM-DD; anything else is VAL-39.
+const IsoDateString = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, { message: 'VAL-39' });
 
 // ISO date strings compare correctly as plain strings.
 function endDateNotBeforeStartDate(
@@ -10,7 +10,7 @@ function endDateNotBeforeStartDate(
   ctx: z.RefinementCtx,
 ): void {
   if (body.startDate && body.endDate && body.endDate < body.startDate) {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['endDate'], message: 'VAL-31' });
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['endDate'], message: 'VAL-40' });
   }
 }
 

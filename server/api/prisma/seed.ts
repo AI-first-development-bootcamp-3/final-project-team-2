@@ -141,6 +141,17 @@ async function main(): Promise<void> {
     },
   });
 
+  // Open task on a project Alice already reports against, but with no
+  // assignment to her — the daily-reporting e2e asserts this label never
+  // appears in the picker (KAN-75 / 9.1).
+  await prisma.task.create({
+    data: {
+      name: 'Unassigned Seed Task',
+      project_id: websiteRedesign.id,
+      status: TaskStatus.open,
+    },
+  });
+
   // ─── Task Assignments ───────────────────────────────
   // Employee 1: UI Design, Frontend Dev, API Integration
   await prisma.taskAssignment.createMany({
@@ -288,7 +299,10 @@ async function main(): Promise<void> {
   });
 
   // ─── Month Locks ──────────────────────────────────────
-  // July 2026 is locked by admin (previous month closed)
+  // July 2026 is locked by admin (previous month closed).
+  // January 2025 is a second lock placed well away from the seeded working
+  // week (2026-08-09..13) and from the current month, so the daily-reporting
+  // e2e can write into it without colliding with other specs (KAN-75 / 9.1).
   const admin = await prisma.user.findFirstOrThrow({ where: { role: UserRole.admin } });
 
   await prisma.monthLock.create({
@@ -301,15 +315,25 @@ async function main(): Promise<void> {
     },
   });
 
+  await prisma.monthLock.create({
+    data: {
+      year: 2025,
+      month: 1,
+      locked_by: admin.id,
+      locked_at: new Date('2025-02-01T09:00:00.000+02:00'),
+      is_locked: true,
+    },
+  });
+
   console.log('Seed complete:');
   console.log(`  Users: 3 (1 admin, 2 employees)`);
   console.log(`  Clients: 2`);
   console.log(`  Projects: 3`);
-  console.log(`  Tasks: 6`);
+  console.log(`  Tasks: 7`);
   console.log(`  Assignments: 6`);
   console.log(`  Time entries: ${emp1Entries.length + emp2Entries.length}`);
   console.log(`  Absences: 1`);
-  console.log(`  Month locks: 1 (July 2026 locked)`);
+  console.log(`  Month locks: 2 (July 2026, January 2025)`);
 }
 
 main()

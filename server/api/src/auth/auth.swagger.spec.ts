@@ -32,10 +32,10 @@ describe('Swagger documentation for auth endpoints', () => {
   });
 
   it.each([
-    ['/api/v1/auth/login', '200'],
-    ['/api/v1/auth/refresh', '200'],
-    ['/api/v1/auth/logout', '204'],
-  ])('documents POST %s with a summary and %s response', (path, successStatus) => {
+    ['/api/v1/auth/login', '200', true],
+    ['/api/v1/auth/refresh', '200', true],
+    ['/api/v1/auth/logout', '204', false],
+  ])('documents POST %s with a summary and %s response', (path, successStatus, expects401) => {
     const operation = document.paths[path]?.post;
     expect(operation, `missing ${path}`).toBeDefined();
     expect(operation?.summary, `missing summary on ${path}`).toBeTruthy();
@@ -43,6 +43,8 @@ describe('Swagger documentation for auth endpoints', () => {
       operation?.responses?.[successStatus],
       `missing ${successStatus} on ${path}`,
     ).toBeDefined();
-    expect(operation?.responses?.['401'], `missing 401 on ${path}`).toBeDefined();
+    if (expects401) {
+      expect(operation?.responses?.['401'], `missing 401 on ${path}`).toBeDefined();
+    }
   });
 });

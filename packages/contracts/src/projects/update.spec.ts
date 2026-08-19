@@ -108,16 +108,16 @@ describe('UpdateProjectBodySchema', () => {
     }
   });
 
-  it('rejects a malformed endDate with VAL-30', () => {
+  it('rejects a malformed endDate with VAL-39', () => {
     const result = UpdateProjectBodySchema.safeParse({ endDate: '30/06/2026' });
     expect(result.success).toBe(false);
     if (!result.success) {
       const issue = result.error.issues.find((i) => i.path.includes('endDate'));
-      expect(issue?.message).toBe('VAL-30');
+      expect(issue?.message).toBe('VAL-39');
     }
   });
 
-  it('rejects endDate before startDate with VAL-31', () => {
+  it('rejects endDate before startDate with VAL-40', () => {
     const result = UpdateProjectBodySchema.safeParse({
       startDate: '2026-06-30',
       endDate: '2026-01-01',
@@ -125,7 +125,7 @@ describe('UpdateProjectBodySchema', () => {
     expect(result.success).toBe(false);
     if (!result.success) {
       const issue = result.error.issues.find((i) => i.path.includes('endDate'));
-      expect(issue?.message).toBe('VAL-31');
+      expect(issue?.message).toBe('VAL-40');
     }
   });
 

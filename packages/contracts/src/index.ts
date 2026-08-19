@@ -1,10 +1,9 @@
 import { z } from 'zod';
 import { UserRole } from './enums.js';
 
+// Re-exports WorkLocation, which now lives in enums.ts so time-entries/fields.ts
+// can derive its VAL-36 schema from it without importing this module circularly.
 export * from './enums.js';
-
-export const WorkLocation = z.enum(['office', 'client_site', 'home']);
-export type WorkLocation = z.infer<typeof WorkLocation>;
 
 export const AbsenceType = z.enum(['vacation', 'sick', 'military', 'other']);
 export type AbsenceType = z.infer<typeof AbsenceType>;
@@ -18,7 +17,18 @@ export type AuditAction = z.infer<typeof AuditAction>;
 export { ListMetaSchema, listSuccessSchema } from './common/list-envelope.js';
 export type { ListMeta } from './common/list-envelope.js';
 
-export { ApiErrorSchema, ApiErrorDetailSchema, zodIssuesToDetails } from './common/api-error.js';
+export type { ValCode } from './common/val-messages.js';
+export { VAL_MESSAGES } from './common/val-messages.js';
+
+export {
+  ApiErrorSchema,
+  ApiErrorDetailSchema,
+  ROOT_DETAIL_FIELD,
+  partitionDetails,
+  valDetail,
+  zodIssuesToDetails,
+  zodIssuesToHebrewDetails,
+} from './common/api-error.js';
 export type { ApiError, ApiErrorDetail } from './common/api-error.js';
 
 export {
@@ -81,51 +91,9 @@ export const RefreshResponse = z.object({
 
 export type RefreshResponse = z.infer<typeof RefreshResponse>;
 
-export type ValCode =
-  | 'VAL-01'
-  | 'VAL-02'
-  | 'VAL-03'
-  | 'VAL-04'
-  | 'VAL-10'
-  | 'VAL-11'
-  | 'VAL-12'
-  | 'VAL-13'
-  | 'VAL-20'
-  | 'VAL-21'
-  | 'VAL-22'
-  | 'VAL-23'
-  | 'VAL-24'
-  | 'VAL-25'
-  | 'VAL-26'
-  | 'VAL-27'
-  | 'VAL-28'
-  | 'VAL-29'
-  | 'VAL-30'
-  | 'VAL-31';
-
-export const VAL_MESSAGES: Record<ValCode, string> = {
-  'VAL-01': 'כתובת האימייל היא שדה חובה',
-  'VAL-02': 'כתובת האימייל שהוזנה אינה תקינה',
-  'VAL-03': 'הסיסמה היא שדה חובה',
-  'VAL-04': 'הסיסמה חייבת להכיל 8 תווים לפחות',
-  'VAL-10': 'שם מלא הוא שדה חובה',
-  'VAL-11': 'כתובת האימייל כבר בשימוש (VAL-11)',
-  'VAL-12': 'יש לבחור תפקיד תקין',
-  'VAL-13': 'הסיסמה הראשונית היא שדה חובה',
-  'VAL-20': 'שם הלקוח הוא שדה חובה',
-  'VAL-21': 'שם הלקוח כבר קיים במערכת',
-  'VAL-22': 'שם הפרויקט הוא שדה חובה',
-  'VAL-23': 'יש לבחור לקוח תקין ופעיל',
-  'VAL-24': 'שם המשימה הוא שדה חובה',
-  'VAL-25': 'יש לבחור פרויקט תקין ופעיל',
-  'VAL-26': 'יש לבחור משתמש ומשימה תקינים',
-  'VAL-27': 'השיוך כבר קיים במערכת',
-  'VAL-28': 'יש לבחור אופן דיווח תקין',
-  'VAL-29': 'יש לבחור מנהל תקין',
-  'VAL-30': 'יש להזין תאריך תקין',
-  'VAL-31': 'תאריך הסיום לא יכול להיות לפני תאריך ההתחלה',
-};
-
+// Rule codes and their Hebrew messages live in common/val-messages.js, so the
+// shared error helpers can build a translated payload without importing this
+// file circularly. Re-exported above.
 // --- Clients ---
 export {
   ClientsListQuerySchema,
@@ -208,3 +176,76 @@ export type { CreateAssignmentBody, AssignmentCreateSuccess } from './assignment
 // --- Me ---
 export { MyAssignmentSchema, MyAssignmentsResponseSchema } from './me/assignments.js';
 export type { MyAssignment, MyAssignmentsResponse } from './me/assignments.js';
+
+// --- Day status ---
+// Computed, never stored (§2.4). Exported from here so the daily quota bar and
+// the monthly calendar share one implementation of the thresholds.
+export {
+  DayStatus,
+  FULL_DAY_MINUTES,
+  computeDayStatus,
+  minutesForDay,
+  isCoveredByAbsence,
+} from './day-status/day-status.js';
+export type {
+  DayStatusEntry,
+  DayStatusAbsence,
+  DayStatusInput,
+  DayStatusResult,
+} from './day-status/day-status.js';
+
+export {
+  APP_TIME_ZONE,
+  LOCAL_DATE_PATTERN,
+  toLocalDate,
+  toLocalDateOrNull,
+  isRealCalendarDate,
+  isSameLocalDate,
+  toYearMonth,
+} from './day-status/local-date.js';
+
+// --- Time entries ---
+export {
+  TimeEntryLocationSchema,
+  TimeEntryDateSchema,
+  TimeEntryTaskIdSchema,
+  TimeEntryStartAtSchema,
+  TimeEntryEndAtSchema,
+  refineTimeEntryTimes,
+} from './time-entries/fields.js';
+export type { TimeEntryTimes } from './time-entries/fields.js';
+
+export { CreateTimeEntryBodySchema } from './time-entries/create.js';
+export type { CreateTimeEntryBody } from './time-entries/create.js';
+
+export {
+  UpdateTimeEntryBodySchema,
+  MergedTimeEntrySchema,
+  CompletedTimeEntrySchema,
+} from './time-entries/update.js';
+export type {
+  UpdateTimeEntryBody,
+  MergedTimeEntry,
+  CompletedTimeEntry,
+} from './time-entries/update.js';
+
+export {
+  intervalsOverlap,
+  findOverlap,
+  OVERLAP_CANDIDATE_WINDOW_DAYS,
+} from './time-entries/overlap.js';
+export type { TimeInterval } from './time-entries/overlap.js';
+
+export {
+  MAX_TIME_ENTRY_RANGE_DAYS,
+  TimeEntriesListQuerySchema,
+  TimeEntryListItemSchema,
+  TimeEntriesListSuccessSchema,
+  TimeEntrySuccessSchema,
+} from './time-entries/list.js';
+export type {
+  TimeEntriesListQuery,
+  TimeEntryListItem,
+  TimeEntriesListSuccess,
+  TimeEntrySuccess,
+} from './time-entries/list.js';

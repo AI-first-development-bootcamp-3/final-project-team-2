@@ -172,6 +172,11 @@ model TimeEntry {
   user User  @relation(fields: [user_id], references: [id])
   task Task? @relation(fields: [task_id], references: [id])
 
+  // VAL-32 is additionally enforced by a Postgres exclusion constraint,
+  // `time_entries_no_overlap`, added in 20260819140000_time_entry_no_overlap.
+  // Prisma has no schema syntax for EXCLUDE, so it lives in raw SQL there and
+  // is deliberately invisible here — see that migration before changing
+  // start_at, end_at, or deleted_at.
   @@map("time_entries")
 }
 

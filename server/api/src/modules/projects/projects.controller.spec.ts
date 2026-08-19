@@ -468,7 +468,7 @@ describe('POST /api/v1/projects', () => {
     );
   });
 
-  it('returns 400 with VAL-31 when endDate is before startDate', async () => {
+  it('returns 400 with VAL-40 when endDate is before startDate', async () => {
     ({ app } = await createApp('admin'));
     const response = await request(app.getHttpServer())
       .post('/api/v1/projects')
@@ -485,8 +485,8 @@ describe('POST /api/v1/projects', () => {
       expect.arrayContaining([
         expect.objectContaining({
           field: 'endDate',
-          rule: 'VAL-31',
-          message: VAL_MESSAGES['VAL-31'],
+          rule: 'VAL-40',
+          message: VAL_MESSAGES['VAL-40'],
         }),
       ]),
     );

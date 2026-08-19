@@ -117,7 +117,7 @@ describe('ProjectCreateForm', () => {
     });
   });
 
-  it('shows Hebrew VAL-31 when the end date is before the start date and does not POST', async () => {
+  it('shows Hebrew VAL-40 when the end date is before the start date and does not POST', async () => {
     const user = userEvent.setup();
     const onCreated = vi.fn();
     renderForm(onCreated);
@@ -129,7 +129,7 @@ describe('ProjectCreateForm', () => {
     fireEvent.change(screen.getByLabelText('תאריך סיום'), { target: { value: '2026-01-01' } });
     await user.click(screen.getByRole('button', { name: 'צור פרויקט' }));
 
-    expect(await screen.findByText(VAL_MESSAGES['VAL-31'])).toBeInTheDocument();
+    expect(await screen.findByText(VAL_MESSAGES['VAL-40'])).toBeInTheDocument();
     expect(apiFetch.mock.calls.some((call) => call[1]?.method === 'POST')).toBe(false);
     expect(onCreated).not.toHaveBeenCalled();
   });

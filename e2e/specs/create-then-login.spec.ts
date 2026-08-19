@@ -18,11 +18,11 @@ test.describe.skip('Create then login', () => {
     await page.goto('/login');
     await expect(page.getByRole('heading', { name: 'ברוכים הבאים!' })).toBeVisible();
     await page.getByLabel('אימייל').fill(email);
-    await page.getByLabel('סיסמה').fill(CREATED_EMPLOYEE_PASSWORD);
+    await page.getByLabel('סיסמה', { exact: true }).fill(CREATED_EMPLOYEE_PASSWORD);
     await page.getByRole('button', { name: 'התחבר' }).click();
 
     await expect(page).not.toHaveURL(/\/login/);
-    await expect(page.getByRole('heading', { name: 'עמוד ראשי - דיווח יומי' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'דיווח שעות' })).toBeVisible();
     await expect(page.getByText(/שינוי סיסמה|החלפת סיסמה|יש לשנות את הסיסמה/)).toHaveCount(0);
   });
 });

@@ -1,5 +1,5 @@
 import React from 'react';
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { AppRoutes } from './App';
@@ -8,6 +8,18 @@ import { clearAuthSession, setAuthSession } from './lib/auth';
 describe('App Routing & Guards', () => {
   beforeEach(() => {
     clearAuthSession();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({ data: [] }),
+      }),
+    );
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   it('redirects unauthenticated visitor from / to /login', () => {
@@ -20,7 +32,7 @@ describe('App Routing & Guards', () => {
     expect(screen.getByRole('heading', { name: 'ברוכים הבאים!' })).toBeInTheDocument();
   });
 
-  it('renders dashboard placeholder for authenticated visitor on /', () => {
+  it('renders the daily report for an authenticated visitor on /', async () => {
     setAuthSession({
       accessToken: 'valid-token',
       user: {
@@ -37,7 +49,7 @@ describe('App Routing & Guards', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByRole('heading', { name: 'עמוד ראשי - דיווח יומי' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'דיווח שעות' })).toBeInTheDocument();
   });
 
   it('redirects unknown path * to /login', () => {
