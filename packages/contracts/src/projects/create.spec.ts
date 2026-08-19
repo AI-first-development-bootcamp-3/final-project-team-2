@@ -11,6 +11,11 @@ const createdItem = {
   isActive: true,
   isDeleted: false,
   reportType: 'TOTAL_HOURS' as const,
+  leadManagerId: null,
+  leadManagerName: null,
+  startDate: null,
+  endDate: null,
+  description: null,
 };
 
 describe('CreateProjectBodySchema', () => {
@@ -54,6 +59,57 @@ describe('CreateProjectBodySchema', () => {
     if (!result.success) {
       expect(result.error.issues[0]?.message).toBe('VAL-23');
     }
+  });
+
+  it('accepts optional leadManagerId, dates, and description', () => {
+    const body = {
+      ...validBody,
+      leadManagerId: '550e8400-e29b-41d4-a716-446655440002',
+      startDate: '2026-01-01',
+      endDate: '2026-06-30',
+      description: 'A project',
+    };
+    expect(CreateProjectBodySchema.parse(body)).toEqual(body);
+  });
+
+  it('rejects a non-uuid leadManagerId with VAL-29', () => {
+    const result = CreateProjectBodySchema.safeParse({ ...validBody, leadManagerId: 'nope' });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const issue = result.error.issues.find((i) => i.path.includes('leadManagerId'));
+      expect(issue?.message).toBe('VAL-29');
+    }
+  });
+
+  it('rejects a malformed startDate with VAL-30', () => {
+    const result = CreateProjectBodySchema.safeParse({ ...validBody, startDate: '01/06/2026' });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const issue = result.error.issues.find((i) => i.path.includes('startDate'));
+      expect(issue?.message).toBe('VAL-30');
+    }
+  });
+
+  it('rejects endDate before startDate with VAL-31', () => {
+    const result = CreateProjectBodySchema.safeParse({
+      ...validBody,
+      startDate: '2026-06-30',
+      endDate: '2026-01-01',
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const issue = result.error.issues.find((i) => i.path.includes('endDate'));
+      expect(issue?.message).toBe('VAL-31');
+    }
+  });
+
+  it('accepts endDate equal to startDate', () => {
+    const result = CreateProjectBodySchema.safeParse({
+      ...validBody,
+      startDate: '2026-01-01',
+      endDate: '2026-01-01',
+    });
+    expect(result.success).toBe(true);
   });
 
   it('rejects invalid UUID clientId with VAL-23', () => {

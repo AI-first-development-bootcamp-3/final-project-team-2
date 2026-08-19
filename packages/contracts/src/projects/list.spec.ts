@@ -55,8 +55,44 @@ describe('ProjectListItemSchema', () => {
       isActive: true,
       isDeleted: false,
       reportType: 'TOTAL_HOURS' as const,
+      leadManagerId: null,
+      leadManagerName: null,
+      startDate: null,
+      endDate: null,
+      description: null,
     };
     expect(ProjectListItemSchema.parse(item)).toEqual(item);
+  });
+
+  it('accepts populated lead manager, dates, and description', () => {
+    const item = {
+      id: '550e8400-e29b-41d4-a716-446655440001',
+      name: 'Mobile App Redesign',
+      clientId: '550e8400-e29b-41d4-a716-446655440000',
+      clientName: 'Acme Corp',
+      isActive: true,
+      isDeleted: false,
+      reportType: 'TOTAL_HOURS' as const,
+      leadManagerId: '550e8400-e29b-41d4-a716-446655440002',
+      leadManagerName: 'Dana Manager',
+      startDate: '2026-01-01',
+      endDate: '2026-06-30',
+      description: 'Redesign of the mobile app',
+    };
+    expect(ProjectListItemSchema.parse(item)).toEqual(item);
+  });
+
+  it('requires the KAN-120 fields (missing field is a contract violation, not a default)', () => {
+    const result = ProjectListItemSchema.safeParse({
+      id: '550e8400-e29b-41d4-a716-446655440001',
+      name: 'Mobile App Redesign',
+      clientId: '550e8400-e29b-41d4-a716-446655440000',
+      clientName: 'Acme Corp',
+      isActive: true,
+      isDeleted: false,
+      reportType: 'TOTAL_HOURS' as const,
+    });
+    expect(result.success).toBe(false);
   });
 
   it('requires reportType (missing field is a contract violation, not a default)', () => {
@@ -95,6 +131,11 @@ describe('ProjectsListSuccessSchema', () => {
           isActive: true,
           isDeleted: false,
           reportType: 'TOTAL_HOURS' as const,
+          leadManagerId: null,
+          leadManagerName: null,
+          startDate: null,
+          endDate: null,
+          description: null,
         },
       ],
       meta: { page: 1, limit: 20, total: 1 },

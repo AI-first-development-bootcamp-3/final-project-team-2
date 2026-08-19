@@ -176,7 +176,7 @@ export function TaskCreateForm({
         ) : null}
       </label>
       <label className="flex flex-col gap-1 text-sm font-medium text-neutral-700">
-        תיאור (אופציונלי)
+        תאור המשימה
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}

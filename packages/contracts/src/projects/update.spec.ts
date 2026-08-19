@@ -14,6 +14,11 @@ const item = {
   isActive: true,
   isDeleted: false,
   reportType: 'TOTAL_HOURS' as const,
+  leadManagerId: null,
+  leadManagerName: null,
+  startDate: null,
+  endDate: null,
+  description: null,
 };
 
 describe('UpdateProjectReportTypeBodySchema', () => {
@@ -76,6 +81,51 @@ describe('UpdateProjectBodySchema', () => {
     expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.error.issues[0]?.message).toBe('VAL-22');
+    }
+  });
+
+  it('accepts optional leadManagerId, dates, and description', () => {
+    const body = {
+      leadManagerId: '550e8400-e29b-41d4-a716-446655440002',
+      startDate: '2026-01-01',
+      endDate: '2026-06-30',
+      description: 'Updated description',
+    };
+    expect(UpdateProjectBodySchema.parse(body)).toEqual(body);
+  });
+
+  it('accepts null to clear leadManagerId, dates, and description', () => {
+    const body = { leadManagerId: null, startDate: null, endDate: null, description: null };
+    expect(UpdateProjectBodySchema.parse(body)).toEqual(body);
+  });
+
+  it('rejects a non-uuid leadManagerId with VAL-29', () => {
+    const result = UpdateProjectBodySchema.safeParse({ leadManagerId: 'nope' });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const issue = result.error.issues.find((i) => i.path.includes('leadManagerId'));
+      expect(issue?.message).toBe('VAL-29');
+    }
+  });
+
+  it('rejects a malformed endDate with VAL-30', () => {
+    const result = UpdateProjectBodySchema.safeParse({ endDate: '30/06/2026' });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const issue = result.error.issues.find((i) => i.path.includes('endDate'));
+      expect(issue?.message).toBe('VAL-30');
+    }
+  });
+
+  it('rejects endDate before startDate with VAL-31', () => {
+    const result = UpdateProjectBodySchema.safeParse({
+      startDate: '2026-06-30',
+      endDate: '2026-01-01',
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const issue = result.error.issues.find((i) => i.path.includes('endDate'));
+      expect(issue?.message).toBe('VAL-31');
     }
   });
 
