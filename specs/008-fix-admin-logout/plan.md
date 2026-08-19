@@ -36,26 +36,26 @@ _GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
 Project `.specify/memory/constitution.md` is still a template (not ratified). Gates below are taken from **existing auth / admin-shell specs** and this feature’s FRs until a real constitution is adopted.
 
-| Gate | Status | Notes |
-| ---- | ------ | ----- |
-| Logout clears session and shows sign-in (admin-shell) | PASS | Plan wires sidebar to API logout + redirect |
-| Refresh after logout is 401 (auth spec) | PASS | Client calls logout; server still bumps `token_version` and clears cookie |
-| In-memory session only (KAN-70) | PASS | No web-storage session; durable credential remains httpOnly cookie |
-| Admin console only | PASS | Employee app unchanged |
-| No unjustified new packages/services | PASS | Reuse `@abra/admin`, `@abra/api`, `@abra/e2e` |
-| Test-first / required e2e check | PASS | Vitest regressions + Playwright in existing `e2e` job |
-| No schema / no new product APIs | PASS | Same `POST /auth/logout` path; semantics widened to stay 204 when access JWT is dead |
+| Gate                                                  | Status | Notes                                                                                |
+| ----------------------------------------------------- | ------ | ------------------------------------------------------------------------------------ |
+| Logout clears session and shows sign-in (admin-shell) | PASS   | Plan wires sidebar to API logout + redirect                                          |
+| Refresh after logout is 401 (auth spec)               | PASS   | Client calls logout; server still bumps `token_version` and clears cookie            |
+| In-memory session only (KAN-70)                       | PASS   | No web-storage session; durable credential remains httpOnly cookie                   |
+| Admin console only                                    | PASS   | Employee app unchanged                                                               |
+| No unjustified new packages/services                  | PASS   | Reuse `@abra/admin`, `@abra/api`, `@abra/e2e`                                        |
+| Test-first / required e2e check                       | PASS   | Vitest regressions + Playwright in existing `e2e` job                                |
+| No schema / no new product APIs                       | PASS   | Same `POST /auth/logout` path; semantics widened to stay 204 when access JWT is dead |
 
 **Gate result**: PASS — proceed to Phase 0 / Phase 1.
 
 ### Post-design re-check (after Phase 1)
 
-| Gate | Status | Notes |
-| ---- | ------ | ----- |
-| Root cause addressed in design | PASS | `research.md` §1–2: sidebar skipped API logout |
-| Refresh race and dead access token covered | PASS | `research.md` §3–4; contract tables |
-| Proof is cookie-aware e2e + unit | PASS | `contracts/admin-logout.md` + `quickstart.md` |
-| No unjustified complexity | PASS | Complexity Tracking empty; no new app; one helper; one e2e file |
+| Gate                                       | Status | Notes                                                           |
+| ------------------------------------------ | ------ | --------------------------------------------------------------- |
+| Root cause addressed in design             | PASS   | `research.md` §1–2: sidebar skipped API logout                  |
+| Refresh race and dead access token covered | PASS   | `research.md` §3–4; contract tables                             |
+| Proof is cookie-aware e2e + unit           | PASS   | `contracts/admin-logout.md` + `quickstart.md`                   |
+| No unjustified complexity                  | PASS   | Complexity Tracking empty; no new app; one helper; one e2e file |
 
 **Post-design gate result**: PASS.
 

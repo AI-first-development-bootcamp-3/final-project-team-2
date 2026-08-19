@@ -68,7 +68,7 @@ Mark the handler `@Public()` (like login/refresh). CSRF posture stays SameSite=S
 
 Replace the current API test “rejects logout without a valid access token” with: no access token + valid refresh cookie still 204, bumps version, subsequent refresh 401; no tokens still 204 and Set-Cookie expires the cookie.
 
-**Rationale**: Access tokens last ~15 minutes. Sidebar (and Users) then `location.assign('/login')`. If logout 401s, the cookie is **not** cleared today, and `bootstrapSession` restores the session — the same user-visible bug after idle. FR-001 / FR-004 / FR-006 require Logout to stick even after remember-me and reload. Auth spec already says logout SHALL increment `token_version` and clear the cookie; it does not require a live access token to *attempt* that.
+**Rationale**: Access tokens last ~15 minutes. Sidebar (and Users) then `location.assign('/login')`. If logout 401s, the cookie is **not** cleared today, and `bootstrapSession` restores the session — the same user-visible bug after idle. FR-001 / FR-004 / FR-006 require Logout to stick even after remember-me and reload. Auth spec already says logout SHALL increment `token_version` and clear the cookie; it does not require a live access token to _attempt_ that.
 
 **Alternatives considered**:
 
@@ -80,12 +80,12 @@ Replace the current API test “rejects logout without a valid access token” w
 
 **Decision**:
 
-| Layer        | What                                                                                          | Why                                      |
-| ------------ | --------------------------------------------------------------------------------------------- | ---------------------------------------- |
-| Vitest admin | Sidebar calls `logout` then redirect; `logout()` POSTs `/auth/logout` and ignores late refresh | Fast regression on the actual bug        |
-| Vitest API   | Logout with refresh cookie only; logout with no credentials still clears cookie               | Server hardening                         |
+| Layer        | What                                                                                                      | Why                                             |
+| ------------ | --------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| Vitest admin | Sidebar calls `logout` then redirect; `logout()` POSTs `/auth/logout` and ignores late refresh            | Fast regression on the actual bug               |
+| Vitest API   | Logout with refresh cookie only; logout with no credentials still clears cookie                           | Server hardening                                |
 | Playwright   | New `e2e/specs/admin-logout.spec.ts`: sign in → sidebar Logout → stay on sign-in → reload → sign in again | FR/SC that only a real browser cookie can prove |
-| Helper       | `signOutAdmin` keeps working; new journey clicks sidebar `התנתקות`                            | Product control, not Users-only button   |
+| Helper       | `signOutAdmin` keeps working; new journey clicks sidebar `התנתקות`                                        | Product control, not Users-only button          |
 
 Do **not** add a new CI job. Existing `e2e` job picks up `e2e/specs/*.spec.ts`. Employee-app logout remains out of scope.
 

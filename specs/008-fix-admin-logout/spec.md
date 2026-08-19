@@ -8,7 +8,7 @@
 
 **Input**: User description: "Jira KAN-116 (Bug). When you log out from admin you instantly login inside again. Fix it."
 
-## User Scenarios & Testing *(mandatory)*
+## User Scenarios & Testing _(mandatory)_
 
 ### User Story 1 - Admin signs out and stays signed out (Priority: P1)
 
@@ -68,7 +68,7 @@ An administrator who originally signed in with “remember me” (or an equivale
 - Employee app sign-out: out of scope for this bug; this feature covers the admin console only.
 - Forced logout from deactivation or password reset (existing product rules): unchanged; this feature only fixes explicit Logout from the console.
 
-## Requirements *(mandatory)*
+## Requirements _(mandatory)_
 
 ### Functional Requirements
 
@@ -86,7 +86,7 @@ An administrator who originally signed in with “remember me” (or an equivale
 - **Logout**: The operator’s explicit choice to end the current admin console session.
 - **Admin sign-in screen**: The unauthenticated screen where an administrator must enter credentials to start a new session.
 
-## Success Criteria *(mandatory)*
+## Success Criteria _(mandatory)_
 
 ### Measurable Outcomes
 
@@ -102,7 +102,7 @@ An administrator who originally signed in with “remember me” (or an equivale
 - This work tracks Jira [KAN-116](https://nadav40450.atlassian.net/browse/KAN-116). The ticket summary is the defect: “when you log out from admin you instantly login inside again.” There is no longer description; the expected outcome is inferred from existing admin-console logout rules and this bug report.
 - Scope is the **admin console** only. Employee-app sign-out is unchanged unless the same defect is later reported there.
 - Existing product intent (admin shell): the console already has a Logout control that must clear the session and send the operator to the admin sign-in screen. This feature does not add a new Logout control; it makes that existing action actually end the session.
-- Existing product intent (authentication): an explicit logout ends the session so a later refresh cannot restore access without a new sign-in. Remember-me extends an *uninterrupted* session; it does not override Logout.
+- Existing product intent (authentication): an explicit logout ends the session so a later refresh cannot restore access without a new sign-in. Remember-me extends an _uninterrupted_ session; it does not override Logout.
 - A new sign-in after Logout is a deliberate operator action with valid credentials, not an automatic restore of the previous session.
 - Hebrew RTL admin console copy and the existing sidebar Logout placement stay as they are unless a label change is required to complete the flow.
 - Demo administrators used in checks (for example the seeded admin) are sufficient to reproduce and prove the fix.

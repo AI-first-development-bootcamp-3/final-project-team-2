@@ -132,7 +132,9 @@ describe('logout', () => {
   });
 
   it('POSTs /auth/logout with credentials and Bearer when a session exists', async () => {
-    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(null, { status: 204 }));
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(new Response(null, { status: 204 }));
 
     await logout();
 
