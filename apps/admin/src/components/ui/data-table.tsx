@@ -51,7 +51,10 @@ export function DataTable<T>({
                 const isActive = sort === column.id;
                 const nextOrder: SortOrder = isActive && order === 'asc' ? 'desc' : 'asc';
                 return (
-                  <th key={column.id} className="px-4 py-3 text-sm font-semibold text-white">
+                  <th
+                    key={column.id}
+                    className="border-s border-white/10 px-4 py-3 text-sm font-semibold text-white first:border-s-0"
+                  >
                     {column.sortable && onSortChange ? (
                       <button
                         type="button"
@@ -88,20 +91,19 @@ export function DataTable<T>({
             ))}
           </tbody>
         </table>
-      </div>
-      <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-center gap-3 text-sm text-neutral-500">
-        <span>
-          עמוד {page} מתוך {pageCount} ({total} רשומות)
-        </span>
-        <nav aria-label="עימוד" className="flex items-center gap-1">
-          <button
-            type="button"
-            className="rounded px-2 py-1 hover:bg-neutral-200 disabled:opacity-40"
-            disabled={!canPrev}
-            onClick={() => onPageChange(page - 1)}
-          >
-            הקודם
-          </button>
+        {/* Figma pagination: centered inside the table card — chevron controls
+            around the page numbers, current page in a gray square, no summary
+            text. Accessible names keep the existing 'הקודם'/'הבא' selectors. */}
+        <nav
+          aria-label="עימוד"
+          className="flex items-center justify-center gap-1 border-t border-divider py-2 text-sm text-grayIcon"
+        >
+          <PagerButton label="לעמוד הראשון" disabled={!canPrev} onClick={() => onPageChange(1)}>
+            <path d="m13 6-6 6 6 6 M18 6v12" />
+          </PagerButton>
+          <PagerButton label="הקודם" disabled={!canPrev} onClick={() => onPageChange(page - 1)}>
+            <path d="m14 6-6 6 6 6" />
+          </PagerButton>
           {buildPageItems(page, pageCount).map((item, index) =>
             item === 'gap' ? (
               <span key={`gap-${index}`} className="px-1">
@@ -113,8 +115,8 @@ export function DataTable<T>({
                 type="button"
                 aria-current={item === page ? 'page' : undefined}
                 className={cn(
-                  'min-w-8 rounded px-2 py-1 text-center hover:bg-neutral-200',
-                  item === page && 'bg-neutral-200 font-semibold text-neutral-900',
+                  'h-7 min-w-7 rounded px-1.5 text-center hover:bg-neutral-100',
+                  item === page && 'bg-divider font-semibold text-ink',
                 )}
                 onClick={() => onPageChange(item)}
               >
@@ -122,18 +124,50 @@ export function DataTable<T>({
               </button>
             ),
           )}
-          <button
-            type="button"
-            className="rounded px-2 py-1 hover:bg-neutral-200 disabled:opacity-40"
+          <PagerButton label="הבא" disabled={!canNext} onClick={() => onPageChange(page + 1)}>
+            <path d="m10 6 6 6-6 6" />
+          </PagerButton>
+          <PagerButton
+            label="לעמוד האחרון"
             disabled={!canNext}
-            onClick={() => onPageChange(page + 1)}
+            onClick={() => onPageChange(pageCount)}
           >
-            הבא
-          </button>
+            <path d="m11 6 6 6-6 6 M6 6v12" />
+          </PagerButton>
         </nav>
-        <span aria-hidden="true" />
       </div>
     </div>
+  );
+}
+
+function PagerButton(props: {
+  label: string;
+  disabled: boolean;
+  onClick: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={props.label}
+      title={props.label}
+      className="rounded p-1.5 hover:bg-neutral-100 disabled:opacity-40"
+      disabled={props.disabled}
+      onClick={props.onClick}
+    >
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="h-4 w-4 -scale-x-100"
+        aria-hidden="true"
+      >
+        {props.children}
+      </svg>
+    </button>
   );
 }
 
