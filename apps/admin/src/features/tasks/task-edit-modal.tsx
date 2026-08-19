@@ -166,7 +166,7 @@ export function TaskEditModal({ task, onClose, onSuccess }: TaskEditModalProps) 
         ) : null}
       </label>
       <label className="flex flex-col gap-1 text-sm font-medium text-neutral-700">
-        תיאור
+        תאור המשימה
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}

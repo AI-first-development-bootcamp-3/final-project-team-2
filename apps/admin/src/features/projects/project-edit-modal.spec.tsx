@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { VAL_MESSAGES } from '@abra/contracts';
 import { ProjectEditModal } from './project-edit-modal';
@@ -16,6 +16,14 @@ vi.mock('@/lib/api/client', async () => {
   };
 });
 
+const managerUser = {
+  id: '990e8400-e29b-41d4-a716-446655440000',
+  fullName: 'Dana Manager',
+  email: 'dana@example.com',
+  role: 'admin' as const,
+  isActive: true,
+};
+
 const project = {
   id: '550e8400-e29b-41d4-a716-446655440000',
   name: 'Acme Mobile App',
@@ -24,6 +32,11 @@ const project = {
   isActive: true,
   isDeleted: false,
   reportType: 'TOTAL_HOURS' as const,
+  leadManagerId: managerUser.id,
+  leadManagerName: managerUser.fullName,
+  startDate: '2026-01-01',
+  endDate: '2026-06-30',
+  description: 'Rebuild of the Acme mobile app',
 };
 
 const activeClient = {
@@ -44,6 +57,9 @@ describe('ProjectEditModal', () => {
       if (String(path).startsWith('/clients')) {
         return Promise.resolve({ data: [activeClient], meta: { page: 1, limit: 100, total: 1 } });
       }
+      if (String(path).startsWith('/users')) {
+        return Promise.resolve({ data: [managerUser], meta: { page: 1, limit: 100, total: 1 } });
+      }
       return Promise.resolve({ data: project });
     });
   });
@@ -58,12 +74,90 @@ describe('ProjectEditModal', () => {
     expect(screen.getByLabelText('שם הלקוח')).toHaveValue(project.clientId);
   });
 
+  it('pre-fills lead manager, dates, and description', async () => {
+    renderModal();
+
+    expect(await screen.findByRole('option', { name: 'Dana Manager' })).toBeInTheDocument();
+    expect(screen.getByLabelText('שייך מנהל ראשי לפרויקט')).toHaveValue(managerUser.id);
+    expect(screen.getByLabelText('תאריך התחלה')).toHaveValue('2026-01-01');
+    expect(screen.getByLabelText('תאריך סיום')).toHaveValue('2026-06-30');
+    expect(screen.getByLabelText('תאור הפרויקט')).toHaveValue('Rebuild of the Acme mobile app');
+  });
+
+  it('keeps the current manager selectable when the users list no longer returns them', async () => {
+    apiFetch.mockImplementation((path: string) => {
+      if (String(path).startsWith('/clients')) {
+        return Promise.resolve({ data: [activeClient], meta: { page: 1, limit: 100, total: 1 } });
+      }
+      if (String(path).startsWith('/users')) {
+        return Promise.resolve({ data: [], meta: { page: 1, limit: 100, total: 0 } });
+      }
+      return Promise.resolve({ data: project });
+    });
+    renderModal();
+
+    expect(await screen.findByRole('option', { name: 'Dana Manager' })).toBeInTheDocument();
+    expect(screen.getByLabelText('שייך מנהל ראשי לפרויקט')).toHaveValue(managerUser.id);
+  });
+
+  it('round-trips lead manager, dates, and description in the PATCH body', async () => {
+    const user = userEvent.setup();
+    const onSuccess = vi.fn();
+    renderModal(onSuccess);
+    await screen.findByRole('option', { name: 'Globex Ltd' });
+    await screen.findByRole('option', { name: 'Dana Manager' });
+
+    fireEvent.change(screen.getByLabelText('תאריך סיום'), { target: { value: '2026-12-31' } });
+    await user.click(screen.getByRole('button', { name: 'שמירה' }));
+
+    await waitFor(() => expect(onSuccess).toHaveBeenCalled());
+    const patch = apiFetch.mock.calls.find((call) => call[1]?.method === 'PATCH');
+    expect(JSON.parse(String(patch?.[1]?.body))).toEqual({
+      name: project.name,
+      clientId: project.clientId,
+      isActive: true,
+      leadManagerId: managerUser.id,
+      startDate: '2026-01-01',
+      endDate: '2026-12-31',
+      description: 'Rebuild of the Acme mobile app',
+    });
+  });
+
+  it('clears lead manager, dates, and description with nulls in the PATCH body', async () => {
+    const user = userEvent.setup();
+    const onSuccess = vi.fn();
+    renderModal(onSuccess);
+    await screen.findByRole('option', { name: 'Globex Ltd' });
+    await screen.findByRole('option', { name: 'Dana Manager' });
+
+    await user.selectOptions(screen.getByLabelText('שייך מנהל ראשי לפרויקט'), '');
+    fireEvent.change(screen.getByLabelText('תאריך התחלה'), { target: { value: '' } });
+    fireEvent.change(screen.getByLabelText('תאריך סיום'), { target: { value: '' } });
+    await user.clear(screen.getByLabelText('תאור הפרויקט'));
+    await user.click(screen.getByRole('button', { name: 'שמירה' }));
+
+    await waitFor(() => expect(onSuccess).toHaveBeenCalled());
+    const patch = apiFetch.mock.calls.find((call) => call[1]?.method === 'PATCH');
+    expect(JSON.parse(String(patch?.[1]?.body))).toEqual({
+      name: project.name,
+      clientId: project.clientId,
+      isActive: true,
+      leadManagerId: null,
+      startDate: null,
+      endDate: null,
+      description: null,
+    });
+  });
+
   it('saves name via PATCH not DELETE', async () => {
     const user = userEvent.setup();
     const onSuccess = vi.fn();
     apiFetch.mockImplementation((path: string, init?: RequestInit) => {
       if (String(path).startsWith('/clients')) {
         return Promise.resolve({ data: [activeClient], meta: { page: 1, limit: 100, total: 1 } });
+      }
+      if (String(path).startsWith('/users')) {
+        return Promise.resolve({ data: [managerUser], meta: { page: 1, limit: 100, total: 1 } });
       }
       if (init?.method === 'PATCH') {
         return Promise.resolve({ data: { ...project, name: 'Updated Mobile App' } });
@@ -108,6 +202,9 @@ describe('ProjectEditModal', () => {
       if (String(path).startsWith('/clients')) {
         return Promise.resolve({ data: [activeClient], meta: { page: 1, limit: 100, total: 1 } });
       }
+      if (String(path).startsWith('/users')) {
+        return Promise.resolve({ data: [managerUser], meta: { page: 1, limit: 100, total: 1 } });
+      }
       if (init?.method === 'PATCH') {
         return Promise.reject(
           new ApiClientError(422, {
@@ -135,6 +232,9 @@ describe('ProjectEditModal', () => {
       if (String(path).startsWith('/clients')) {
         return Promise.resolve({ data: [activeClient], meta: { page: 1, limit: 100, total: 1 } });
       }
+      if (String(path).startsWith('/users')) {
+        return Promise.resolve({ data: [managerUser], meta: { page: 1, limit: 100, total: 1 } });
+      }
       if (init?.method === 'PATCH') {
         return new Promise((res) => {
           resolve = res;
@@ -158,6 +258,9 @@ describe('ProjectEditModal', () => {
     apiFetch.mockImplementation((path: string, init?: RequestInit) => {
       if (String(path).startsWith('/clients')) {
         return Promise.resolve({ data: [activeClient], meta: { page: 1, limit: 100, total: 1 } });
+      }
+      if (String(path).startsWith('/users')) {
+        return Promise.resolve({ data: [managerUser], meta: { page: 1, limit: 100, total: 1 } });
       }
       if (init?.method === 'PATCH') {
         return Promise.reject(new ApiClientError(500, undefined));
