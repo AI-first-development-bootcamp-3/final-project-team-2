@@ -216,6 +216,7 @@ export function AssignmentsPage() {
           setSuccessMessage('השיוך נוצר בהצלחה');
           fetchAssignments();
         }}
+        onSomeCreated={fetchAssignments}
       />
 
       {removing ? (

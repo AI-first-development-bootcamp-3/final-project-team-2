@@ -170,7 +170,9 @@ describe('AssignmentsPage', () => {
     });
   });
 
-  it('opens AssignmentCreateForm, pre-populates dropdowns, and submits new assignment', async () => {
+  // KAN-121: the create modal keeps the task select and replaces the employee
+  // dropdown with the rich picker table (checkbox multi-select).
+  it('opens AssignmentCreateForm, drives the employee picker, and submits new assignment', async () => {
     const user = userEvent.setup();
 
     renderPage();
@@ -179,17 +181,16 @@ describe('AssignmentsPage', () => {
     expect(userNames.length).toBeGreaterThan(0);
     await user.click(screen.getByRole('button', { name: 'שיוך חדש' }));
 
-    const dialog = screen.getByRole('dialog');
+    const dialog = screen.getByRole('dialog', { name: 'שיוך חדש' });
     expect(dialog).toBeInTheDocument();
-    expect(await within(dialog).findByRole('option', { name: /ישראל ישראלי/ })).toBeInTheDocument();
     expect(
       await within(dialog).findByRole('option', { name: /Design Login Flow/ }),
     ).toBeInTheDocument();
 
-    await user.selectOptions(within(dialog).getByLabelText('עובד'), mockUser.id);
     await user.selectOptions(within(dialog).getByLabelText('משימה'), mockTask.id);
+    await user.click(await within(dialog).findByRole('checkbox', { name: 'בחירת ישראל ישראלי' }));
 
-    await user.click(within(dialog).getByRole('button', { name: 'שמירה' }));
+    await user.click(within(dialog).getByRole('button', { name: 'שייך עובד למשימה' }));
 
     await waitFor(() => {
       expect(apiFetch).toHaveBeenCalledWith(
@@ -210,15 +211,14 @@ describe('AssignmentsPage', () => {
     expect(userNames.length).toBeGreaterThan(0);
     await user.click(screen.getByRole('button', { name: 'שיוך חדש' }));
 
-    const dialog = screen.getByRole('dialog');
-    expect(await within(dialog).findByRole('option', { name: /ישראל ישראלי/ })).toBeInTheDocument();
-
-    await user.selectOptions(within(dialog).getByLabelText('עובד'), mockUser.id);
+    const dialog = screen.getByRole('dialog', { name: 'שיוך חדש' });
+    await within(dialog).findByRole('option', { name: /Design Login Flow/ });
     await user.selectOptions(within(dialog).getByLabelText('משימה'), mockTask.id);
+    await user.click(await within(dialog).findByRole('checkbox', { name: 'בחירת ישראל ישראלי' }));
 
-    await user.click(within(dialog).getByRole('button', { name: 'שמירה' }));
+    await user.click(within(dialog).getByRole('button', { name: 'שייך עובד למשימה' }));
 
-    expect(await screen.findByText('השיוך כבר קיים במערכת')).toBeInTheDocument();
+    expect(await screen.findByText(/השיוך כבר קיים במערכת/)).toBeInTheDocument();
   });
 
   it('opens remove confirmation from the chip ✕ and deletes the assignment', async () => {
