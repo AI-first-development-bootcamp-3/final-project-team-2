@@ -29,6 +29,21 @@ async function createApp() {
     },
     task: {
       findUnique: vi.fn().mockResolvedValue({ id: ASSIGNMENT.task_id, deleted_at: null }),
+      findMany: vi.fn().mockResolvedValue([
+        {
+          id: ASSIGNMENT.task_id,
+          name: 'Task One',
+          project: { name: 'Project Alpha', client: { name: 'Acme Corp' } },
+          task_assignments: [
+            {
+              id: ASSIGNMENT.id,
+              user_id: ASSIGNMENT.user_id,
+              user: { full_name: 'Alice Cohen', email: 'alice@abra.co' },
+            },
+          ],
+        },
+      ]),
+      count: vi.fn().mockResolvedValue(1),
     },
   };
 
@@ -63,6 +78,39 @@ describe('AssignmentsController', () => {
 
     expect(response.body.data).toHaveLength(1);
     expect(response.body.data[0].userFullName).toBe('Alice Cohen');
+  });
+
+  it('GET /api/v1/assignments?groupBy=task returns one row per task with employees', async () => {
+    ({ app } = await createApp());
+    const response = await request(app.getHttpServer())
+      .get('/api/v1/assignments?groupBy=task')
+      .set('Authorization', 'Bearer admin-token')
+      .expect(200);
+
+    expect(response.body.data).toHaveLength(1);
+    expect(response.body.data[0]).toMatchObject({
+      taskId: ASSIGNMENT.task_id,
+      taskName: 'Task One',
+      projectName: 'Project Alpha',
+      clientName: 'Acme Corp',
+    });
+    expect(response.body.data[0].employees).toEqual([
+      {
+        assignmentId: ASSIGNMENT.id,
+        userId: ASSIGNMENT.user_id,
+        userFullName: 'Alice Cohen',
+        userEmail: 'alice@abra.co',
+      },
+    ]);
+    expect(response.body.meta).toEqual({ page: 1, limit: 20, total: 1 });
+  });
+
+  it('GET /api/v1/assignments fails on invalid groupBy value', async () => {
+    ({ app } = await createApp());
+    await request(app.getHttpServer())
+      .get('/api/v1/assignments?groupBy=project')
+      .set('Authorization', 'Bearer admin-token')
+      .expect(400);
   });
 
   it('GET /api/v1/assignments fails on invalid query params', async () => {

@@ -8,6 +8,7 @@ import { Prisma } from '@prisma/client';
 import {
   VAL_MESSAGES,
   type AssignmentListItem,
+  type AssignmentsByTaskItem,
   type AssignmentsListQuery,
   type CreateAssignmentBody,
 } from '@abra/contracts';
@@ -74,6 +75,67 @@ export class AssignmentsService {
 
     return {
       data: (rows as AssignmentRow[]).map(toListItem),
+      meta: { page: query.page, limit: query.limit, total },
+    };
+  }
+
+  // KAN-122 (Admin Web Portal Spec §4.2): one row per task with the employees
+  // assigned to it. A task matches the filters when ANY of its assignments
+  // matches (e.g. q matches one employee), but the row always carries the full
+  // employee list. Pagination and total are computed at the task level.
+  async listGroupedByTask(query: AssignmentsListQuery): Promise<{
+    data: AssignmentsByTaskItem[];
+    meta: { page: number; limit: number; total: number };
+  }> {
+    const where = this.buildGroupedWhere(query);
+
+    const [rows, total] = await Promise.all([
+      this.prisma.task.findMany({
+        where,
+        select: {
+          id: true,
+          name: true,
+          project: { select: { name: true, client: { select: { name: true } } } },
+          task_assignments: {
+            select: {
+              id: true,
+              user_id: true,
+              user: { select: { full_name: true, email: true } },
+            },
+            orderBy: { created_at: 'asc' },
+          },
+        },
+        orderBy: { name: query.order },
+        skip: (query.page - 1) * query.limit,
+        take: query.limit,
+      }),
+      this.prisma.task.count({ where }),
+    ]);
+
+    type GroupedRow = {
+      id: string;
+      name: string;
+      project: { name: string; client: { name: string } };
+      task_assignments: Array<{
+        id: string;
+        user_id: string;
+        user: { full_name: string; email: string };
+      }>;
+    };
+
+    return {
+      data: (rows as GroupedRow[]).map((row) => ({
+        taskId: row.id,
+        taskName: row.name,
+        projectName: row.project.name,
+        clientName: row.project.client.name,
+        employees: row.task_assignments.map((assignment) => ({
+          assignmentId: assignment.id,
+          userId: assignment.user_id,
+          userFullName: assignment.user.full_name,
+          userEmail: assignment.user.email,
+        })),
+      })),
       meta: { page: query.page, limit: query.limit, total },
     };
   }
@@ -164,5 +226,37 @@ export class AssignmentsService {
     }
 
     return and.length > 0 ? { AND: and } : {};
+  }
+
+  // Task-level filters for the grouped view: a task is included when at least
+  // one of its assignments matches. q searches by employee name/email (§4.1).
+  private buildGroupedWhere(query: AssignmentsListQuery): Prisma.TaskWhereInput {
+    const assignmentFilter: Prisma.TaskAssignmentWhereInput[] = [];
+
+    if (query.userId) {
+      assignmentFilter.push({ user_id: query.userId });
+    }
+
+    if (query.q) {
+      assignmentFilter.push({
+        OR: [
+          { user: { full_name: { contains: query.q, mode: 'insensitive' } } },
+          { user: { email: { contains: query.q, mode: 'insensitive' } } },
+        ],
+      });
+    }
+
+    const where: Prisma.TaskWhereInput = {
+      deleted_at: null,
+      task_assignments: {
+        some: assignmentFilter.length > 0 ? { AND: assignmentFilter } : {},
+      },
+    };
+
+    if (query.taskId) {
+      where.id = query.taskId;
+    }
+
+    return where;
   }
 }
