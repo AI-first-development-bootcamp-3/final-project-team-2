@@ -40,8 +40,8 @@ Every implementation task is TDD (red-green-refactor): the ".a" task writes fail
 
 ## 6. Playwright e2e (KAN-84)
 
-- [ ] 6.1 Seed fixtures: a month containing an exactly-9h day, an EXCESS day, a PARTIAL day, and a locked prior month (MonthLock row) — absence-day case stays at component level until Epic 7 (design decision 6)
-- [ ] 6.2 e2e spec: calendar renders the seeded statuses; drill-down lists the seeded entries; edit round-trip updates the calendar; locked month is read-only with the lock indicator
+- [ ] 6.1 Seed fixtures: a month containing an exactly-9h day, an EXCESS day, and a PARTIAL day (revised: the locked-month row cannot be seeded — no lock-write API exists until Epic 9 — and stays at component level, like the absence case per design decision 6). Seeding is written into the spec itself (admin console + API); PENDING EXECUTION against a live stack running this branch
+- [ ] 6.2 e2e spec: calendar renders the seeded statuses; drill-down lists the seeded entries (written as `e2e/specs/monthly-view.spec.ts`; edit round-trip deferred with task 4.2; PENDING EXECUTION — the local docker stack runs other branches, so it has not been run yet)
 
 ## 7. Wrap-up
 
