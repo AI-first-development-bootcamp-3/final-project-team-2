@@ -5,12 +5,6 @@ import { UserRole } from './enums.js';
 // can derive its VAL-36 schema from it without importing this module circularly.
 export * from './enums.js';
 
-export const AbsenceType = z.enum(['vacation', 'sick', 'military', 'other']);
-export type AbsenceType = z.infer<typeof AbsenceType>;
-
-export const HalfDayPeriod = z.enum(['morning', 'afternoon']);
-export type HalfDayPeriod = z.infer<typeof HalfDayPeriod>;
-
 export const AuditAction = z.enum(['create', 'update', 'delete', 'lock_month', 'unlock_month']);
 export type AuditAction = z.infer<typeof AuditAction>;
 
@@ -243,3 +237,37 @@ export type {
   TimeEntriesListSuccess,
   TimeEntrySuccess,
 } from './time-entries/list.js';
+
+// --- Absences ---
+export {
+  AbsenceTypeSchema,
+  AbsenceStartDateSchema,
+  AbsenceEndDateSchema,
+  AbsenceNotesSchema,
+  refineAbsenceRange,
+} from './absences/fields.js';
+export type { AbsenceRangeFields } from './absences/fields.js';
+
+export { splitIntoWorkingRuns, isWeekend, hasWorkingDay } from './absences/split.js';
+export type { DateRange } from './absences/split.js';
+
+export { CreateAbsenceBodySchema } from './absences/create.js';
+export type { CreateAbsenceBody } from './absences/create.js';
+
+export { UpdateAbsenceBodySchema, MergedAbsenceSchema } from './absences/update.js';
+export type { UpdateAbsenceBody, MergedAbsence } from './absences/update.js';
+
+export {
+  AbsencesListQuerySchema,
+  AbsenceListItemSchema,
+  AbsencesListSuccessSchema,
+  AbsenceCreateSuccessSchema,
+  AbsenceGetSuccessSchema,
+} from './absences/list.js';
+export type {
+  AbsencesListQuery,
+  AbsenceListItem,
+  AbsencesListSuccess,
+  AbsenceCreateSuccess,
+  AbsenceGetSuccess,
+} from './absences/list.js';

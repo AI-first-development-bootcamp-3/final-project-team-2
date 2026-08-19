@@ -12,6 +12,7 @@ import { TasksModule } from './modules/tasks/tasks.module';
 import { AssignmentsModule } from './modules/assignments/assignments.module';
 import { MeModule } from './modules/me/me.module';
 import { TimeEntriesModule } from './modules/time-entries/time-entries.module';
+import { AbsencesModule } from './modules/absences/absences.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { TimeEntriesModule } from './modules/time-entries/time-entries.module';
     AssignmentsModule,
     MeModule,
     TimeEntriesModule,
+    AbsencesModule,
   ],
   controllers: [AppController],
   // Secure by default: every route requires a token unless @Public().

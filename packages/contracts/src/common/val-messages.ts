@@ -33,6 +33,17 @@ export type ValCode =
   | 'VAL-35'
   | 'VAL-36'
   | 'VAL-38'
+  | 'VAL-40'
+  | 'VAL-41'
+  | 'VAL-42'
+  | 'VAL-43'
+  | 'VAL-44'
+  | 'VAL-45'
+  | 'VAL-60'
+  | 'VAL-61'
+  | 'VAL-62'
+  | 'VAL-ABSENCE-HALF-DAY'
+  | 'VAL-ABSENCE-OVERLAP'
   | 'VAL-DATE-RANGE'
   | 'VAL-EMPTY-UPDATE'
   | 'VAL-RUNNING-ENTRY';
@@ -70,6 +81,22 @@ export const VAL_MESSAGES: Record<ValCode, string> = {
   'VAL-35': 'יש לבחור משימה',
   'VAL-36': 'יש לבחור מיקום עבודה',
   'VAL-38': 'התאריך אינו תואם את יום תחילת הדיווח',
+  // Absences (§9.5). VAL-44 is reported as a flag on reads rather than a
+  // rejection — a sick absence without its document still saves (§7.1).
+  'VAL-40': 'יש לבחור סוג היעדרות תקין',
+  'VAL-41': 'תאריך התחלה הוא שדה חובה',
+  'VAL-42': 'תאריך הסיום חייב להיות מאוחר או זהה לתאריך ההתחלה',
+  'VAL-43': 'לא ניתן לדווח היעדרות בימי שישי ושבת',
+  'VAL-44': 'היעדרות מחלה או מילואים מחייבת צירוף מסמך',
+  'VAL-45': 'החודש נעול ולא ניתן לדווח היעדרות מסוג זה',
+  // Attachments (§9.7).
+  'VAL-60': 'ניתן להעלות קבצים מסוג JPG, PNG או PDF בלבד',
+  'VAL-61': 'גודל הקובץ לא יכול לעלות על 5MB',
+  'VAL-62': 'ההיעדרות המשויכת לקובץ לא נמצאה',
+  // Not in the spec registry: a half day describes one date and needs a period,
+  // and two absences cannot cover the same day (design D10).
+  'VAL-ABSENCE-HALF-DAY': 'עבור חצי יום יש לבחור בוקר או אחר הצהריים, לתאריך אחד בלבד',
+  'VAL-ABSENCE-OVERLAP': 'קיים כבר דיווח היעדרות בטווח תאריכים זה',
   'VAL-DATE-RANGE': 'יש לציין תאריך יחיד או טווח תאריכים תקין',
   'VAL-EMPTY-UPDATE': 'לא נשלחו שדות לעדכון',
   // Punch Clock (KAN-79): PATCH/DELETE of a running entry is refused outright

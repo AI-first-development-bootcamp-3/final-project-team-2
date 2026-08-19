@@ -2,7 +2,15 @@ import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 
 /** Model names that use soft-delete (deleted_at column). */
-export const SOFT_DELETE_MODELS = ['User', 'Client', 'Project', 'Task', 'TimeEntry', 'Absence'];
+export const SOFT_DELETE_MODELS = [
+  'User',
+  'Client',
+  'Project',
+  'Task',
+  'TimeEntry',
+  'Absence',
+  'AbsenceAttachment',
+];
 
 export const SOFT_DELETE_READ_ACTIONS = [
   'findFirst',

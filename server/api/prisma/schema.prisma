@@ -53,15 +53,15 @@ enum AuditAction {
 // ─── Models ──────────────────────────────────────────────
 
 model User {
-  id            String   @id @default(uuid()) @db.Uuid
-  email         String   @db.VarChar(255)
-  full_name     String   @db.VarChar(255)
-  password_hash String   @db.VarChar(255)
+  id            String    @id @default(uuid()) @db.Uuid
+  email         String    @db.VarChar(255)
+  full_name     String    @db.VarChar(255)
+  password_hash String    @db.VarChar(255)
   role          UserRole
-  is_active     Boolean  @default(true)
-  token_version Int      @default(0)
-  created_at    DateTime @default(now())
-  updated_at    DateTime @updatedAt
+  is_active     Boolean   @default(true)
+  token_version Int       @default(0)
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
   deleted_at    DateTime?
 
   task_assignments TaskAssignment[]
@@ -76,12 +76,12 @@ model User {
 }
 
 model Client {
-  id           String   @id @default(uuid()) @db.Uuid
-  name         String   @db.VarChar(255)
-  contact_info String?  @db.Text
-  is_active    Boolean  @default(true)
-  created_at   DateTime @default(now())
-  updated_at   DateTime @updatedAt
+  id           String    @id @default(uuid()) @db.Uuid
+  name         String    @db.VarChar(255)
+  contact_info String?   @db.Text
+  is_active    Boolean   @default(true)
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @updatedAt
   deleted_at   DateTime?
 
   projects Project[]
@@ -168,6 +168,13 @@ model Absence {
   is_half_day     Boolean        @default(false)
   half_day_period HalfDayPeriod?
   notes           String?        @db.Text
+  // One reported absence becomes one row per contiguous run of working days
+  // (VAL-43), and every row from that report shares a group_id. Edits and
+  // deletes act on the whole group, so a Thursday-to-Sunday vacation stays one
+  // thing to the employee even though it is stored as two rows.
+  //
+  // Nullable so the column is additive: a row without one is a group of one.
+  group_id        String?        @db.Uuid
   created_at      DateTime       @default(now())
   updated_at      DateTime       @updatedAt
   deleted_at      DateTime?
@@ -175,17 +182,25 @@ model Absence {
   user        User                @relation(fields: [user_id], references: [id])
   attachments AbsenceAttachment[]
 
+  // Group lookups are always scoped to one employee, and the month filter reads
+  // by user and date.
+  @@index([user_id, group_id])
+  @@index([user_id, start_date])
   @@map("absences")
 }
 
 model AbsenceAttachment {
-  id         String   @id @default(uuid()) @db.Uuid
-  absence_id String   @db.Uuid
-  file_name  String   @db.VarChar(255)
-  file_type  String   @db.VarChar(50)
+  id         String    @id @default(uuid()) @db.Uuid
+  absence_id String    @db.Uuid
+  file_name  String    @db.VarChar(255)
+  file_type  String    @db.VarChar(50)
   file_size  Int
-  blob_key   String   @db.VarChar(500)
-  created_at DateTime @default(now())
+  blob_key   String    @db.VarChar(500)
+  created_at DateTime  @default(now())
+  // Soft delete, like every other record that carries history (§8.3). A sick
+  // note is the evidence behind a locked month's payroll, so a hard delete
+  // would leave an audit entry pointing at a row that no longer exists.
+  deleted_at DateTime?
 
   absence Absence @relation(fields: [absence_id], references: [id])
 

@@ -23,9 +23,17 @@ describe('PrismaService', () => {
 
     const service = module.get(PrismaService);
     expect(service.softDeleteModels).toEqual(
-      expect.arrayContaining(['User', 'Client', 'Project', 'Task', 'TimeEntry', 'Absence']),
+      expect.arrayContaining([
+        'User',
+        'Client',
+        'Project',
+        'Task',
+        'TimeEntry',
+        'Absence',
+        'AbsenceAttachment',
+      ]),
     );
-    expect(service.softDeleteModels).toHaveLength(6);
+    expect(service.softDeleteModels).toHaveLength(7);
   });
 });
 
@@ -151,9 +159,32 @@ describe('applySoftDeleteMiddleware', () => {
     expect(query).toHaveBeenCalledWith(args);
   });
 
-  it('covers all 6 soft-delete models', () => {
-    expect(SOFT_DELETE_MODELS).toHaveLength(6);
+  it('covers all 7 soft-delete models', () => {
+    expect(SOFT_DELETE_MODELS).toHaveLength(7);
     expect(SOFT_DELETE_MODELS).toContain('User');
     expect(SOFT_DELETE_MODELS).toContain('Absence');
+    // An attachment is the evidence behind a locked month, so deleting one is
+    // soft like everything else that carries history (§8.3).
+    expect(SOFT_DELETE_MODELS).toContain('AbsenceAttachment');
+  });
+
+  it('soft-deletes an attachment instead of removing the row', async () => {
+    const update = vi.fn();
+    const client = { absenceAttachment: { update, updateMany: vi.fn() } } as never;
+    const query = vi.fn();
+
+    await applySoftDeleteMiddleware({
+      model: 'AbsenceAttachment',
+      operation: 'delete',
+      args: { where: { id: 'a-1' } },
+      query,
+      client,
+    });
+
+    expect(update).toHaveBeenCalledWith({
+      where: { id: 'a-1' },
+      data: { deleted_at: expect.any(Date) },
+    });
+    expect(query).not.toHaveBeenCalled();
   });
 });
