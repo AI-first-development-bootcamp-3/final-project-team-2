@@ -1,11 +1,12 @@
 import { describe, it, expect, vi, beforeAll, afterAll, beforeEach } from 'vitest';
 import { Test } from '@nestjs/testing';
+import { APP_GUARD } from '@nestjs/core';
 import type { ExecutionContext, INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { VAL_MESSAGES } from '@abra/contracts';
-import { TimeEntriesModule } from './time-entries.module';
+import { RolesGuard } from '../../auth/roles.guard';
 import { PrismaService } from '../../prisma/prisma.service';
-import { JwtGuard } from '../../common/guards/jwt.guard';
+import { TimeEntriesModule } from './time-entries.module';
 
 const TASK_ID = '00000000-0000-0000-0000-000000000021';
 
@@ -157,11 +158,17 @@ function taskIsNotAssigned(): void {
 }
 
 beforeAll(async () => {
-  const moduleRef = await Test.createTestingModule({ imports: [TimeEntriesModule] })
+  const moduleRef = await Test.createTestingModule({
+    imports: [TimeEntriesModule],
+    // Same APP_GUARD pair as production, with a stub authenticator so the
+    // suite can flip employee / admin / signed-out without rebooting Nest.
+    providers: [
+      { provide: APP_GUARD, useValue: jwtGuardMock },
+      { provide: APP_GUARD, useClass: RolesGuard },
+    ],
+  })
     .overrideProvider(PrismaService)
     .useValue(prismaMock)
-    .overrideGuard(JwtGuard)
-    .useValue(jwtGuardMock)
     .compile();
 
   app = moduleRef.createNestApplication();

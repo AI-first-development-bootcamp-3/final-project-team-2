@@ -12,7 +12,6 @@ import {
   Post,
   Query,
   Req,
-  UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import {
@@ -21,12 +20,9 @@ import {
   UpdateTimeEntryBodySchema,
   zodIssuesToHebrewDetails,
 } from '@abra/contracts';
+import { Roles } from '../../auth/auth.decorators';
 import type { AuthenticatedUser } from '../../auth/jwt.guard';
-import { Roles } from '../../common/decorators/roles.decorator';
-import { JwtGuard } from '../../common/guards/jwt.guard';
-import { RolesGuard } from '../../common/guards/roles.guard';
 import { TimeEntriesService } from './time-entries.service';
-
 
 function badRequest(issues: Parameters<typeof zodIssuesToHebrewDetails>[0]): never {
   throw new BadRequestException({
@@ -67,7 +63,6 @@ const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{
 @ApiTags('time-entries')
 @ApiBearerAuth()
 @Controller('time-entries')
-@UseGuards(JwtGuard, RolesGuard)
 @Roles('employee')
 export class TimeEntriesController {
   constructor(private readonly timeEntries: TimeEntriesService) {}
