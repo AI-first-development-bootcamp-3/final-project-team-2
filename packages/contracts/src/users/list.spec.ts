@@ -117,6 +117,39 @@ describe('UserListItemSchema', () => {
   it('rejects an invalid role', () => {
     expect(UserListItemSchema.safeParse({ ...sampleItem, role: 'manager' }).success).toBe(false);
   });
+
+  it('accepts a directory row with HR metadata fields', () => {
+    const withHr = {
+      ...sampleItem,
+      employeeNumber: 'EMP-101',
+      roleTitle: 'מפתחת תוכנה',
+      employmentType: 'worker' as const,
+      employmentPercent: 80,
+      orgUnit: 'פיתוח',
+    };
+    expect(UserListItemSchema.parse(withHr)).toEqual(withHr);
+  });
+
+  it('accepts null HR metadata fields', () => {
+    const withNulls = {
+      ...sampleItem,
+      employeeNumber: null,
+      roleTitle: null,
+      employmentType: null,
+      employmentPercent: null,
+      orgUnit: null,
+    };
+    expect(UserListItemSchema.parse(withNulls)).toEqual(withNulls);
+  });
+
+  it('rejects an invalid employmentType or out-of-range employmentPercent', () => {
+    expect(
+      UserListItemSchema.safeParse({ ...sampleItem, employmentType: 'freelancer' }).success,
+    ).toBe(false);
+    expect(UserListItemSchema.safeParse({ ...sampleItem, employmentPercent: 101 }).success).toBe(
+      false,
+    );
+  });
 });
 
 describe('UsersListSuccessSchema', () => {

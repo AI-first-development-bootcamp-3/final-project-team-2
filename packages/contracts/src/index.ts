@@ -22,6 +22,7 @@ export { ApiErrorSchema, ApiErrorDetailSchema, zodIssuesToDetails } from './comm
 export type { ApiError, ApiErrorDetail } from './common/api-error.js';
 
 export {
+  EmploymentType,
   UsersListQuerySchema,
   UsersListSortSchema,
   UsersListOrderSchema,
