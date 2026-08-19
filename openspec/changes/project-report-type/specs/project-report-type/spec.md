@@ -26,19 +26,7 @@ The admin console SHALL provide a dedicated settings screen `/admin/reporting-se
 - **WHEN** admin toggles report type radio button from `סכום שעות` to `כניסה / יציאה` on `/admin/reporting-settings`
 - **THEN** system sends `PATCH /api/v1/projects/:id/report-type` with body `{ "reportType": "CLOCK_IN_OUT" }`, updates project record, and displays "אופן הדיווח עודכן בהצלחה".
 
-### Requirement: Employee App Flow Switch by Report Type
-
-The employee application SHALL inspect the `reportType` of the selected task's project when rendering time entry reporting UI.
-
-- If `reportType === 'TOTAL_HOURS'`, the employee app SHALL present the manual total-hours entry form.
-- If `reportType === 'CLOCK_IN_OUT'`, the employee app SHALL present the punch-clock timer UI.
-
-#### Scenario: Employee opens time reporting for a project with TOTAL_HOURS report type
-
-- **WHEN** employee selects a task belonging to a project with `reportType = 'TOTAL_HOURS'`
-- **THEN** employee app displays the manual hours entry form.
-
-#### Scenario: Employee opens time reporting for a project with CLOCK_IN_OUT report type
-
-- **WHEN** employee selects a task belonging to a project with `reportType = 'CLOCK_IN_OUT'`
-- **THEN** employee app displays the clock-in / clock-out timer interface.
+<!-- The "Employee App Flow Switch by Report Type" requirement moved to the
+     employee-report-flow-switch change: the flow switch is not implemented
+     (PR #43 review finding), and this delta must not canonize unbuilt
+     behavior on archive/sync. -->

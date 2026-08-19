@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { Test } from '@nestjs/testing';
-import type { ExecutionContext, INestApplication } from '@nestjs/common';
+import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import * as bcrypt from 'bcrypt';
 import { Prisma } from '@prisma/client';
 import { UsersModule } from './users.module';
 import { PrismaService } from '../../prisma/prisma.service';
-import { JwtGuard } from '../../common/guards/jwt.guard';
+import { stubAuthGuards } from '../../auth/auth.testing';
 
 const ALICE = {
   id: '550e8400-e29b-41d4-a716-446655440000',
@@ -17,22 +17,11 @@ const ALICE = {
   deleted_at: null,
 };
 
-function adminJwtGuard() {
-  return {
-    canActivate(context: ExecutionContext) {
-      context.switchToHttp().getRequest().user = { id: 'admin-1', role: 'admin' };
-      return true;
-    },
-  };
-}
-
-function employeeJwtGuard() {
-  return {
-    canActivate(context: ExecutionContext) {
-      context.switchToHttp().getRequest().user = { id: 'emp-1', role: 'employee' };
-      return true;
-    },
-  };
+function userFor(auth: 'none' | 'admin' | 'employee') {
+  if (auth === 'none') return null;
+  return auth === 'admin'
+    ? { userId: 'admin-1', role: 'admin' as const }
+    : { userId: 'emp-1', role: 'employee' as const };
 }
 
 const NADAV_ID = '660e8400-e29b-41d4-a716-446655440001';
@@ -77,15 +66,11 @@ async function createApp(auth: 'none' | 'admin' | 'employee') {
 
   const builder = Test.createTestingModule({
     imports: [UsersModule],
+    // Mirror production: stub authenticator + REAL RolesGuard as APP_GUARDs.
+    providers: stubAuthGuards(userFor(auth)),
   })
     .overrideProvider(PrismaService)
     .useValue(prisma);
-
-  if (auth === 'admin') {
-    builder.overrideGuard(JwtGuard).useValue(adminJwtGuard());
-  } else if (auth === 'employee') {
-    builder.overrideGuard(JwtGuard).useValue(employeeJwtGuard());
-  }
 
   const moduleRef = await builder.compile();
   const app = moduleRef.createNestApplication();

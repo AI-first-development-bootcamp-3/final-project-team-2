@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, within, act } from '@testing-library/react';
 import { ReportingSettingsPage } from './reporting-settings-page';
 import { apiFetch } from '@/lib/api/client';
 
@@ -73,5 +73,86 @@ describe('ReportingSettingsPage', () => {
     expect(await screen.findByRole('status')).toHaveTextContent(
       'אופן הדיווח לפרויקט "Mobile App" עודכן בהצלחה',
     );
+  });
+
+  it('keeps the table rendered when an update fails, with a dismissible error', async () => {
+    vi.mocked(apiFetch)
+      .mockResolvedValueOnce(mockProjects)
+      .mockRejectedValueOnce(new Error('network'));
+
+    render(<ReportingSettingsPage />);
+    await screen.findByText('Mobile App');
+
+    fireEvent.click(screen.getAllByRole('radio')[1]!);
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('שגיאה בעדכון אופן הדיווח');
+    // The table must survive the failure so the admin can retry immediately.
+    expect(screen.getByText('Mobile App')).toBeInTheDocument();
+    expect(screen.getAllByRole('radio')).toHaveLength(2);
+
+    fireEvent.click(within(alert).getByRole('button', { name: 'סגור הודעה' }));
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.getByText('Mobile App')).toBeInTheDocument();
+  });
+
+  it('debounces search: rapid typing issues a single trailing request', async () => {
+    vi.useFakeTimers();
+    try {
+      render(<ReportingSettingsPage />);
+      expect(apiFetch).toHaveBeenCalledTimes(1);
+
+      const input = screen.getByRole('searchbox');
+      fireEvent.change(input, { target: { value: 'a' } });
+      fireEvent.change(input, { target: { value: 'al' } });
+      fireEvent.change(input, { target: { value: 'alpha' } });
+      expect(apiFetch).toHaveBeenCalledTimes(1);
+
+      await act(async () => {
+        vi.advanceTimersByTime(300);
+      });
+
+      expect(apiFetch).toHaveBeenCalledTimes(2);
+      expect(String(vi.mocked(apiFetch).mock.calls[1]![0])).toContain('q=alpha');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('ignores a stale response that resolves after a newer request', async () => {
+    vi.useFakeTimers();
+    try {
+      let resolveStale!: (value: typeof mockProjects) => void;
+      const stale = new Promise<typeof mockProjects>((resolve) => {
+        resolveStale = resolve;
+      });
+      const fresh = {
+        data: [
+          {
+            ...mockProjects.data[0]!,
+            id: '550e8400-e29b-41d4-a716-446655440002',
+            name: 'Filtered Project',
+          },
+        ],
+        meta: { page: 1, limit: 20, total: 1 },
+      };
+      vi.mocked(apiFetch).mockReturnValueOnce(stale).mockResolvedValueOnce(fresh);
+
+      render(<ReportingSettingsPage />);
+      fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'Filtered' } });
+      await act(async () => {
+        vi.advanceTimersByTime(300);
+      });
+      await act(async () => {});
+
+      // The first (pre-search) request resolves late — it must be discarded.
+      resolveStale(mockProjects);
+      await act(async () => {});
+
+      expect(screen.getByText('Filtered Project')).toBeInTheDocument();
+      expect(screen.queryByText('Mobile App')).not.toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

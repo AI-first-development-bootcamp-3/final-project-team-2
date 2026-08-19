@@ -71,6 +71,7 @@ jobs:
     needs: [guard, migrate]
     if: |
       always() &&
+      github.event_name == 'push' &&
       needs.guard.result == 'success' &&
       needs.guard.outputs.should-deploy == 'true' &&
       (needs.migrate.result == 'success' || needs.migrate.result == 'skipped')
@@ -82,12 +83,15 @@ jobs:
           - name: Mobile
             directory: apps/mobile
             project-id-secret: VERCEL_MOBILE_PROJECT_ID
+            staging-alias: timesheet-mobile-staging-abra.vercel.app
           - name: Admin
             directory: apps/admin
             project-id-secret: VERCEL_ADMIN_PROJECT_ID
+            staging-alias: timesheet-admin-staging-abra.vercel.app
           - name: API
             directory: server/api
             project-id-secret: VERCEL_API_PROJECT_ID
+            staging-alias: timesheet-api-staging-abra.vercel.app
     steps:
       - uses: actions/checkout@v4
 
@@ -100,10 +104,17 @@ jobs:
           VERCEL_PROJECT_ID: ${{ secrets[matrix.project-id-secret] }}
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
-          # Production only on a merge landing in main. Everything else
-          # (push to staging, and PRs into main or staging) is a preview.
-          if [ "${{ github.event_name }}" = "push" ] && [ "${{ github.ref }}" = "refs/heads/main" ]; then
+          # Deploys run on push events only (see the job's `if`). Push to main
+          # is production; push to staging is a preview whose stable alias is
+          # re-pointed below, so the *-staging-abra.vercel.app URLs (which the
+          # staging admin bundle bakes in) always serve the latest staging
+          # code without manual re-aliasing.
+          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
             vercel deploy --prod --token=$VERCEL_TOKEN
           else
-            vercel deploy --token=$VERCEL_TOKEN
+            url=$(vercel deploy --token=$VERCEL_TOKEN)
+            echo "deployed $url"
+            if [ "${{ github.ref }}" = "refs/heads/staging" ]; then
+              vercel alias set "$url" "${{ matrix.staging-alias }}" --token=$VERCEL_TOKEN
+            fi
           fi

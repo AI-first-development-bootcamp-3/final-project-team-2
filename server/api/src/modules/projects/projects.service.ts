@@ -124,20 +124,6 @@ export class ProjectsService {
     return toListItem(row as ProjectRow);
   }
 
-  async updateReportType(id: string, reportType: ReportType): Promise<ProjectListItem> {
-    const existing = await this.prisma.project.findUnique({ where: { id } });
-    if (!existing || existing.deleted_at) {
-      throw new NotFoundException('פרויקט לא נמצא');
-    }
-
-    const row = await this.prisma.project.update({
-      where: { id },
-      data: { report_type: reportType },
-      select: PROJECT_LIST_SELECT,
-    });
-    return toListItem(row as ProjectRow);
-  }
-
   async softDelete(id: string): Promise<void> {
     const existing = await this.prisma.project.findUnique({ where: { id } });
     if (!existing || existing.deleted_at) {

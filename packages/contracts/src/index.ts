@@ -97,6 +97,7 @@ export type ValCode =
   | 'VAL-25'
   | 'VAL-26'
   | 'VAL-27'
+  | 'VAL-28'
   | 'VAL-30'
   | 'VAL-31'
   | 'VAL-32'
@@ -125,6 +126,7 @@ export const VAL_MESSAGES: Record<ValCode, string> = {
   'VAL-25': 'יש לבחור פרויקט תקין ופעיל',
   'VAL-26': 'יש לבחור משתמש ומשימה תקינים',
   'VAL-27': 'השיוך כבר קיים במערכת',
+  'VAL-28': 'יש לבחור אופן דיווח תקין',
   // Time entries (§8.5). VAL-37 (one running timer per user) belongs to the
   // Punch Clock epic and is intentionally absent here.
   'VAL-30': 'שעת התחלה היא שדה חובה',
