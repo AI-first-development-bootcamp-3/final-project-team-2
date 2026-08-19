@@ -247,3 +247,66 @@ describe('DayStatus enum', () => {
     expect(DayStatus.options).toEqual(['empty', 'partial', 'full', 'excess', 'absence']);
   });
 });
+
+describe('minutesForDay — sub-minute durations', () => {
+  // Rounding each entry and summing let sub-minute dust manufacture minutes
+  // that were never worked, and the exact-540 boundary is the whole point of
+  // FULL_DAY_MINUTES.
+  it('does not round an 8h59m30s day up to full', () => {
+    const result = computeDayStatus({
+      date: '2026-08-10',
+      entries: [{ startAt: '2026-08-10T08:00:30.000Z', endAt: '2026-08-10T17:00:00.000Z' }],
+    });
+
+    expect(result.totalMinutes).toBe(539);
+    expect(result.status).toBe('partial');
+  });
+
+  it('totals two thirty-second entries as one minute, not two', () => {
+    const result = computeDayStatus({
+      date: '2026-08-10',
+      entries: [
+        { startAt: '2026-08-10T08:00:00.000Z', endAt: '2026-08-10T08:00:30.000Z' },
+        { startAt: '2026-08-10T09:00:00.000Z', endAt: '2026-08-10T09:00:30.000Z' },
+      ],
+    });
+
+    expect(result.totalMinutes).toBe(1);
+  });
+
+  it('still lands exactly on full for fractional hours that sum to nine', () => {
+    const result = computeDayStatus({
+      date: '2026-08-10',
+      entries: [
+        { startAt: '2026-08-10T06:00:00.000Z', endAt: '2026-08-10T08:30:00.000Z' },
+        { startAt: '2026-08-10T09:00:00.000Z', endAt: '2026-08-10T15:30:00.000Z' },
+      ],
+    });
+
+    expect(result.totalMinutes).toBe(540);
+    expect(result.status).toBe('full');
+  });
+});
+
+describe('computeDayStatus — malformed rows degrade instead of throwing', () => {
+  // These rows come from the server and the client apps never re-validate them,
+  // so one bad startAt must not blank the whole quota bar from two layers down.
+  it('skips an entry whose startAt cannot be parsed', () => {
+    const result = computeDayStatus({
+      date: '2026-08-10',
+      entries: [
+        { startAt: '', endAt: null },
+        { startAt: '2026-08-10T06:00:00.000Z', endAt: '2026-08-10T14:00:00.000Z' },
+      ],
+    });
+
+    expect(result.totalMinutes).toBe(480);
+    expect(result.status).toBe('partial');
+  });
+
+  it('does not throw when every entry is malformed', () => {
+    expect(() =>
+      computeDayStatus({ date: '2026-08-10', entries: [{ startAt: 'garbage', endAt: 'garbage' }] }),
+    ).not.toThrow();
+  });
+});

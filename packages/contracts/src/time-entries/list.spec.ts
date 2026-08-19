@@ -109,3 +109,29 @@ describe('TimeEntryListItemSchema', () => {
     expect(TimeEntryListItemSchema.safeParse({ ...item, date: 'yesterday' }).success).toBe(false);
   });
 });
+
+describe('TimeEntriesListQuerySchema — hostile query values', () => {
+  it('reports VAL-DATE-RANGE for a duplicated parameter arriving as an array', () => {
+    // Express turns `?date=a&date=b` into an array; zod's default message would
+    // surface raw English under the catch-all VAL-QUERY rule, which has no
+    // Hebrew entry.
+    const result = TimeEntriesListQuerySchema.safeParse({ date: ['2026-08-10', '2026-08-11'] });
+
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.error.issues.map((issue) => issue.message)).toContain('VAL-DATE-RANGE');
+  });
+
+  it.each(['2026-02-30', '2026-13-01'])('rejects the calendar-invalid date %s', (date) => {
+    const result = TimeEntriesListQuerySchema.safeParse({ date });
+
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.error.issues.map((issue) => issue.message)).toContain('VAL-DATE-RANGE');
+  });
+
+  it('rejects a calendar-invalid range bound', () => {
+    const result = TimeEntriesListQuerySchema.safeParse({ from: '2026-02-30', to: '2026-03-31' });
+    expect(result.success).toBe(false);
+  });
+});

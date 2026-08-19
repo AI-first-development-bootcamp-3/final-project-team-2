@@ -1,12 +1,16 @@
 import { z } from 'zod';
 import {
   TimeEntryDateSchema,
+  TimeEntryDescriptionSchema,
   TimeEntryEndAtSchema,
   TimeEntryLocationSchema,
   TimeEntryStartAtSchema,
   TimeEntryTaskIdSchema,
-  refineTimeEntryTimes,
+  timeEntryBodySchema,
 } from './fields.js';
+
+/** The fields an edit is allowed to carry. */
+const UPDATABLE_FIELDS = ['taskId', 'date', 'startAt', 'endAt', 'location', 'description'] as const;
 
 /**
  * Body for editing an entry. Every field is optional so a client can send only
@@ -17,27 +21,29 @@ import {
  * merges the patch onto the stored entry and re-validates the result, so a
  * partial edit is still held to the full rule set (see `MergedTimeEntrySchema`).
  */
-export const UpdateTimeEntryBodySchema = z
-  .object({
+export const UpdateTimeEntryBodySchema = timeEntryBodySchema(
+  {
     taskId: TimeEntryTaskIdSchema.optional(),
     date: TimeEntryDateSchema.optional(),
     startAt: TimeEntryStartAtSchema.optional(),
     endAt: TimeEntryEndAtSchema.optional(),
     location: TimeEntryLocationSchema.optional(),
     // Explicit null clears the description; omitting it leaves it untouched.
-    description: z.string().trim().nullable().optional(),
-  })
-  .superRefine((value, ctx) => {
-    refineTimeEntryTimes(value, ctx);
-
-    if (Object.values(value).every((field) => field === undefined)) {
+    description: TimeEntryDescriptionSchema,
+  },
+  (raw, ctx) => {
+    if (UPDATABLE_FIELDS.every((field) => raw[field] === undefined)) {
+      // Root-scoped on purpose: no single input is at fault. Forms must surface
+      // it as a form-level message — keyed by field alone it would be dropped
+      // and the save would appear to do nothing.
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: [],
         message: 'VAL-EMPTY-UPDATE',
       });
     }
-  });
+  },
+);
 
 export type UpdateTimeEntryBody = z.infer<typeof UpdateTimeEntryBodySchema>;
 
@@ -46,16 +52,19 @@ export type UpdateTimeEntryBody = z.infer<typeof UpdateTimeEntryBodySchema>;
  *
  * Identical to the create rules, and deliberately so: an edit must not be able
  * to leave an entry in a state a create would have rejected.
+ *
+ * `endAt` is required here because a running entry never reaches this schema —
+ * the service refuses PATCH and DELETE on one outright with VAL-RUNNING-ENTRY
+ * (design D7), rather than exempting it from rules and reporting VAL-31 against
+ * a field the caller never sent.
  */
-export const MergedTimeEntrySchema = z
-  .object({
-    taskId: TimeEntryTaskIdSchema,
-    date: TimeEntryDateSchema,
-    startAt: TimeEntryStartAtSchema,
-    endAt: TimeEntryEndAtSchema,
-    location: TimeEntryLocationSchema,
-    description: z.string().trim().nullable().optional(),
-  })
-  .superRefine(refineTimeEntryTimes);
+export const MergedTimeEntrySchema = timeEntryBodySchema({
+  taskId: TimeEntryTaskIdSchema,
+  date: TimeEntryDateSchema,
+  startAt: TimeEntryStartAtSchema,
+  endAt: TimeEntryEndAtSchema,
+  location: TimeEntryLocationSchema,
+  description: TimeEntryDescriptionSchema,
+});
 
 export type MergedTimeEntry = z.infer<typeof MergedTimeEntrySchema>;

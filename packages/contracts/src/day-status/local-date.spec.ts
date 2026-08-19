@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { toLocalDate, isSameLocalDate, toYearMonth, APP_TIME_ZONE } from './local-date.js';
+import {
+  toLocalDate,
+  toLocalDateOrNull,
+  isSameLocalDate,
+  isRealCalendarDate,
+  toYearMonth,
+  APP_TIME_ZONE,
+} from './local-date.js';
 
 describe('toLocalDate', () => {
   it('formats an instant as a YYYY-MM-DD Asia/Jerusalem date', () => {
@@ -94,5 +101,37 @@ describe('toYearMonth', () => {
 describe('APP_TIME_ZONE', () => {
   it('is the Israeli zone every day-boundary decision is made in', () => {
     expect(APP_TIME_ZONE).toBe('Asia/Jerusalem');
+  });
+});
+
+describe('isRealCalendarDate', () => {
+  it.each(['2026-08-10', '2024-02-29', '2026-12-31'])('accepts %s', (date) => {
+    expect(isRealCalendarDate(date)).toBe(true);
+  });
+
+  // Shape-only checking let these through, and `new Date` rolls them over
+  // silently rather than failing.
+  it.each(['2026-02-30', '2026-13-01', '2026-00-10', '2026-04-31', '2025-02-29'])(
+    'rejects %s',
+    (date) => {
+      expect(isRealCalendarDate(date)).toBe(false);
+    },
+  );
+});
+
+describe('toYearMonth — impossible dates', () => {
+  it('refuses a month of 13 rather than returning a key no MonthLock can match', () => {
+    expect(() => toYearMonth('2026-13-01')).toThrow(RangeError);
+  });
+});
+
+describe('toLocalDateOrNull', () => {
+  it('returns null for an unusable instant instead of throwing', () => {
+    expect(toLocalDateOrNull(new Date('nonsense'))).toBeNull();
+  });
+
+  it('agrees with toLocalDate for a usable one', () => {
+    const instant = new Date('2026-08-10T19:00:00.000Z');
+    expect(toLocalDateOrNull(instant)).toBe(toLocalDate(instant));
   });
 });

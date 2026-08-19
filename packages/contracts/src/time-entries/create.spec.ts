@@ -185,3 +185,69 @@ describe('CreateTimeEntryBodySchema — multiple violations', () => {
     expect(messages).toEqual(expect.arrayContaining(['VAL-30', 'VAL-31', 'VAL-35', 'VAL-36']));
   });
 });
+
+describe('CreateTimeEntryBodySchema — a field failure never suppresses the cross-field rules', () => {
+  // zod v3 abandons an object's superRefine as soon as a field parse aborts,
+  // which a missing or wrong-typed field does. That silently dropped VAL-31 and
+  // VAL-38 and cost the employee a second round trip.
+  const reversed = {
+    ...validBody,
+    startAt: '2026-08-10T15:00:00.000Z',
+    endAt: '2026-08-10T06:00:00.000Z',
+  };
+
+  it('reports VAL-31 alongside a missing location', () => {
+    const messages = CreateTimeEntryBodySchema.safeParse(omit(reversed, 'location'))
+      .error!.issues.map((issue) => issue.message);
+
+    expect(messages).toEqual(expect.arrayContaining(['VAL-36', 'VAL-31']));
+  });
+
+  it('reports VAL-31 alongside an out-of-set location', () => {
+    const messages = CreateTimeEntryBodySchema.safeParse({ ...reversed, location: 'cafe' })
+      .error!.issues.map((issue) => issue.message);
+
+    expect(messages).toEqual(expect.arrayContaining(['VAL-36', 'VAL-31']));
+  });
+
+  it('reports VAL-38 alongside a missing task', () => {
+    const messages = CreateTimeEntryBodySchema.safeParse(
+      omit({ ...validBody, date: '2026-08-11' }, 'taskId'),
+    ).error!.issues.map((issue) => issue.message);
+
+    expect(messages).toEqual(expect.arrayContaining(['VAL-35', 'VAL-38']));
+  });
+});
+
+describe('CreateTimeEntryBodySchema — no derived complaints from a rejected value', () => {
+  it('reports VAL-30 alone when startAt is a bare date, without deriving VAL-31 or VAL-38', () => {
+    // `new Date('2026-08-09')` parses, so the cross-field rules would happily
+    // compute from a value the field schema had already rejected.
+    const messages = CreateTimeEntryBodySchema.safeParse({
+      ...validBody,
+      startAt: '2026-08-09',
+    }).error!.issues.map((issue) => issue.message);
+
+    expect(messages).toEqual(['VAL-30']);
+  });
+});
+
+describe('CreateTimeEntryBodySchema — description', () => {
+  it('accepts an explicit null, matching what the list endpoint returns', () => {
+    // One payload builder serves create and edit; the read path hands back
+    // `description: null`, so rejecting it here failed a round trip through
+    // the client's own data.
+    const result = CreateTimeEntryBodySchema.safeParse({ ...validBody, description: null });
+    expect(result.success).toBe(true);
+  });
+});
+
+describe('CreateTimeEntryBodySchema — calendar-invalid dates', () => {
+  it('rejects a day that does not exist with VAL-38', () => {
+    expect(rulesFor({ ...validBody, date: '2026-02-30' }, 'date')).toContain('VAL-38');
+  });
+
+  it('rejects a month of 13 with VAL-38', () => {
+    expect(rulesFor({ ...validBody, date: '2026-13-01' }, 'date')).toContain('VAL-38');
+  });
+});

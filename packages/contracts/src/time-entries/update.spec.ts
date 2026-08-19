@@ -120,3 +120,31 @@ describe('refinement robustness', () => {
     expect(() => UpdateTimeEntryBodySchema.safeParse({ startAt: 'x', endAt: 'y' })).not.toThrow();
   });
 });
+
+describe('UpdateTimeEntryBodySchema — a field failure never suppresses the cross-field rules', () => {
+  it('reports VAL-31 alongside an out-of-set location', () => {
+    const messages = UpdateTimeEntryBodySchema.safeParse({
+      startAt: '2026-08-10T15:00:00.000Z',
+      endAt: '2026-08-10T06:00:00.000Z',
+      location: 'cafe',
+    }).error!.issues.map((issue) => issue.message);
+
+    expect(messages).toEqual(expect.arrayContaining(['VAL-36', 'VAL-31']));
+  });
+});
+
+describe('MergedTimeEntrySchema — running entries never reach it', () => {
+  it('rejects a null endAt, which the service refuses earlier with VAL-RUNNING-ENTRY', () => {
+    // Design D7: PATCH and DELETE on a running entry are refused outright
+    // rather than exempted from the rules, so requiring endAt here is correct.
+    const result = MergedTimeEntrySchema.safeParse({
+      taskId: '550e8400-e29b-41d4-a716-446655440000',
+      date: '2026-08-10',
+      startAt: '2026-08-10T06:00:00.000Z',
+      endAt: null,
+      location: 'office',
+    });
+
+    expect(result.success).toBe(false);
+  });
+});

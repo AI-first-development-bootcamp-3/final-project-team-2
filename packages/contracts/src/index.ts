@@ -1,10 +1,9 @@
 import { z } from 'zod';
 import { UserRole } from './enums.js';
 
+// Re-exports WorkLocation, which now lives in enums.ts so time-entries/fields.ts
+// can derive its VAL-36 schema from it without importing this module circularly.
 export * from './enums.js';
-
-export const WorkLocation = z.enum(['office', 'client_site', 'home']);
-export type WorkLocation = z.infer<typeof WorkLocation>;
 
 export const AbsenceType = z.enum(['vacation', 'sick', 'military', 'other']);
 export type AbsenceType = z.infer<typeof AbsenceType>;

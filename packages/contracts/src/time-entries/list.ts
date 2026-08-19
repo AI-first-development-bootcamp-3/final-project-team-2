@@ -1,8 +1,23 @@
 import { z } from 'zod';
-import { LOCAL_DATE_PATTERN } from '../day-status/local-date.js';
+import { LOCAL_DATE_PATTERN, isRealCalendarDate } from '../day-status/local-date.js';
 import { TimeEntryLocationSchema } from './fields.js';
 
-const localDateQuery = z.string().regex(LOCAL_DATE_PATTERN, { message: 'VAL-DATE-RANGE' });
+/**
+ * A `YYYY-MM-DD` query parameter.
+ *
+ * Every failure reports VAL-DATE-RANGE, the wrong-typed case included: a
+ * duplicated parameter (`?date=a&date=b`) arrives from Express as an array, and
+ * on zod's default that surfaced a raw English message under the catch-all
+ * `VAL-QUERY` rule, which has no Hebrew entry in `VAL_MESSAGES`.
+ *
+ * Calendar reality is checked too, not just shape. The write path is
+ * backstopped by VAL-38's cross-check against `startAt`; the read path has no
+ * such backstop, and `new Date('2026-02-30')` silently returns 2 March.
+ */
+const localDateQuery = z
+  .string({ required_error: 'VAL-DATE-RANGE', invalid_type_error: 'VAL-DATE-RANGE' })
+  .regex(LOCAL_DATE_PATTERN, { message: 'VAL-DATE-RANGE' })
+  .refine(isRealCalendarDate, { message: 'VAL-DATE-RANGE' });
 
 /**
  * Reads take either a single day or an inclusive range.
