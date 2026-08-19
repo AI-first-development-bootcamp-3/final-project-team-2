@@ -131,34 +131,36 @@ export function timeEntryBodySchema<Shape extends z.ZodRawShape>(
 ) {
   const fields = z.object(shape);
 
-  return z
-    .object({})
-    .passthrough()
-    .superRefine((raw, ctx) => {
-      const supplied = raw as Record<string, unknown>;
-      const passed: Record<string, unknown> = {};
+  return (
+    z
+      .object({})
+      .passthrough()
+      .superRefine((raw, ctx) => {
+        const supplied = raw as Record<string, unknown>;
+        const passed: Record<string, unknown> = {};
 
-      for (const [key, schema] of Object.entries(shape)) {
-        const result = schema.safeParse(supplied[key]);
+        for (const [key, schema] of Object.entries(shape)) {
+          const result = schema.safeParse(supplied[key]);
 
-        if (result.success) {
-          passed[key] = result.data;
-          continue;
+          if (result.success) {
+            passed[key] = result.data;
+            continue;
+          }
+
+          for (const issue of result.error.issues) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              path: [key, ...issue.path],
+              message: issue.message,
+            });
+          }
         }
 
-        for (const issue of result.error.issues) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            path: [key, ...issue.path],
-            message: issue.message,
-          });
-        }
-      }
-
-      refineTimeEntryTimes(passed as TimeEntryTimes, ctx);
-      afterFields?.(supplied, ctx);
-    })
-    // Reached only when every field passed above, so this re-parse cannot fail;
-    // it exists to hand back the trimmed, typed, unknown-key-stripped value.
-    .transform((raw) => fields.parse(raw));
+        refineTimeEntryTimes(passed as TimeEntryTimes, ctx);
+        afterFields?.(supplied, ctx);
+      })
+      // Reached only when every field passed above, so this re-parse cannot fail;
+      // it exists to hand back the trimmed, typed, unknown-key-stripped value.
+      .transform((raw) => fields.parse(raw))
+  );
 }

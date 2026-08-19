@@ -197,15 +197,18 @@ describe('CreateTimeEntryBodySchema — a field failure never suppresses the cro
   };
 
   it('reports VAL-31 alongside a missing location', () => {
-    const messages = CreateTimeEntryBodySchema.safeParse(omit(reversed, 'location'))
-      .error!.issues.map((issue) => issue.message);
+    const messages = CreateTimeEntryBodySchema.safeParse(
+      omit(reversed, 'location'),
+    ).error!.issues.map((issue) => issue.message);
 
     expect(messages).toEqual(expect.arrayContaining(['VAL-36', 'VAL-31']));
   });
 
   it('reports VAL-31 alongside an out-of-set location', () => {
-    const messages = CreateTimeEntryBodySchema.safeParse({ ...reversed, location: 'cafe' })
-      .error!.issues.map((issue) => issue.message);
+    const messages = CreateTimeEntryBodySchema.safeParse({
+      ...reversed,
+      location: 'cafe',
+    }).error!.issues.map((issue) => issue.message);
 
     expect(messages).toEqual(expect.arrayContaining(['VAL-36', 'VAL-31']));
   });
