@@ -249,3 +249,11 @@ export type {
   TimeEntriesListSuccess,
   TimeEntrySuccess,
 } from './time-entries/list.js';
+
+// --- Months (KAN-80) ---
+export {
+  MonthAbsenceSchema,
+  MonthLockStatusSchema,
+  MonthQueryResponseSchema,
+} from './months/query.js';
+export type { MonthAbsence, MonthLockStatus, MonthQueryResponse } from './months/query.js';
