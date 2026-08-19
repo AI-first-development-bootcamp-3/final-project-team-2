@@ -89,7 +89,7 @@ export function DataTable<T>({
           </tbody>
         </table>
       </div>
-      <div className="mt-4 flex items-center justify-between gap-3 text-sm text-neutral-500">
+      <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-center gap-3 text-sm text-neutral-500">
         <span>
           עמוד {page} מתוך {pageCount} ({total} רשומות)
         </span>
@@ -131,6 +131,7 @@ export function DataTable<T>({
             הבא
           </button>
         </nav>
+        <span aria-hidden="true" />
       </div>
     </div>
   );
