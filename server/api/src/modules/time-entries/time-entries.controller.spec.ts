@@ -112,8 +112,42 @@ function monthIs(lock: { is_locked: boolean }): void {
   prismaMock.monthLock.findUnique.mockResolvedValue(lock);
 }
 
+/**
+ * An assignment to an open task under an active project and client — what the
+ * picker would have offered. The write path reads the catalogue state through
+ * the assignment row, so the fixture has to carry it.
+ */
 function taskIsAssigned(): void {
-  prismaMock.taskAssignment.findUnique.mockResolvedValue({ id: 'assignment-1' });
+  prismaMock.taskAssignment.findUnique.mockResolvedValue({
+    id: 'assignment-1',
+    task: {
+      status: 'open',
+      deleted_at: null,
+      project: {
+        is_active: true,
+        deleted_at: null,
+        report_type: 'TOTAL_HOURS',
+        client: { is_active: true, deleted_at: null },
+      },
+    },
+  });
+}
+
+/** Assigned, but the work is no longer open for reporting (VAL-33A). */
+function taskIsClosed(): void {
+  prismaMock.taskAssignment.findUnique.mockResolvedValue({
+    id: 'assignment-1',
+    task: {
+      status: 'closed',
+      deleted_at: null,
+      project: {
+        is_active: true,
+        deleted_at: null,
+        report_type: 'TOTAL_HOURS',
+        client: { is_active: true, deleted_at: null },
+      },
+    },
+  });
 }
 
 function taskIsNotAssigned(): void {
@@ -248,6 +282,23 @@ describe('POST /api/v1/time-entries', () => {
     );
     expect(prismaMock.timeEntry.create).not.toHaveBeenCalled();
   });
+
+  it('refuses a write against an assigned-but-closed task with VAL-33A', async () => {
+    // The assignment row survives the task being closed, so a direct API call
+    // could otherwise report hours the picker would never have offered (D9).
+    taskIsClosed();
+
+    const response = await request(app.getHttpServer())
+      .post('/api/v1/time-entries')
+      .send(validBody)
+      .expect(403);
+
+    expect(response.body.details).toEqual(
+      expect.arrayContaining([expect.objectContaining({ field: 'taskId', rule: 'VAL-33A' })]),
+    );
+    expect(prismaMock.timeEntry.create).not.toHaveBeenCalled();
+  });
+
   it('rejects an overlapping entry with VAL-32', async () => {
     prismaMock.timeEntry.findMany.mockResolvedValue([
       { id: 'existing-1', start_at: ROW.start_at, end_at: ROW.end_at },
@@ -311,6 +362,28 @@ describe('GET /api/v1/time-entries', () => {
     await request(app.getHttpServer())
       .get('/api/v1/time-entries?from=2026-08-31&to=2026-08-01')
       .expect(400);
+  });
+
+  it('answers 400, not 500, for a month that does not exist', async () => {
+    // `new Date('2026-13-01')` is an Invalid Date; unguarded it reached Prisma
+    // and came back as a 500.
+    await request(app.getHttpServer())
+      .get('/api/v1/time-entries?from=2026-13-01&to=2026-13-05')
+      .expect(400);
+    expect(prismaMock.timeEntry.findMany).not.toHaveBeenCalled();
+  });
+
+  it('rejects a day that does not exist rather than answering about another one', async () => {
+    // V8 rolls 30 February over to March 2 — a 200 about a day nobody asked for.
+    await request(app.getHttpServer()).get('/api/v1/time-entries?date=2026-02-30').expect(400);
+    expect(prismaMock.timeEntry.findMany).not.toHaveBeenCalled();
+  });
+
+  it('rejects a range too wide to answer in one unpaged response', async () => {
+    await request(app.getHttpServer())
+      .get('/api/v1/time-entries?from=1900-01-01&to=2100-12-31')
+      .expect(400);
+    expect(prismaMock.timeEntry.findMany).not.toHaveBeenCalled();
   });
 
   it('still permits reads in a locked month', async () => {

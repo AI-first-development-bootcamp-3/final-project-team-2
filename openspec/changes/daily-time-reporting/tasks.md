@@ -34,6 +34,13 @@
 - [x] 4.5 Document every endpoint in Swagger with request and response schemas and the bearer requirement.
 - [x] 4.6 Test create and read against the scenarios in `specs/time-entries-api/spec.md`: ownership cannot be forged, another employee's entries are never returned, multiple entries per day, locked-month write refused but read allowed, historical entries still render after their task is closed.
 
+### Review follow-ups (PR #54)
+
+- [x] 4.7 Add `assertTaskAvailableForReporting` — assignment *plus* the catalogue state `GET /me/assignments` filters on (task open and not deleted, project and client active and not deleted, `report_type = TOTAL_HOURS`), throwing forbidden with the new `VAL-33A`. `TaskAssignment` is never soft-deleted, so existence alone let a direct call write against dead or punch-clock work (D9). Applied to create and to an edit that changes the task; an edit that keeps its task stays on plain `VAL-33` so an entry can still be corrected after its task closes.
+- [x] 4.8 Validate list query dates as real calendar days, not just `YYYY-MM-DD` shape — `2026-13-01` reached Prisma as an Invalid Date (500) and `2026-02-30` silently answered about March 2. Shared `isCalendarDate` now backs the list query, `TimeEntryDateSchema`, and `toYearMonth`.
+- [x] 4.9 Cap the list range at `MAX_TIME_ENTRY_RANGE_DAYS` (366) in the query schema — the response is deliberately unpaged, so the range width is what bounds it.
+- [x] 4.10 Accept `description: null` on create, matching the read shape and the update body, so an entry read back can be posted again.
+
 ## 5. Overlap enforcement in the API (KAN-78)
 
 - [x] 5.1 In the service, fetch overlap candidates for the user with a start-time window widened by one day on each side of the candidate interval; name and comment the widening constant (D6).

@@ -10,6 +10,7 @@ import { TimeEntriesService } from './time-entries.service';
 const USER_ID = '00000000-0000-0000-0000-000000000011';
 const OTHER_USER_ID = '00000000-0000-0000-0000-000000000012';
 const TASK_ID = '00000000-0000-0000-0000-000000000021';
+const OTHER_TASK_ID = '00000000-0000-0000-0000-000000000022';
 const ENTRY_ID = '00000000-0000-0000-0000-000000000031';
 
 /** A stored row: 09:00-18:00 local on 2026-08-10 (Israel is UTC+3 in August). */
@@ -45,11 +46,15 @@ function createPrisma() {
   };
 }
 
-function createScope(assigned = true) {
+function createScope(assigned = true, available = true) {
   return {
     isUserAssignedToTask: vi.fn().mockResolvedValue(assigned),
     assertUserAssignedToTask: vi.fn().mockImplementation(async () => {
       if (!assigned) throw new ForbiddenException({ details: [{ rule: 'VAL-33' }] });
+    }),
+    assertTaskAvailableForReporting: vi.fn().mockImplementation(async () => {
+      if (!assigned) throw new ForbiddenException({ details: [{ rule: 'VAL-33' }] });
+      if (!available) throw new ForbiddenException({ details: [{ rule: 'VAL-33A' }] });
     }),
   };
 }
@@ -135,6 +140,38 @@ describe('TimeEntriesService.update', () => {
       createService(prisma, scope).update(USER_ID, ENTRY_ID, { taskId: TASK_ID }),
     ).rejects.toBeInstanceOf(ForbiddenException);
     expect(prisma.timeEntry.update).not.toHaveBeenCalled();
+  });
+
+  it('holds an edit onto a different task to the full availability check', async () => {
+    const scope = createScope();
+
+    await createService(prisma, scope).update(USER_ID, ENTRY_ID, { taskId: OTHER_TASK_ID });
+
+    // Pointing an entry at other work is a fresh report of hours against it,
+    // so it must clear the same bar a create does.
+    expect(scope.assertTaskAvailableForReporting).toHaveBeenCalledWith(USER_ID, OTHER_TASK_ID);
+    expect(scope.assertUserAssignedToTask).not.toHaveBeenCalled();
+  });
+
+  it('lets an entry on a task that has since closed still be corrected', async () => {
+    // The task the entry already sits on is checked for assignment only. An
+    // entry logged while the task was open must stay fixable after it closes,
+    // or a typo is frozen into the month with no way out (§8.3).
+    const scope = createScope(true, false);
+
+    await createService(prisma, scope).update(USER_ID, ENTRY_ID, { location: 'home' });
+
+    expect(scope.assertUserAssignedToTask).toHaveBeenCalledWith(USER_ID, TASK_ID);
+    expect(scope.assertTaskAvailableForReporting).not.toHaveBeenCalled();
+    expect(prisma.timeEntry.update).toHaveBeenCalledOnce();
+  });
+
+  it('lets an entry on a task that has since closed still be deleted', async () => {
+    const scope = createScope(true, false);
+
+    await createService(prisma, scope).remove(USER_ID, ENTRY_ID);
+
+    expect(prisma.timeEntry.delete).toHaveBeenCalledOnce();
   });
 
   it('refuses an edit in a locked month', async () => {
