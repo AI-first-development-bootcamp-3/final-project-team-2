@@ -22,7 +22,6 @@ import {
 import { Roles } from '../../auth/auth.decorators';
 import { TasksService } from './tasks.service';
 
-
 @ApiTags('tasks')
 @ApiBearerAuth()
 @Controller('tasks')

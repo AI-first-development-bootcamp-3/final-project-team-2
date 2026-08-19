@@ -36,7 +36,7 @@
 
 ### Review follow-ups (PR #54)
 
-- [x] 4.7 Add `assertTaskAvailableForReporting` — assignment *plus* the catalogue state `GET /me/assignments` filters on (task open and not deleted, project and client active and not deleted, `report_type = TOTAL_HOURS`), throwing forbidden with the new `VAL-33A`. `TaskAssignment` is never soft-deleted, so existence alone let a direct call write against dead or punch-clock work (D9). Applied to create and to an edit that changes the task; an edit that keeps its task stays on plain `VAL-33` so an entry can still be corrected after its task closes.
+- [x] 4.7 Add `assertTaskAvailableForReporting` — assignment _plus_ the catalogue state `GET /me/assignments` filters on (task open and not deleted, project and client active and not deleted, `report_type = TOTAL_HOURS`), throwing forbidden with the new `VAL-33A`. `TaskAssignment` is never soft-deleted, so existence alone let a direct call write against dead or punch-clock work (D9). Applied to create and to an edit that changes the task; an edit that keeps its task stays on plain `VAL-33` so an entry can still be corrected after its task closes.
 - [x] 4.8 Validate list query dates as real calendar days, not just `YYYY-MM-DD` shape — `2026-13-01` reached Prisma as an Invalid Date (500) and `2026-02-30` silently answered about March 2. Shared `isCalendarDate` now backs the list query, `TimeEntryDateSchema`, and `toYearMonth`.
 - [x] 4.9 Cap the list range at `MAX_TIME_ENTRY_RANGE_DAYS` (366) in the query schema — the response is deliberately unpaged, so the range width is what bounds it.
 - [x] 4.10 Accept `description: null` on create, matching the read shape and the update body, so an entry read back can be posted again.
@@ -45,7 +45,7 @@
 
 - [x] 5.1 In the service, fetch overlap candidates for the user with a start-time window widened by one day on each side of the candidate interval; name and comment the widening constant (D6).
 - [x] 5.2 Reject overlapping writes with `VAL-32` via the pure comparison from task 3.4; exclude the entry being edited from its own candidate set.
-- [x] 5.3 Unit-test overlap with a mocked Prisma client, including both night-shift orderings, an adjacent (touching) entry accepted, an overlap with another user's entry accepted, and an overlap with a soft-deleted entry accepted. *(Reworded from "integration-test against the database": no DB-backed test was delivered, so the soft-delete extension's filtering is asserted through the query the service builds, not through a real row. See 9.7.)*
+- [x] 5.3 Unit-test overlap with a mocked Prisma client, including both night-shift orderings, an adjacent (touching) entry accepted, an overlap with another user's entry accepted, and an overlap with a soft-deleted entry accepted. _(Reworded from "integration-test against the database": no DB-backed test was delivered, so the soft-delete extension's filtering is asserted through the query the service builds, not through a real row. See 9.7.)_
 - [x] 5.4 Add the guard test asserting the candidate window's documented bound.
 
 ## 6. Time-entries API: edit and delete (KAN-79)
@@ -54,7 +54,7 @@
 - [x] 6.2 Call `assertMonthNotLocked` for both the entry's existing month and its target month, so an edit cannot move an entry across a lock boundary (D5).
 - [x] 6.3 Implement `DELETE /api/v1/time-entries/:id`: owner only, month open. Deletion is soft via the existing Prisma extension — no new delete logic.
 - [x] 6.4 Return not-found for an unknown entry and reject any attempt to edit or delete another user's entry, without revealing that it exists.
-- [x] 6.5 Unit-test edit and delete with a mocked Prisma client: valid edit, edit creating an overlap, edit onto an unassigned task, edit and delete refused in a locked month, deleted entries excluded from reads, totals, and overlap checks while the row is retained. *(Same rewording as 5.3 — the exclusion of deleted rows is asserted at the query, not against the database.)*
+- [x] 6.5 Unit-test edit and delete with a mocked Prisma client: valid edit, edit creating an overlap, edit onto an unassigned task, edit and delete refused in a locked month, deleted entries excluded from reads, totals, and overlap checks while the row is retained. _(Same rewording as 5.3 — the exclusion of deleted rows is asserted at the query, not against the database.)_
 - [x] 6.6 Verify `pnpm --filter @abra/api test:coverage` passes the 70% gate.
 
 ### Review follow-ups (PR #57 and #58)

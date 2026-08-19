@@ -20,7 +20,6 @@ import {
 import { Roles } from '../../auth/auth.decorators';
 import { AssignmentsService } from './assignments.service';
 
-
 @ApiTags('assignments')
 @ApiBearerAuth()
 @Controller('assignments')

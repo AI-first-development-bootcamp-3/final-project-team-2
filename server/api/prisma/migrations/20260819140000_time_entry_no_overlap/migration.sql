@@ -14,6 +14,11 @@ CREATE EXTENSION IF NOT EXISTS btree_gist;
 -- 12:00 adjacent rather than overlapping, matching `intervalsOverlap` in
 -- contracts, which treats touching boundaries as non-overlapping.
 --
+-- `tsrange`, not `tstzrange`: start_at/end_at are TIMESTAMP(3) (Prisma DateTime
+-- without @db.Timestamptz). tstzrange() would cast timestamp → timestamptz,
+-- which depends on the session TimeZone and is STABLE, so Postgres rejects the
+-- index with "functions in index expression must be marked IMMUTABLE".
+--
 -- Restricted to live, completed entries. A soft-deleted row must not block its
 -- own slot being re-reported, and a running entry has no end instant to bound a
 -- range with — the Punch Clock epic enforces its own single-timer rule (VAL-37).
@@ -21,6 +26,6 @@ ALTER TABLE "time_entries"
   ADD CONSTRAINT "time_entries_no_overlap"
   EXCLUDE USING gist (
     "user_id" WITH =,
-    tstzrange("start_at", "end_at", '[)') WITH &&
+    tsrange("start_at", "end_at", '[)') WITH &&
   )
   WHERE ("deleted_at" IS NULL AND "end_at" IS NOT NULL);

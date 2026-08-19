@@ -212,7 +212,11 @@ export type { TimeEntryTimes } from './time-entries/fields.js';
 export { CreateTimeEntryBodySchema } from './time-entries/create.js';
 export type { CreateTimeEntryBody } from './time-entries/create.js';
 
-export { UpdateTimeEntryBodySchema, MergedTimeEntrySchema, CompletedTimeEntrySchema } from './time-entries/update.js';
+export {
+  UpdateTimeEntryBodySchema,
+  MergedTimeEntrySchema,
+  CompletedTimeEntrySchema,
+} from './time-entries/update.js';
 export type {
   UpdateTimeEntryBody,
   MergedTimeEntry,

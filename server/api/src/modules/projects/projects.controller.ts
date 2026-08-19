@@ -24,7 +24,6 @@ import {
 import { Roles } from '../../auth/auth.decorators';
 import { ProjectsService } from './projects.service';
 
-
 // A malformed :id must be a 400 in the API's details shape, not a Prisma
 // P2023 surfacing as a 500. VAL-25 is the existing "valid project" rule.
 const projectIdPipe = new ParseUUIDPipe({

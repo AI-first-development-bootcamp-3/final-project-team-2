@@ -120,11 +120,7 @@ export class TimeEntriesController {
       badRequest(parsed.error.issues);
     }
 
-    const data = await this.timeEntries.update(
-      req.user.userId,
-      entryIdOrNotFound(id),
-      parsed.data,
-    );
+    const data = await this.timeEntries.update(req.user.userId, entryIdOrNotFound(id), parsed.data);
     return { data };
   }
 

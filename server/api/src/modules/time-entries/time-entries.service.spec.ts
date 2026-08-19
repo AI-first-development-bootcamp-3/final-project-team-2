@@ -258,10 +258,13 @@ describe('TimeEntriesService.create — overlap (VAL-32)', () => {
   }
 
   /** Whether that predicate would match a stored row. */
-  function matches(query: { where: Record<string, { lt?: Date; gt?: Date }> }, row: {
-    start: string;
-    end: string | null;
-  }): boolean {
+  function matches(
+    query: { where: Record<string, { lt?: Date; gt?: Date }> },
+    row: {
+      start: string;
+      end: string | null;
+    },
+  ): boolean {
     if (row.end === null) {
       // `end_at: { gt: ... }` never matches NULL, so a running entry is out.
       return false;
@@ -306,27 +309,35 @@ describe('TimeEntriesService.create — overlap (VAL-32)', () => {
   it('would match an entry that overlaps', async () => {
     await attempt(bodyFor('2026-08-10', '11:00', '2026-08-10', '13:00'));
 
-    expect(matches(overlapQuery(), { start: at('2026-08-10', '09:00'), end: at('2026-08-10', '12:00') })).toBe(true);
+    expect(
+      matches(overlapQuery(), { start: at('2026-08-10', '09:00'), end: at('2026-08-10', '12:00') }),
+    ).toBe(true);
   });
 
   it('would not match an entry that starts exactly where this one ends', async () => {
     await attempt(bodyFor('2026-08-10', '09:00', '2026-08-10', '12:00'));
 
     // Touching boundaries are adjacent, not overlapping.
-    expect(matches(overlapQuery(), { start: at('2026-08-10', '12:00'), end: at('2026-08-10', '14:00') })).toBe(false);
+    expect(
+      matches(overlapQuery(), { start: at('2026-08-10', '12:00'), end: at('2026-08-10', '14:00') }),
+    ).toBe(false);
   });
 
   it('would match a night shift that runs into this morning', async () => {
     await attempt(bodyFor('2026-08-11', '05:00', '2026-08-11', '07:00'));
 
     // 22:00 on the 10th to 06:00 on the 11th.
-    expect(matches(overlapQuery(), { start: at('2026-08-10', '22:00'), end: at('2026-08-11', '06:00') })).toBe(true);
+    expect(
+      matches(overlapQuery(), { start: at('2026-08-10', '22:00'), end: at('2026-08-11', '06:00') }),
+    ).toBe(true);
   });
 
   it('would match a morning entry this night shift runs into', async () => {
     await attempt(bodyFor('2026-08-10', '22:00', '2026-08-11', '06:00'));
 
-    expect(matches(overlapQuery(), { start: at('2026-08-11', '05:00'), end: at('2026-08-11', '07:00') })).toBe(true);
+    expect(
+      matches(overlapQuery(), { start: at('2026-08-11', '05:00'), end: at('2026-08-11', '07:00') }),
+    ).toBe(true);
   });
 
   /**
@@ -337,7 +348,9 @@ describe('TimeEntriesService.create — overlap (VAL-32)', () => {
   it('would match an entry far longer than a day, which the old window missed', async () => {
     await attempt(bodyFor('2026-08-11', '19:00', '2026-08-11', '20:00'));
 
-    expect(matches(overlapQuery(), { start: at('2026-08-10', '06:00'), end: at('2026-08-12', '06:00') })).toBe(true);
+    expect(
+      matches(overlapQuery(), { start: at('2026-08-10', '06:00'), end: at('2026-08-12', '06:00') }),
+    ).toBe(true);
   });
 
   it('would not match an entry that is still running', async () => {
@@ -378,9 +391,11 @@ describe('TimeEntriesService.create — overlap (VAL-32)', () => {
    * the caller still sees VAL-32 rather than a 500.
    */
   it('translates the database no-overlap constraint into the same VAL-32 conflict', async () => {
-    prisma.timeEntry.create.mockRejectedValue(Object.assign(new Error('conflicting key value'), {
-      code: '23P01',
-    }));
+    prisma.timeEntry.create.mockRejectedValue(
+      Object.assign(new Error('conflicting key value'), {
+        code: '23P01',
+      }),
+    );
 
     await expect(
       attempt(bodyFor('2026-08-10', '09:00', '2026-08-10', '17:00')),
@@ -390,9 +405,11 @@ describe('TimeEntriesService.create — overlap (VAL-32)', () => {
   });
 
   it('does not swallow an unrelated database error', async () => {
-    prisma.timeEntry.create.mockRejectedValue(Object.assign(new Error('connection lost'), {
-      code: '08006',
-    }));
+    prisma.timeEntry.create.mockRejectedValue(
+      Object.assign(new Error('connection lost'), {
+        code: '08006',
+      }),
+    );
 
     await expect(attempt(bodyFor('2026-08-10', '09:00', '2026-08-10', '17:00'))).rejects.toThrow(
       'connection lost',

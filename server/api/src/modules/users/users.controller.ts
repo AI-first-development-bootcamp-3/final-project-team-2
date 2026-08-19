@@ -23,7 +23,6 @@ import {
 import { Roles } from '../../auth/auth.decorators';
 import { UsersService } from './users.service';
 
-
 @ApiTags('users')
 @ApiBearerAuth()
 @Controller('users')
