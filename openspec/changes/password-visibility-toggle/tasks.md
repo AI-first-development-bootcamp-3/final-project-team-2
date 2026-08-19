@@ -13,3 +13,4 @@
 ## 3. Verify
 
 - [x] 3.1 Run `pnpm --filter @abra/admin test` and `pnpm --filter @abra/mobile test`
+- [x] 3.2 Point e2e password locators at `getByLabel('סיסמה', { exact: true })` so they do not match הצג סיסמה

@@ -8,7 +8,7 @@ export async function signInAsEmployee(
 ): Promise<void> {
   await page.goto('/login');
   await page.getByLabel('אימייל').fill(credentials.email);
-  await page.getByLabel('סיסמה').fill(credentials.password);
+  await page.getByLabel('סיסמה', { exact: true }).fill(credentials.password);
   await page.getByRole('button', { name: 'התחבר' }).click();
   await expect(page).toHaveURL(new URL('/', page.url()).href);
   await expect(page.getByRole('heading', { name: 'דיווח שעות' })).toBeVisible();

@@ -27,9 +27,9 @@ See proposal.md for motivation. Admin login uses a raw `<input type="password">`
 
 Labels: הצג סיסמה / הסתר סיסמה. `aria-pressed` reflects the revealed state. Button sits at inline-end (`end-0`) with `pe-10` so it stays on the visual left in RTL and does not cover typed text.
 
-### 3. No e2e changes
+### 3. E2E locators must use exact label match
 
-Playwright already fills via `getByLabel('סיסמה')`. Behavior is covered by unit tests on `InputField` and both LoginPages.
+Playwright `getByLabel('סיסמה')` is a substring match, so it also hits the toggle (`הצג סיסמה`). Login helpers SHALL use `getByLabel('סיסמה', { exact: true })`.
 
 ## Risks / Trade-offs
 

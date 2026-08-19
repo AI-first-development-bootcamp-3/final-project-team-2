@@ -4,7 +4,7 @@ import { SEEDED_EMPLOYEE } from '../fixtures/users';
 async function fillLoginForm(page: Page, email: string, password: string): Promise<void> {
   await page.goto('/login');
   await page.getByLabel('אימייל').fill(email);
-  await page.getByLabel('סיסמה').fill(password);
+  await page.getByLabel('סיסמה', { exact: true }).fill(password);
   await page.getByRole('button', { name: 'התחבר' }).click();
 }
 
