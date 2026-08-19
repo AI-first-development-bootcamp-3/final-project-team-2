@@ -11,6 +11,7 @@ async function searchAndFindRow(
   page: Page,
   uniqueText: string,
   pathIncludes: string,
+  rowText: string = uniqueText,
 ): Promise<Locator> {
   const pending = page.waitForResponse((res) => {
     const url = res.url();
@@ -20,7 +21,7 @@ async function searchAndFindRow(
   });
   await page.getByLabel('חיפוש').fill(uniqueText);
   await pending;
-  const row = page.getByRole('row').filter({ hasText: uniqueText });
+  const row = page.getByRole('row').filter({ hasText: rowText });
   await expect(row).toBeVisible({ timeout: 15_000 });
   return row;
 }
@@ -112,7 +113,9 @@ export async function assignEmployeeViaConsole(
   await expect(dialog).toBeHidden();
   await expect(page.getByRole('status')).toContainText('השיוך נוצר בהצלחה');
 
-  const row = await searchAndFindRow(page, params.email, '/assignments?');
+  // The grouped-by-task table (KAN-122) renders employees as name chips —
+  // search by email server-side, but assert on the name the row displays.
+  const row = await searchAndFindRow(page, params.email, '/assignments?', params.fullName);
   await expect(row).toContainText(params.fullName);
   await expect(row).toContainText(params.taskName);
 }
