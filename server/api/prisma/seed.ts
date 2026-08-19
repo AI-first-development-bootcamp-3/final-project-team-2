@@ -1,4 +1,4 @@
-import { PrismaClient, UserRole, TaskStatus, WorkLocation } from '@prisma/client';
+import { PrismaClient, UserRole, TaskStatus, WorkLocation, EmploymentType } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
@@ -21,12 +21,17 @@ async function main(): Promise<void> {
   // ─── Users ──────────────────────────────────────────
   const SALT_ROUNDS = 10;
 
-  await prisma.user.create({
+  const adminUser = await prisma.user.create({
     data: {
       email: 'admin@abra.co',
       full_name: 'Admin User',
       password_hash: await bcrypt.hash('Admin123!', SALT_ROUNDS),
       role: UserRole.admin,
+      employee_number: 'E-1001',
+      role_title: 'System Administrator',
+      employment_type: EmploymentType.manager,
+      employment_percent: 100,
+      org_unit: 'IT',
     },
   });
 
@@ -36,6 +41,11 @@ async function main(): Promise<void> {
       full_name: 'Alice Cohen',
       password_hash: await bcrypt.hash('Employee123!', SALT_ROUNDS),
       role: UserRole.employee,
+      employee_number: 'E-1002',
+      role_title: 'Frontend Developer',
+      employment_type: EmploymentType.worker,
+      employment_percent: 100,
+      org_unit: 'R&D Solutions',
     },
   });
 
@@ -45,6 +55,11 @@ async function main(): Promise<void> {
       full_name: 'Bob Levi',
       password_hash: await bcrypt.hash('Employee123!', SALT_ROUNDS),
       role: UserRole.employee,
+      employee_number: 'E-1003',
+      role_title: 'UX Designer',
+      employment_type: EmploymentType.worker,
+      employment_percent: 80,
+      org_unit: 'R&D Solutions',
     },
   });
 
@@ -59,7 +74,14 @@ async function main(): Promise<void> {
 
   // ─── Projects ───────────────────────────────────────
   const websiteRedesign = await prisma.project.create({
-    data: { name: 'Website Redesign', client_id: acme.id },
+    data: {
+      name: 'Website Redesign',
+      client_id: acme.id,
+      lead_manager_id: adminUser.id,
+      start_date: new Date('2026-01-01'),
+      end_date: new Date('2026-12-31'),
+      description: 'Full redesign of the Acme marketing site',
+    },
   });
 
   const mobileApp = await prisma.project.create({
