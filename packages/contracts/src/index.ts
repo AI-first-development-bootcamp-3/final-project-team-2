@@ -1,10 +1,9 @@
 import { z } from 'zod';
 import { UserRole } from './enums.js';
 
+// Re-exports WorkLocation, which now lives in enums.ts so time-entries/fields.ts
+// can derive its VAL-36 schema from it without importing this module circularly.
 export * from './enums.js';
-
-export const WorkLocation = z.enum(['office', 'client_site', 'home']);
-export type WorkLocation = z.infer<typeof WorkLocation>;
 
 export const AbsenceType = z.enum(['vacation', 'sick', 'military', 'other']);
 export type AbsenceType = z.infer<typeof AbsenceType>;
@@ -97,7 +96,18 @@ export type ValCode =
   | 'VAL-25'
   | 'VAL-26'
   | 'VAL-27'
-  | 'VAL-28';
+  | 'VAL-28'
+  | 'VAL-30'
+  | 'VAL-31'
+  | 'VAL-32'
+  | 'VAL-33'
+  | 'VAL-34'
+  | 'VAL-35'
+  | 'VAL-36'
+  | 'VAL-38'
+  | 'VAL-DATE-RANGE'
+  | 'VAL-EMPTY-UPDATE'
+  | 'VAL-RUNNING-ENTRY';
 
 export const VAL_MESSAGES: Record<ValCode, string> = {
   'VAL-01': 'כתובת האימייל היא שדה חובה',
@@ -117,6 +127,21 @@ export const VAL_MESSAGES: Record<ValCode, string> = {
   'VAL-26': 'יש לבחור משתמש ומשימה תקינים',
   'VAL-27': 'השיוך כבר קיים במערכת',
   'VAL-28': 'יש לבחור אופן דיווח תקין',
+  // Time entries (§8.5). VAL-37 (one running timer per user) belongs to the
+  // Punch Clock epic and is intentionally absent here.
+  'VAL-30': 'שעת התחלה היא שדה חובה',
+  'VAL-31': 'שעת הסיום חייבת להיות מאוחרת משעת ההתחלה',
+  'VAL-32': 'קיים כבר דיווח שעות חופף בטווח זה',
+  'VAL-33': 'אינך משויך למשימה שנבחרה',
+  'VAL-34': 'החודש נעול ולא ניתן לעדכן דיווחי שעות',
+  'VAL-35': 'יש לבחור משימה',
+  'VAL-36': 'יש לבחור מיקום עבודה',
+  'VAL-38': 'התאריך אינו תואם את יום תחילת הדיווח',
+  'VAL-DATE-RANGE': 'יש לציין תאריך יחיד או טווח תאריכים תקין',
+  'VAL-EMPTY-UPDATE': 'לא נשלחו שדות לעדכון',
+  // Punch Clock (KAN-79): PATCH/DELETE of a running entry is refused outright
+  // rather than exempted from the merged-entry rules (design D7).
+  'VAL-RUNNING-ENTRY': 'לא ניתן לערוך דיווח שעות שטרם הסתיים',
 };
 
 // --- Clients ---
@@ -195,3 +220,60 @@ export type { CreateAssignmentBody, AssignmentCreateSuccess } from './assignment
 // --- Me ---
 export { MyAssignmentSchema, MyAssignmentsResponseSchema } from './me/assignments.js';
 export type { MyAssignment, MyAssignmentsResponse } from './me/assignments.js';
+
+// --- Day status ---
+// Computed, never stored (§2.4). Exported from here so the daily quota bar and
+// the monthly calendar share one implementation of the thresholds.
+export {
+  DayStatus,
+  FULL_DAY_MINUTES,
+  computeDayStatus,
+  minutesForDay,
+  isCoveredByAbsence,
+} from './day-status/day-status.js';
+export type {
+  DayStatusEntry,
+  DayStatusAbsence,
+  DayStatusInput,
+  DayStatusResult,
+} from './day-status/day-status.js';
+
+export {
+  APP_TIME_ZONE,
+  LOCAL_DATE_PATTERN,
+  toLocalDate,
+  toLocalDateOrNull,
+  isRealCalendarDate,
+  isSameLocalDate,
+  toYearMonth,
+} from './day-status/local-date.js';
+
+// --- Time entries ---
+export {
+  TimeEntryLocationSchema,
+  TimeEntryDateSchema,
+  TimeEntryTaskIdSchema,
+  TimeEntryStartAtSchema,
+  TimeEntryEndAtSchema,
+  refineTimeEntryTimes,
+} from './time-entries/fields.js';
+export type { TimeEntryTimes } from './time-entries/fields.js';
+
+export { CreateTimeEntryBodySchema } from './time-entries/create.js';
+export type { CreateTimeEntryBody } from './time-entries/create.js';
+
+export { UpdateTimeEntryBodySchema, MergedTimeEntrySchema } from './time-entries/update.js';
+export type { UpdateTimeEntryBody, MergedTimeEntry } from './time-entries/update.js';
+
+export {
+  TimeEntriesListQuerySchema,
+  TimeEntryListItemSchema,
+  TimeEntriesListSuccessSchema,
+  TimeEntrySuccessSchema,
+} from './time-entries/list.js';
+export type {
+  TimeEntriesListQuery,
+  TimeEntryListItem,
+  TimeEntriesListSuccess,
+  TimeEntrySuccess,
+} from './time-entries/list.js';
