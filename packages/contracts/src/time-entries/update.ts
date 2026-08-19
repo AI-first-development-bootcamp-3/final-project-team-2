@@ -68,3 +68,14 @@ export const MergedTimeEntrySchema = timeEntryBodySchema({
 });
 
 export type MergedTimeEntry = z.infer<typeof MergedTimeEntrySchema>;
+
+/**
+ * A merged entry that has been completed — every field a write needs.
+ *
+ * `MergedTimeEntrySchema` already requires `endAt` / `taskId` / `location`
+ * because this epic refuses PATCH/DELETE on a running entry (design D7). The
+ * alias exists so the write path and the Punch Clock epic share one name for
+ * that completed shape rather than reaching past the refusal.
+ */
+export const CompletedTimeEntrySchema = MergedTimeEntrySchema;
+export type CompletedTimeEntry = MergedTimeEntry;

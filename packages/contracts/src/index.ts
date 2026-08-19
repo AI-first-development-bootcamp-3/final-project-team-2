@@ -17,7 +17,7 @@ export type AuditAction = z.infer<typeof AuditAction>;
 export { ListMetaSchema, listSuccessSchema } from './common/list-envelope.js';
 export type { ListMeta } from './common/list-envelope.js';
 
-export { ApiErrorSchema, ApiErrorDetailSchema, zodIssuesToDetails } from './common/api-error.js';
+export { ApiErrorSchema, ApiErrorDetailSchema, zodIssuesToDetails, partitionDetails, ROOT_DETAIL_FIELD } from './common/api-error.js';
 export type { ApiError, ApiErrorDetail } from './common/api-error.js';
 
 export {
@@ -268,8 +268,12 @@ export type { TimeEntryTimes } from './time-entries/fields.js';
 export { CreateTimeEntryBodySchema } from './time-entries/create.js';
 export type { CreateTimeEntryBody } from './time-entries/create.js';
 
-export { UpdateTimeEntryBodySchema, MergedTimeEntrySchema } from './time-entries/update.js';
-export type { UpdateTimeEntryBody, MergedTimeEntry } from './time-entries/update.js';
+export { UpdateTimeEntryBodySchema, MergedTimeEntrySchema, CompletedTimeEntrySchema } from './time-entries/update.js';
+export type {
+  UpdateTimeEntryBody,
+  MergedTimeEntry,
+  CompletedTimeEntry,
+} from './time-entries/update.js';
 
 export {
   intervalsOverlap,
