@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { bootstrapSession, refreshSession } from './api';
+import { API_URL, bootstrapSession, logout, refreshSession } from './api';
 import { apiFetch, ApiClientError } from './api/client';
 import { clearAuthSession, getAuthSession, setAuthSession } from './auth';
 import { ADMIN_USER, makeSession } from '../test/fixtures';
@@ -118,5 +118,59 @@ describe('apiFetch — 401 refresh-and-retry interceptor', () => {
     expect(failure).toBeInstanceOf(ApiClientError);
     expect((failure as ApiClientError).status).toBe(500);
     expect((failure as ApiClientError).body).toEqual({ message: 'boom', details: [] });
+  });
+});
+
+describe('logout', () => {
+  beforeEach(() => {
+    clearAuthSession();
+    setAuthSession(makeSession());
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('POSTs /auth/logout with credentials and Bearer when a session exists', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(null, { status: 204 }));
+
+    await logout();
+
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    const [url, init] = fetchSpy.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe(`${API_URL}/auth/logout`);
+    expect(init.method).toBe('POST');
+    expect(init.credentials).toBe('include');
+    expect(new Headers(init.headers).get('Authorization')).toBe('Bearer header.payload.sig');
+  });
+
+  it('clears the session even when fetch rejects', async () => {
+    vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('network down'));
+
+    await logout();
+
+    expect(getAuthSession()).toBeNull();
+  });
+
+  it('does not restore the session when a later refresh succeeds after logout has started', async () => {
+    let resolveRefresh: ((value: Response) => void) | undefined;
+    vi.spyOn(globalThis, 'fetch').mockImplementation((input) => {
+      const url = String(input);
+      if (url.includes('/auth/refresh')) {
+        return new Promise<Response>((resolve) => {
+          resolveRefresh = resolve;
+        });
+      }
+      return Promise.resolve(new Response(null, { status: 204 }));
+    });
+
+    const pendingRefresh = refreshSession();
+    await logout();
+    expect(getAuthSession()).toBeNull();
+
+    resolveRefresh?.(jsonResponse(REFRESH_BODY));
+    await pendingRefresh;
+
+    expect(getAuthSession()).toBeNull();
   });
 });

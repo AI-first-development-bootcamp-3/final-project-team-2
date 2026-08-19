@@ -1,6 +1,7 @@
 import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import type { Request } from 'express';
 import type { LoginFormData, LoginResponse, RefreshResponse, UserRole } from '@abra/contracts';
 import { PrismaService } from '../prisma/prisma.service';
 import { ENV } from '../env.provider';
@@ -8,6 +9,7 @@ import type { Env } from '../env';
 import type { User } from '@prisma/client';
 import {
   ACCESS_TOKEN_TTL,
+  REFRESH_COOKIE,
   REFRESH_TTL_DEFAULT_MS,
   REFRESH_TTL_REMEMBER_ME_MS,
 } from './auth.constants';
@@ -60,6 +62,63 @@ export class AuthService {
   }
 
   async refresh(refreshToken: string | undefined): Promise<RefreshResponse> {
+    const user = await this.requireUsableRefreshUser(refreshToken);
+    return {
+      accessToken: await this.signAccessToken(user.id, user.role),
+      user: { id: user.id, email: user.email, fullName: user.full_name, role: user.role },
+    };
+  }
+
+  /**
+   * Revokes every outstanding refresh token for the user by bumping
+   * token_version. Access tokens die at their natural (~15 min) expiry.
+   */
+  async logout(userId: string): Promise<void> {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { token_version: { increment: 1 } },
+    });
+  }
+
+  /**
+   * Best-effort identity for idempotent logout: a valid access Bearer, or the
+   * refresh cookie using the same verification rules as {@link refresh}.
+   * Returns null when neither credential identifies a user (tampered cookie,
+   * missing tokens) so the controller can still expire the cookie.
+   */
+  async identifyLogoutUser(req: Request): Promise<string | null> {
+    const header = req.headers.authorization ?? '';
+    const accessToken = header.startsWith('Bearer ') ? header.slice('Bearer '.length) : undefined;
+    if (accessToken) {
+      try {
+        const payload = await this.verifyAccessToken(accessToken);
+        return payload.userId;
+      } catch {
+        // Expired or invalid access JWT — fall through to the refresh cookie.
+      }
+    }
+
+    return this.identifyUserFromRefreshCookie(
+      (req.cookies as Record<string, string> | undefined)?.[REFRESH_COOKIE],
+    );
+  }
+
+  private async identifyUserFromRefreshCookie(
+    refreshToken: string | undefined,
+  ): Promise<string | null> {
+    try {
+      const user = await this.requireUsableRefreshUser(refreshToken);
+      return user.id;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Same refresh-cookie rules as {@link refresh}: present, valid JWT, account
+   * usable, and token_version match. Throws UnauthorizedException otherwise.
+   */
+  private async requireUsableRefreshUser(refreshToken: string | undefined): Promise<User> {
     if (!refreshToken) {
       throw new UnauthorizedException('Invalid refresh token');
     }
@@ -78,21 +137,7 @@ export class AuthService {
     if (user.token_version !== payload.tokenVersion) {
       throw new UnauthorizedException('Invalid refresh token');
     }
-    return {
-      accessToken: await this.signAccessToken(user.id, user.role),
-      user: { id: user.id, email: user.email, fullName: user.full_name, role: user.role },
-    };
-  }
-
-  /**
-   * Revokes every outstanding refresh token for the user by bumping
-   * token_version. Access tokens die at their natural (~15 min) expiry.
-   */
-  async logout(userId: string): Promise<void> {
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: { token_version: { increment: 1 } },
-    });
+    return user;
   }
 
   /**

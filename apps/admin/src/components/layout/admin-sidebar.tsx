@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { clearAccessToken, redirectToSignIn } from '@/lib/api/client';
+import { logoutAndRedirect } from '@/lib/api';
 
 const NAV_ITEMS = [
   { to: '/admin/users', label: 'משתמשים' },
@@ -12,8 +12,7 @@ const NAV_ITEMS = [
 
 export function AdminSidebar() {
   function handleLogout() {
-    clearAccessToken();
-    redirectToSignIn();
+    void logoutAndRedirect();
   }
 
   return (

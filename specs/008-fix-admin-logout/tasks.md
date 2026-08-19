@@ -31,8 +31,8 @@ description: "Task list for Fix Admin Logout Relogin (KAN-116)"
 
 **Purpose**: Confirm existing stack; no new packages or schema
 
-- [ ] T001 Confirm no new npm/pnpm packages and no Prisma schema change: do not edit `package.json` workspace deps, `apps/admin/package.json`, `server/api/package.json`, `e2e/package.json`, or `server/api/prisma/schema.prisma`; reuse `User.token_version` and cookie name `refresh_token` from `server/api/src/auth/auth.constants.ts`
-- [ ] T002 [P] Confirm the e2e harness already exports `ADMIN_BASE_URL` (default `http://localhost:5174`) from `e2e/playwright.config.ts` and seed admin `ADMIN_EMAIL` / `ADMIN_PASSWORD` from `e2e/helpers/credentials.ts`; do **not** add a CI job — existing `e2e` job must pick up `e2e/specs/admin-logout.spec.ts` via `testDir: './specs'`
+- [x] T001 Confirm no new npm/pnpm packages and no Prisma schema change: do not edit `package.json` workspace deps, `apps/admin/package.json`, `server/api/package.json`, `e2e/package.json`, or `server/api/prisma/schema.prisma`; reuse `User.token_version` and cookie name `refresh_token` from `server/api/src/auth/auth.constants.ts`
+- [x] T002 [P] Confirm the e2e harness already exports `ADMIN_BASE_URL` (default `http://localhost:5174`) from `e2e/playwright.config.ts` and seed admin `ADMIN_EMAIL` / `ADMIN_PASSWORD` from `e2e/helpers/credentials.ts`; do **not** add a CI job — existing `e2e` job must pick up `e2e/specs/admin-logout.spec.ts` via `testDir: './specs'`
 
 ---
 
@@ -42,10 +42,10 @@ description: "Task list for Fix Admin Logout Relogin (KAN-116)"
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T003 Replace the “rejects a logout without a valid access token” case in `server/api/src/auth/auth.spec.ts` with failing tests from `specs/008-fix-admin-logout/contracts/admin-logout.md`: (1) no Bearer + valid `refresh_token` cookie → 204, `token_version` incremented, subsequent `POST /api/v1/auth/refresh` with the old cookie → 401; (2) no Bearer and no cookie → 204 and `Set-Cookie` expires `refresh_token` (Max-Age 0 or epoch Expires). Keep the existing Bearer-success case that increments version, clears cookie, and kills prior refresh
-- [ ] T004 Implement idempotent logout in `server/api/src/auth/auth.controller.ts`: mark `POST logout` `@Public()` (remove `@Auth()`); identify the user from a valid Bearer via `AuthService.verifyAccessToken` **or**, if that is missing/expired, from the refresh cookie using the same verify rules as `AuthService.refresh` (add a small helper on `server/api/src/auth/auth.service.ts` if needed — do not issue a new access token); if identified, call existing `logout(userId)` to increment `token_version`; **always** `res.clearCookie(REFRESH_COOKIE, refreshCookieOptions(0))`; return 204 in all three contract rows. Update the Swagger `@ApiOperation` text so it no longer says a valid access token is required. Run `pnpm --filter @abra/api test` until T003 passes
-- [ ] T005 [P] Add failing tests in `apps/admin/src/lib/session.spec.ts`: `logout()` from `apps/admin/src/lib/api.ts` POSTs `${API_URL}/auth/logout` with `credentials: 'include'` and `Authorization: Bearer` when a session exists; `clearAuthSession` runs even when fetch rejects; after `logout()` has started, a later successful `refreshSession()` must **not** leave `getAuthSession()` set (in-flight refresh race in `specs/008-fix-admin-logout/research.md` §3)
-- [ ] T006 Implement in `apps/admin/src/lib/api.ts`: a logout generation / signed-out flag that `refreshSession` checks before `setAuthSession`; abort or ignore `inflightRefresh` inside `logout()`; keep posting `/auth/logout` then `clearAuthSession` in `finally`. Export `logoutAndRedirect()` that `await logout()` then calls `redirectToSignIn()` from `apps/admin/src/lib/api/client.ts`. Run `pnpm --filter @abra/admin test` until T005 passes
+- [x] T003 Replace the “rejects a logout without a valid access token” case in `server/api/src/auth/auth.spec.ts` with failing tests from `specs/008-fix-admin-logout/contracts/admin-logout.md`: (1) no Bearer + valid `refresh_token` cookie → 204, `token_version` incremented, subsequent `POST /api/v1/auth/refresh` with the old cookie → 401; (2) no Bearer and no cookie → 204 and `Set-Cookie` expires `refresh_token` (Max-Age 0 or epoch Expires). Keep the existing Bearer-success case that increments version, clears cookie, and kills prior refresh
+- [x] T004 Implement idempotent logout in `server/api/src/auth/auth.controller.ts`: mark `POST logout` `@Public()` (remove `@Auth()`); identify the user from a valid Bearer via `AuthService.verifyAccessToken` **or**, if that is missing/expired, from the refresh cookie using the same verify rules as `AuthService.refresh` (add a small helper on `server/api/src/auth/auth.service.ts` if needed — do not issue a new access token); if identified, call existing `logout(userId)` to increment `token_version`; **always** `res.clearCookie(REFRESH_COOKIE, refreshCookieOptions(0))`; return 204 in all three contract rows. Update the Swagger `@ApiOperation` text so it no longer says a valid access token is required. Run `pnpm --filter @abra/api test` until T003 passes
+- [x] T005 [P] Add failing tests in `apps/admin/src/lib/session.spec.ts`: `logout()` from `apps/admin/src/lib/api.ts` POSTs `${API_URL}/auth/logout` with `credentials: 'include'` and `Authorization: Bearer` when a session exists; `clearAuthSession` runs even when fetch rejects; after `logout()` has started, a later successful `refreshSession()` must **not** leave `getAuthSession()` set (in-flight refresh race in `specs/008-fix-admin-logout/research.md` §3)
+- [x] T006 Implement in `apps/admin/src/lib/api.ts`: a logout generation / signed-out flag that `refreshSession` checks before `setAuthSession`; abort or ignore `inflightRefresh` inside `logout()`; keep posting `/auth/logout` then `clearAuthSession` in `finally`. Export `logoutAndRedirect()` that `await logout()` then calls `redirectToSignIn()` from `apps/admin/src/lib/api/client.ts`. Run `pnpm --filter @abra/admin test` until T005 passes
 
 **Checkpoint**: Foundation ready — API logout ends the cookie without a live access JWT; client logout cannot be restored by refresh. Sidebar still must not skip this helper.
 
@@ -61,14 +61,14 @@ description: "Task list for Fix Admin Logout Relogin (KAN-116)"
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T007 [US1] Rewrite `apps/admin/src/components/layout/admin-sidebar.spec.tsx` logout case: mock `logoutAndRedirect` from `apps/admin/src/lib/api.ts` (not `clearAccessToken` / `redirectToSignIn` alone); clicking `התנתקות` must call `logoutAndRedirect`. Confirm the test fails on current `apps/admin/src/components/layout/admin-sidebar.tsx`
-- [ ] T008 [P] [US1] Create `e2e/specs/admin-logout.spec.ts` with `test.setTimeout(60_000)` and **no** `test.skip` / `describe.skip`. Journey A (US1): `signInAsAdmin` from `e2e/helpers/users-directory.ts`; click sidebar `getByRole('button', { name: 'התנתקות' })` (must not rely only on Users `התנתק`); assert URL `/login`, heading `/ברוכים הבאים למערכת/`, Users heading `משתמשים` count 0; `waitForTimeout` ≥ 10_000 still on `/login`; `reload()` still sign-in; `goto(${ADMIN_BASE_URL}/admin/users)` still sign-in. Leave `signOutAdmin` in `e2e/helpers/users-directory.ts` unchanged
+- [x] T007 [US1] Rewrite `apps/admin/src/components/layout/admin-sidebar.spec.tsx` logout case: mock `logoutAndRedirect` from `apps/admin/src/lib/api.ts` (not `clearAccessToken` / `redirectToSignIn` alone); clicking `התנתקות` must call `logoutAndRedirect`. Confirm the test fails on current `apps/admin/src/components/layout/admin-sidebar.tsx`
+- [x] T008 [P] [US1] Create `e2e/specs/admin-logout.spec.ts` with `test.setTimeout(60_000)` and **no** `test.skip` / `describe.skip`. Journey A (US1): `signInAsAdmin` from `e2e/helpers/users-directory.ts`; click sidebar `getByRole('button', { name: 'התנתקות' })` (must not rely only on Users `התנתק`); assert URL `/login`, heading `/ברוכים הבאים למערכת/`, Users heading `משתמשים` count 0; `waitForTimeout` ≥ 10_000 still on `/login`; `reload()` still sign-in; `goto(${ADMIN_BASE_URL}/admin/users)` still sign-in. Leave `signOutAdmin` in `e2e/helpers/users-directory.ts` unchanged
 
 ### Implementation for User Story 1
 
-- [ ] T009 [US1] Change `handleLogout` in `apps/admin/src/components/layout/admin-sidebar.tsx` to `void logoutAndRedirect()` from `apps/admin/src/lib/api.ts`; remove the `clearAccessToken` + `redirectToSignIn` shortcut. Run `pnpm --filter @abra/admin test` until T007 passes
-- [ ] T010 [P] [US1] Change the Users header button in `apps/admin/src/features/users/users-page.tsx` to `void logoutAndRedirect()` (same helper as the sidebar) so `התנתק` cannot drift again; keep the label `התנתק`. Update `apps/admin/src/features/users/users-page.spec.tsx` mocks if they still mock `logout` only
-- [ ] T011 [US1] Run `pnpm --filter @abra/e2e exec playwright test specs/admin-logout.spec.ts` and fix only logout/session code (not test weakening) until Journey A passes — cookie must be dead before `window.location.assign('/login')` so `bootstrapSession` in `apps/admin/src/App.tsx` cannot restore the admin
+- [x] T009 [US1] Change `handleLogout` in `apps/admin/src/components/layout/admin-sidebar.tsx` to `void logoutAndRedirect()` from `apps/admin/src/lib/api.ts`; remove the `clearAccessToken` + `redirectToSignIn` shortcut. Run `pnpm --filter @abra/admin test` until T007 passes
+- [x] T010 [P] [US1] Change the Users header button in `apps/admin/src/features/users/users-page.tsx` to `void logoutAndRedirect()` (same helper as the sidebar) so `התנתק` cannot drift again; keep the label `התנתק`. Update `apps/admin/src/features/users/users-page.spec.tsx` mocks if they still mock `logout` only
+- [x] T011 [US1] Run `pnpm --filter @abra/e2e exec playwright test specs/admin-logout.spec.ts` and fix only logout/session code (not test weakening) until Journey A passes — cookie must be dead before `window.location.assign('/login')` so `bootstrapSession` in `apps/admin/src/App.tsx` cannot restore the admin
 
 **Checkpoint**: User Story 1 is independently testable (KAN-116 MVP). Re-login is not required yet.
 
@@ -82,11 +82,11 @@ description: "Task list for Fix Admin Logout Relogin (KAN-116)"
 
 ### Tests for User Story 2 ⚠️
 
-- [ ] T012 [US2] Extend `e2e/specs/admin-logout.spec.ts` Journey B after Journey A (same test or a second test that logs in, logs out via sidebar, then): submit wrong password → remain on `/login`, see `שם המשתמש או הסיסמה שהוזנו אינם נכונים.`; submit valid seed credentials → leave `/login`, Users heading `משתמשים` visible within 30s (SC-004). Do not skip Journey A
+- [x] T012 [US2] Extend `e2e/specs/admin-logout.spec.ts` Journey B after Journey A (same test or a second test that logs in, logs out via sidebar, then): submit wrong password → remain on `/login`, see `שם המשתמש או הסיסמה שהוזנו אינם נכונים.`; submit valid seed credentials → leave `/login`, Users heading `משתמשים` visible within 30s (SC-004). Do not skip Journey A
 
 ### Implementation for User Story 2
 
-- [ ] T013 [US2] If Journey B fails, fix only `apps/admin/src/features/auth/LoginPage.tsx` / `apps/admin/src/lib/api.ts` `login()` so a **new** login after logout can set a session (logout flag from T006 must reset on successful `login` / `setAuthSession`). Do not weaken assertions. Run the Playwright file until Journey A + B pass
+- [x] T013 [US2] If Journey B fails, fix only `apps/admin/src/features/auth/LoginPage.tsx` / `apps/admin/src/lib/api.ts` `login()` so a **new** login after logout can set a session (logout flag from T006 must reset on successful `login` / `setAuthSession`). Do not weaken assertions. Run the Playwright file until Journey A + B pass
 
 **Checkpoint**: User Stories 1 and 2 both pass in `admin-logout.spec.ts` (stay signed out, then intentional sign-in)
 
@@ -100,11 +100,11 @@ description: "Task list for Fix Admin Logout Relogin (KAN-116)"
 
 ### Tests for User Story 3 ⚠️
 
-- [ ] T014 [US3] Add Journey C in `e2e/specs/admin-logout.spec.ts`: on admin `/login` check `זכור אותי`, sign in as seed admin, click sidebar `התנתקות`, assert `/login`; `reload()` still sign-in; `goto(${ADMIN_BASE_URL}/admin/users)` still sign-in (FR-006 / SC-005)
+- [x] T014 [US3] Add Journey C in `e2e/specs/admin-logout.spec.ts`: on admin `/login` check `זכור אותי`, sign in as seed admin, click sidebar `התנתקות`, assert `/login`; `reload()` still sign-in; `goto(${ADMIN_BASE_URL}/admin/users)` still sign-in (FR-006 / SC-005)
 
 ### Implementation for User Story 3
 
-- [ ] T015 [US3] If Journey C fails, fix cookie clear so `refreshCookieOptions` in `server/api/src/auth/auth.constants.ts` used by `clearCookie` in `server/api/src/auth/auth.controller.ts` matches login (`path`, `httpOnly`, `secure`, `sameSite`) for both 1-day and 30-day cookies (same cookie name). Re-run Journey C until it passes without skipping
+- [x] T015 [US3] If Journey C fails, fix cookie clear so `refreshCookieOptions` in `server/api/src/auth/auth.constants.ts` used by `clearCookie` in `server/api/src/auth/auth.controller.ts` matches login (`path`, `httpOnly`, `secure`, `sameSite`) for both 1-day and 30-day cookies (same cookie name). Re-run Journey C until it passes without skipping
 
 **Checkpoint**: All three user stories independently pass in `admin-logout.spec.ts`
 
@@ -114,9 +114,9 @@ description: "Task list for Fix Admin Logout Relogin (KAN-116)"
 
 **Purpose**: Typecheck, scope, and quickstart validation
 
-- [ ] T016 [P] Confirm `apps/mobile` is untouched (`git diff -- apps/mobile` empty for this feature) and `e2e/helpers/users-directory.ts` `signOutAdmin` still clicks Users `התנתק` (KAN-49 helper unchanged)
-- [ ] T017 [P] Run `pnpm --filter @abra/admin typecheck` and `pnpm --filter @abra/api typecheck` (and `pnpm --filter @abra/e2e typecheck` if that script exists) after adding `e2e/specs/admin-logout.spec.ts`
-- [ ] T018 Run the validation in `specs/008-fix-admin-logout/quickstart.md`: `pnpm --filter @abra/admin test`, `pnpm --filter @abra/api test`, `pnpm --filter @abra/e2e exec playwright test specs/admin-logout.spec.ts`. Do not `test.skip` the new spec to go green
+- [x] T016 [P] Confirm `apps/mobile` is untouched (`git diff -- apps/mobile` empty for this feature) and `e2e/helpers/users-directory.ts` `signOutAdmin` still clicks Users `התנתק` (KAN-49 helper unchanged)
+- [x] T017 [P] Run `pnpm --filter @abra/admin typecheck` and `pnpm --filter @abra/api typecheck` (and `pnpm --filter @abra/e2e typecheck` if that script exists) after adding `e2e/specs/admin-logout.spec.ts`
+- [x] T018 Run the validation in `specs/008-fix-admin-logout/quickstart.md`: `pnpm --filter @abra/admin test`, `pnpm --filter @abra/api test`, `pnpm --filter @abra/e2e exec playwright test specs/admin-logout.spec.ts`. Do not `test.skip` the new spec to go green
 
 ---
 

@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, Post, Req, Res, UnauthorizedException } from '@nestjs/common';
+import { Body, Controller, HttpCode, Post, Req, Res } from '@nestjs/common';
 import { ApiBody, ApiCookieAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
 import {
@@ -10,8 +10,7 @@ import {
 import { AuthService } from './auth.service';
 import { REFRESH_COOKIE, refreshCookieOptions } from './auth.constants';
 import { ZodValidationPipe } from './zod-validation.pipe';
-import { Auth, Public } from './auth.decorators';
-import type { AuthenticatedRequest } from './jwt.guard';
+import { Public } from './auth.decorators';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -104,27 +103,23 @@ export class AuthController {
     return this.authService.refresh(cookies?.[REFRESH_COOKIE]);
   }
 
-  @Auth()
+  @Public()
   @Post('logout')
   @HttpCode(204)
   @ApiOperation({
     summary: 'Log out and revoke all refresh tokens',
     description:
-      'Increments the user’s token_version (killing every outstanding refresh token) and ' +
-      'clears the refresh cookie. Requires a valid access token.',
+      'Identifies the user from a valid access token or, if that is missing or expired, from ' +
+      'the refresh cookie (same verification as refresh). Increments token_version when a user ' +
+      'is identified and always clears the refresh cookie. Idempotent: returns 204 even with ' +
+      'no usable credentials.',
   })
   @ApiResponse({ status: 204, description: 'Logged out; refresh cookie cleared.' })
-  @ApiResponse({ status: 401, description: 'Missing or invalid access token.' })
-  async logout(
-    @Req() req: AuthenticatedRequest,
-    @Res({ passthrough: true }) res: Response,
-  ): Promise<void> {
-    // The global JwtGuard authenticated this request and attached the user;
-    // a missing user here would be a guard-ordering bug — fail closed.
-    if (!req.user) {
-      throw new UnauthorizedException();
+  async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response): Promise<void> {
+    const userId = await this.authService.identifyLogoutUser(req);
+    if (userId) {
+      await this.authService.logout(userId);
     }
-    await this.authService.logout(req.user.userId);
     res.clearCookie(REFRESH_COOKIE, refreshCookieOptions(0));
   }
 }
