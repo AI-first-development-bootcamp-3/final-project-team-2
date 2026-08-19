@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { UserListItem, UsersListQuery, UsersListSuccess } from '@abra/contracts';
 import { DataTable, type SortOrder } from '@/components/ui/data-table';
-import { logout } from '@/lib/api';
+import { PageHeader } from '@/components/ui/page-header';
+import { FilterSelect, PrimaryButton, SearchField } from '@/components/ui/toolbar';
 import { apiFetch } from '@/lib/api/client';
 import { DeactivateUserModal } from './deactivate-user-modal';
 import { EditUserModal } from './edit-user-modal';
@@ -104,28 +105,12 @@ export function UsersPage() {
 
   return (
     <section>
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <h2 className="text-xl font-semibold">משתמשים</h2>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            className="rounded border px-3 py-1"
-            onClick={() => {
-              void logout().finally(() => {
-                window.location.assign('/login');
-              });
-            }}
-          >
-            התנתק
-          </button>
-          <button
-            type="button"
-            className="rounded border bg-neutral-900 px-3 py-1 text-white"
-            onClick={() => setCreateOpen(true)}
-          >
-            יצירת משתמש
-          </button>
-        </div>
+      <div className="flex items-start justify-between gap-3">
+        <PageHeader
+          title="משתמשים"
+          subtitle="כאן תוכל לנהל את משתמשי המערכת — עריכה, איפוס סיסמה והשבתה."
+        />
+        <PrimaryButton onClick={() => setCreateOpen(true)}>יצירת משתמש</PrimaryButton>
       </div>
 
       {successMessage ? (
@@ -144,47 +129,33 @@ export function UsersPage() {
         </div>
       ) : null}
 
-      <div className="mb-4 flex flex-wrap items-end gap-3">
-        <label className="flex flex-col text-sm">
-          חיפוש
-          <input
-            type="search"
-            value={q}
-            onChange={(event) => onSearchChange(event.target.value)}
-            className="rounded border px-2 py-1"
-          />
-        </label>
-        <label className="flex flex-col text-sm">
-          תפקיד
-          <select
-            value={role}
-            onChange={(event) => {
-              setRole(event.target.value);
-              setPage(1);
-            }}
-            className="rounded border px-2 py-1"
-          >
-            <option value="">הכל</option>
-            <option value="admin">אדמין</option>
-            <option value="employee">משתמש רגיל</option>
-          </select>
-        </label>
-        <label className="flex flex-col text-sm">
-          סטטוס
-          <select
-            value={isActive}
-            onChange={(event) => {
-              setIsActive(event.target.value);
-              setPage(1);
-            }}
-            className="rounded border px-2 py-1"
-          >
-            <option value="">הכל</option>
-            <option value="true">פעיל</option>
-            <option value="false">לא פעיל</option>
-          </select>
-        </label>
-        <label className="flex items-center gap-2 text-sm">
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <SearchField placeholder="חיפוש לפי שם או אימייל" value={q} onChange={onSearchChange} />
+        <FilterSelect
+          label="תפקיד"
+          value={role}
+          onChange={(event) => {
+            setRole(event.target.value);
+            setPage(1);
+          }}
+        >
+          <option value="">הכל</option>
+          <option value="admin">אדמין</option>
+          <option value="employee">משתמש רגיל</option>
+        </FilterSelect>
+        <FilterSelect
+          label="סטטוס"
+          value={isActive}
+          onChange={(event) => {
+            setIsActive(event.target.value);
+            setPage(1);
+          }}
+        >
+          <option value="">הכל</option>
+          <option value="true">פעיל</option>
+          <option value="false">לא פעיל</option>
+        </FilterSelect>
+        <label className="flex items-center gap-2 text-sm text-neutral-600">
           <input
             type="checkbox"
             checked={includeDeleted}

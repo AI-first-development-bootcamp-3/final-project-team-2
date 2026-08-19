@@ -1,5 +1,6 @@
 import type { AssignmentListItem } from '@abra/contracts';
 import type { DataTableColumn } from '@/components/ui/data-table';
+import { IconAction } from '@/components/ui/icon-action';
 
 export function createAssignmentsColumns(params: {
   onRemove: (assignment: AssignmentListItem) => void;
@@ -40,14 +41,8 @@ export function createAssignmentsColumns(params: {
       header: 'פעולות',
       sortable: false,
       cell: (row) => (
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => params.onRemove(row)}
-            className="rounded border border-red-300 bg-red-50 px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-100"
-          >
-            הסר שיוך
-          </button>
+        <div className="flex items-center gap-1">
+          <IconAction kind="unlink" label="הסר שיוך" onClick={() => params.onRemove(row)} />
         </div>
       ),
     },

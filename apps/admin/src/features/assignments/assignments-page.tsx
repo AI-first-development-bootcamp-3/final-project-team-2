@@ -8,6 +8,8 @@ import type {
   UsersListSuccess,
 } from '@abra/contracts';
 import { DataTable, type SortOrder } from '@/components/ui/data-table';
+import { PageHeader } from '@/components/ui/page-header';
+import { PrimaryButton, SearchField } from '@/components/ui/toolbar';
 import { apiFetch } from '@/lib/api/client';
 import { AssignmentCreateForm } from './assignment-create-form';
 import { createAssignmentsColumns } from './assignments-columns';
@@ -121,15 +123,12 @@ export function AssignmentsPage() {
 
   return (
     <section>
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <h2 className="text-xl font-semibold">שיוכים</h2>
-        <button
-          type="button"
-          className="rounded border bg-neutral-900 px-3 py-1 text-white hover:bg-neutral-800"
-          onClick={() => setCreateOpen(true)}
-        >
-          שיוך חדש
-        </button>
+      <div className="flex items-start justify-between gap-3">
+        <PageHeader
+          title="שיוכים"
+          subtitle="כאן תוכל לשייך עובדים למשימות מתוך פרויקטים שונים של לקוחות."
+        />
+        <PrimaryButton onClick={() => setCreateOpen(true)}>שיוך חדש</PrimaryButton>
       </div>
 
       {successMessage ? (
@@ -149,15 +148,7 @@ export function AssignmentsPage() {
       ) : null}
 
       <div className="mb-4 flex flex-wrap items-end gap-3">
-        <label className="flex flex-col text-sm">
-          חיפוש
-          <input
-            type="search"
-            value={q}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="rounded border px-2 py-1"
-          />
-        </label>
+        <SearchField placeholder="חיפוש לפי שם עובד" value={q} onChange={onSearchChange} />
         <label className="flex flex-col text-sm">
           עובד
           <select

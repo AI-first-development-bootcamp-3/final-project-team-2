@@ -1,5 +1,6 @@
 import type { ProjectListItem } from '@abra/contracts';
 import type { DataTableColumn } from '@/components/ui/data-table';
+import { IconAction } from '@/components/ui/icon-action';
 
 export function createProjectsColumns(params: {
   onEdit: (project: ProjectListItem) => void;
@@ -49,37 +50,17 @@ export function createProjectsColumns(params: {
       sortable: false,
       cell: (row) =>
         row.isDeleted ? null : (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             {params.onAddTask ? (
-              <button
-                type="button"
+              <IconAction
+                kind="plus"
+                label="+ הוספת משימה"
                 onClick={() => params.onAddTask!(row)}
-                className="rounded border border-green-300 bg-green-50 px-2 py-1 text-xs font-medium text-green-700 hover:bg-green-100"
-              >
-                + הוספת משימה
-              </button>
+              />
             ) : null}
-            <button
-              type="button"
-              onClick={() => params.onViewTasks(row)}
-              className="rounded border border-blue-300 bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 hover:bg-blue-100"
-            >
-              משימות
-            </button>
-            <button
-              type="button"
-              onClick={() => params.onEdit(row)}
-              className="rounded border px-2 py-1 text-xs font-medium text-neutral-700 hover:bg-neutral-100"
-            >
-              ערוך
-            </button>
-            <button
-              type="button"
-              onClick={() => params.onRemove(row)}
-              className="rounded border border-red-300 bg-red-50 px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-100"
-            >
-              מחיקה
-            </button>
+            <IconAction kind="list" label="משימות" onClick={() => params.onViewTasks(row)} />
+            <IconAction kind="edit" label="ערוך" onClick={() => params.onEdit(row)} />
+            <IconAction kind="trash" label="מחיקה" onClick={() => params.onRemove(row)} />
           </div>
         ),
     },

@@ -8,6 +8,8 @@ import type {
   ProjectsListSuccess,
 } from '@abra/contracts';
 import { DataTable, type SortOrder } from '@/components/ui/data-table';
+import { PageHeader } from '@/components/ui/page-header';
+import { PrimaryButton, SearchField } from '@/components/ui/toolbar';
 import { apiFetch } from '@/lib/api/client';
 import { TaskCreateForm } from '@/features/tasks/task-create-form';
 import { ProjectCreateForm } from './project-create-form';
@@ -137,15 +139,9 @@ export function ProjectsPage() {
 
   return (
     <section>
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <h2 className="text-xl font-semibold">פרויקטים</h2>
-        <button
-          type="button"
-          className="rounded border bg-neutral-900 px-3 py-1 text-white hover:bg-neutral-800"
-          onClick={() => setCreateOpen(true)}
-        >
-          פרויקט חדש
-        </button>
+      <div className="flex items-start justify-between gap-3">
+        <PageHeader title="פרויקטים" subtitle="כאן תוכל לנהל את הפרויקטים של כל לקוח." />
+        <PrimaryButton onClick={() => setCreateOpen(true)}>פרויקט חדש</PrimaryButton>
       </div>
 
       {successMessage ? (
@@ -165,15 +161,7 @@ export function ProjectsPage() {
       ) : null}
 
       <div className="mb-4 flex flex-wrap items-end gap-3">
-        <label className="flex flex-col text-sm">
-          חיפוש
-          <input
-            type="search"
-            value={q}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="rounded border px-2 py-1"
-          />
-        </label>
+        <SearchField placeholder="חיפוש לפי שם פרויקט" value={q} onChange={onSearchChange} />
         <label className="flex flex-col text-sm">
           לקוח
           <select

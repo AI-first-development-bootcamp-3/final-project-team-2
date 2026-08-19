@@ -1,5 +1,6 @@
 import type { ClientListItem } from '@abra/contracts';
 import type { DataTableColumn } from '@/components/ui/data-table';
+import { IconAction } from '@/components/ui/icon-action';
 
 export function createClientsColumns(params: {
   onEdit: (client: ClientListItem) => void;
@@ -37,22 +38,10 @@ export function createClientsColumns(params: {
       header: 'פעולות',
       sortable: false,
       cell: (row) => (
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => params.onEdit(row)}
-            className="rounded border px-2 py-1 text-xs font-medium text-neutral-700 hover:bg-neutral-100"
-          >
-            ערוך
-          </button>
+        <div className="flex items-center gap-1">
+          <IconAction kind="edit" label="ערוך" onClick={() => params.onEdit(row)} />
           {row.isActive ? (
-            <button
-              type="button"
-              onClick={() => params.onDeactivate(row)}
-              className="rounded border border-red-300 bg-red-50 px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-100"
-            >
-              השבת
-            </button>
+            <IconAction kind="trash" label="השבת" onClick={() => params.onDeactivate(row)} />
           ) : null}
         </div>
       ),
