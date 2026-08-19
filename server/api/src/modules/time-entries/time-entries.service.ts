@@ -98,13 +98,25 @@ function toListItem(row: TimeEntryRow): TimeEntryListItem {
 /** Postgres raises this when a write violates the no-overlap exclusion. */
 const EXCLUSION_VIOLATION = '23P01';
 
+/**
+ * Prisma 6 wraps driver errors as `PrismaClientUnknownRequestError`, so the
+ * Postgres code is not always on `error.code`. Walk the cause chain and the
+ * printed message; both carry `23P01` when the exclusion fired.
+ */
 function isOverlapConstraintViolation(error: unknown): boolean {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'code' in error &&
-    (error as { code?: unknown }).code === EXCLUSION_VIOLATION
-  );
+  let current: unknown = error;
+  for (let depth = 0; depth < 6 && current && typeof current === 'object'; depth += 1) {
+    const record = current as { code?: unknown; message?: unknown; cause?: unknown };
+    if (record.code === EXCLUSION_VIOLATION) {
+      return true;
+    }
+    if (typeof record.message === 'string' && record.message.includes(EXCLUSION_VIOLATION)) {
+      return true;
+    }
+    current = record.cause;
+  }
+
+  return false;
 }
 
 @Injectable()

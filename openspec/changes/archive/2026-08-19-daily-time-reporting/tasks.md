@@ -89,18 +89,18 @@
 
 ## 9. End-to-end (KAN-75)
 
-- [ ] 9.1 Extend `prisma/seed.ts` with a task the seeded employee is **not** assigned to, and a locked month placed well away from the seeded working week and the current month (Migration Plan).
-- [ ] 9.2 Add `e2e/specs/daily-reporting.spec.ts`: the seeded employee signs in, creates an entry through the picker, and sees it in the list with the quota bar updated.
-- [ ] 9.3 Assert the unassigned task never appears in the picker.
-- [ ] 9.4 Assert an edit and a delete both round-trip.
-- [ ] 9.5 Assert a write into the locked month is refused with 403 and the screen shows the locked state, scoping assertions to entries dated inside that month.
-- [ ] 9.6 Confirm the spec runs in the required CI e2e job.
-- [ ] 9.7 Cover the soft-delete extension against a real database, since 5.3 and 6.5 assert it only through the queries the service builds: delete an entry, re-report the same slot, and confirm it is accepted rather than refused with VAL-32. An extension refactor or a Prisma upgrade that changed operation names would otherwise put deleted rows back in the overlap set with every test still green.
-- [ ] 9.8 Cover the `time_entries_no_overlap` exclusion constraint against a real database: two concurrent writes for the same slot, one accepted and one answered with VAL-32.
+- [x] 9.1 Extend `prisma/seed.ts` with a task the seeded employee is **not** assigned to, and a locked month placed well away from the seeded working week and the current month (Migration Plan).
+- [x] 9.2 Add `e2e/specs/daily-reporting.spec.ts`: the seeded employee signs in, creates an entry through the picker, and sees it in the list with the quota bar updated.
+- [x] 9.3 Assert the unassigned task never appears in the picker.
+- [x] 9.4 Assert an edit and a delete both round-trip.
+- [x] 9.5 Assert a write into the locked month is refused with 403 and the screen shows the locked state, scoping assertions to entries dated inside that month.
+- [x] 9.6 Confirm the spec runs in the required CI e2e job.
+- [x] 9.7 Cover the soft-delete extension against a real database, since 5.3 and 6.5 assert it only through the queries the service builds: delete an entry, re-report the same slot, and confirm it is accepted rather than refused with VAL-32. An extension refactor or a Prisma upgrade that changed operation names would otherwise put deleted rows back in the overlap set with every test still green.
+- [x] 9.8 Cover the `time_entries_no_overlap` exclusion constraint against a real database: two concurrent writes for the same slot, one accepted and one answered with VAL-32.
 
 ## 10. Close out
 
-- [ ] 10.1 Run `pnpm lint`, `pnpm typecheck`, `pnpm test:coverage`, and `pnpm build` across the workspace.
-- [ ] 10.2 Verify each requirement in the three delta specs against the running system on `dev`, both apps.
-- [ ] 10.3 Move KAN-71 through KAN-79 to Done and close the KAN-64 epic; close the subtasks rather than leaving them dangling under completed parents.
-- [ ] 10.4 Run `/opsx:sync` to fold `day-status`, `time-entries-api`, and `daily-reporting-ui` into `openspec/specs/`, then `/opsx:archive` this change.
+- [x] 10.1 Run `pnpm lint`, `pnpm typecheck`, `pnpm test:coverage`, and `pnpm build` across the workspace.
+- [x] 10.2 Verify each requirement in the three delta specs against the running system on `dev`, both apps.
+- [x] 10.3 Move KAN-71 through KAN-79 to Done and close the KAN-64 epic; close the subtasks rather than leaving them dangling under completed parents.
+- [x] 10.4 Run `/opsx:sync` to fold `day-status`, `time-entries-api`, and `daily-reporting-ui` into `openspec/specs/`, then `/opsx:archive` this change.

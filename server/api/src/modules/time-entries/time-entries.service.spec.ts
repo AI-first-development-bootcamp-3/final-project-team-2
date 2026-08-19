@@ -404,6 +404,24 @@ describe('TimeEntriesService.create — overlap (VAL-32)', () => {
     });
   });
 
+  it('translates a Prisma-wrapped exclusion error into VAL-32 rather than a 500', async () => {
+    // PrismaClientUnknownRequestError puts 23P01 in the message, not on `.code`.
+    prisma.timeEntry.create.mockRejectedValue(
+      Object.assign(
+        new Error(
+          'Invalid `prisma.timeEntry.create()` invocation\nPostgresError { code: "23P01", message: "conflicting key value violates exclusion constraint \\"time_entries_no_overlap\\"" }',
+        ),
+        { name: 'PrismaClientUnknownRequestError' },
+      ),
+    );
+
+    await expect(
+      attempt(bodyFor('2026-08-10', '09:00', '2026-08-10', '17:00')),
+    ).rejects.toMatchObject({
+      response: { statusCode: 409, details: [expect.objectContaining({ rule: 'VAL-32' })] },
+    });
+  });
+
   it('does not swallow an unrelated database error', async () => {
     prisma.timeEntry.create.mockRejectedValue(
       Object.assign(new Error('connection lost'), {
