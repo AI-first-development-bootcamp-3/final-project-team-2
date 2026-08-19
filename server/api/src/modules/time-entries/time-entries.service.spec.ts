@@ -91,14 +91,14 @@ describe('TimeEntriesService.create', () => {
       userId: OTHER_USER_ID,
     } as never);
 
-    const [[call]] = prisma.timeEntry.create.mock.calls;
+    const call = prisma.timeEntry.create.mock.calls[0]?.[0];
     expect(call.data.user_id).toBe(USER_ID);
   });
 
   it('stores the date column at UTC midnight of the local day', async () => {
     await createService(prisma).create(USER_ID, validBody);
 
-    const [[call]] = prisma.timeEntry.create.mock.calls;
+    const call = prisma.timeEntry.create.mock.calls[0]?.[0];
     expect(call.data.date.toISOString()).toBe('2026-08-10T00:00:00.000Z');
   });
 
@@ -137,7 +137,7 @@ describe('TimeEntriesService.create', () => {
   it('stores a missing description as null rather than undefined', async () => {
     await createService(prisma).create(USER_ID, validBody);
 
-    const [[call]] = prisma.timeEntry.create.mock.calls;
+    const call = prisma.timeEntry.create.mock.calls[0]?.[0];
     expect(call.data.description).toBeNull();
   });
 });
@@ -152,21 +152,21 @@ describe('TimeEntriesService.list', () => {
   it('scopes every read to the caller', async () => {
     await createService(prisma).list(USER_ID, { date: '2026-08-10' });
 
-    const [[call]] = prisma.timeEntry.findMany.mock.calls;
+    const call = prisma.timeEntry.findMany.mock.calls[0]?.[0];
     expect(call.where.user_id).toBe(USER_ID);
   });
 
   it('filters to a single day when given a date', async () => {
     await createService(prisma).list(USER_ID, { date: '2026-08-10' });
 
-    const [[call]] = prisma.timeEntry.findMany.mock.calls;
+    const call = prisma.timeEntry.findMany.mock.calls[0]?.[0];
     expect(call.where.date.toISOString()).toBe('2026-08-10T00:00:00.000Z');
   });
 
   it('filters to an inclusive range when given from and to', async () => {
     await createService(prisma).list(USER_ID, { from: '2026-08-01', to: '2026-08-31' });
 
-    const [[call]] = prisma.timeEntry.findMany.mock.calls;
+    const call = prisma.timeEntry.findMany.mock.calls[0]?.[0];
     expect(call.where.date.gte.toISOString()).toBe('2026-08-01T00:00:00.000Z');
     expect(call.where.date.lte.toISOString()).toBe('2026-08-31T00:00:00.000Z');
   });
@@ -174,7 +174,7 @@ describe('TimeEntriesService.list', () => {
   it('returns entries oldest first', async () => {
     await createService(prisma).list(USER_ID, { date: '2026-08-10' });
 
-    const [[call]] = prisma.timeEntry.findMany.mock.calls;
+    const call = prisma.timeEntry.findMany.mock.calls[0]?.[0];
     expect(call.orderBy).toEqual([{ date: 'asc' }, { start_at: 'asc' }]);
   });
 
