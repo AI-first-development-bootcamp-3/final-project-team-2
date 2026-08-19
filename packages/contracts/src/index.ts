@@ -17,7 +17,18 @@ export type AuditAction = z.infer<typeof AuditAction>;
 export { ListMetaSchema, listSuccessSchema } from './common/list-envelope.js';
 export type { ListMeta } from './common/list-envelope.js';
 
-export { ApiErrorSchema, ApiErrorDetailSchema, zodIssuesToDetails } from './common/api-error.js';
+export type { ValCode } from './common/val-messages.js';
+export { VAL_MESSAGES } from './common/val-messages.js';
+
+export {
+  ApiErrorSchema,
+  ApiErrorDetailSchema,
+  ROOT_DETAIL_FIELD,
+  partitionDetails,
+  valDetail,
+  zodIssuesToDetails,
+  zodIssuesToHebrewDetails,
+} from './common/api-error.js';
 export type { ApiError, ApiErrorDetail } from './common/api-error.js';
 
 export {
@@ -79,70 +90,9 @@ export const RefreshResponse = z.object({
 
 export type RefreshResponse = z.infer<typeof RefreshResponse>;
 
-export type ValCode =
-  | 'VAL-01'
-  | 'VAL-02'
-  | 'VAL-03'
-  | 'VAL-04'
-  | 'VAL-10'
-  | 'VAL-11'
-  | 'VAL-12'
-  | 'VAL-13'
-  | 'VAL-20'
-  | 'VAL-21'
-  | 'VAL-22'
-  | 'VAL-23'
-  | 'VAL-24'
-  | 'VAL-25'
-  | 'VAL-26'
-  | 'VAL-27'
-  | 'VAL-28'
-  | 'VAL-30'
-  | 'VAL-31'
-  | 'VAL-32'
-  | 'VAL-33'
-  | 'VAL-34'
-  | 'VAL-35'
-  | 'VAL-36'
-  | 'VAL-38'
-  | 'VAL-DATE-RANGE'
-  | 'VAL-EMPTY-UPDATE'
-  | 'VAL-RUNNING-ENTRY';
-
-export const VAL_MESSAGES: Record<ValCode, string> = {
-  'VAL-01': 'כתובת האימייל היא שדה חובה',
-  'VAL-02': 'כתובת האימייל שהוזנה אינה תקינה',
-  'VAL-03': 'הסיסמה היא שדה חובה',
-  'VAL-04': 'הסיסמה חייבת להכיל 8 תווים לפחות',
-  'VAL-10': 'שם מלא הוא שדה חובה',
-  'VAL-11': 'כתובת האימייל כבר בשימוש (VAL-11)',
-  'VAL-12': 'יש לבחור תפקיד תקין',
-  'VAL-13': 'הסיסמה הראשונית היא שדה חובה',
-  'VAL-20': 'שם הלקוח הוא שדה חובה',
-  'VAL-21': 'שם הלקוח כבר קיים במערכת',
-  'VAL-22': 'שם הפרויקט הוא שדה חובה',
-  'VAL-23': 'יש לבחור לקוח תקין ופעיל',
-  'VAL-24': 'שם המשימה הוא שדה חובה',
-  'VAL-25': 'יש לבחור פרויקט תקין ופעיל',
-  'VAL-26': 'יש לבחור משתמש ומשימה תקינים',
-  'VAL-27': 'השיוך כבר קיים במערכת',
-  'VAL-28': 'יש לבחור אופן דיווח תקין',
-  // Time entries (§8.5). VAL-37 (one running timer per user) belongs to the
-  // Punch Clock epic and is intentionally absent here.
-  'VAL-30': 'שעת התחלה היא שדה חובה',
-  'VAL-31': 'שעת הסיום חייבת להיות מאוחרת משעת ההתחלה',
-  'VAL-32': 'קיים כבר דיווח שעות חופף בטווח זה',
-  'VAL-33': 'אינך משויך למשימה שנבחרה',
-  'VAL-34': 'החודש נעול ולא ניתן לעדכן דיווחי שעות',
-  'VAL-35': 'יש לבחור משימה',
-  'VAL-36': 'יש לבחור מיקום עבודה',
-  'VAL-38': 'התאריך אינו תואם את יום תחילת הדיווח',
-  'VAL-DATE-RANGE': 'יש לציין תאריך יחיד או טווח תאריכים תקין',
-  'VAL-EMPTY-UPDATE': 'לא נשלחו שדות לעדכון',
-  // Punch Clock (KAN-79): PATCH/DELETE of a running entry is refused outright
-  // rather than exempted from the merged-entry rules (design D7).
-  'VAL-RUNNING-ENTRY': 'לא ניתן לערוך דיווח שעות שטרם הסתיים',
-};
+// Rule codes and their Hebrew messages live in common/val-messages.js, so the
+// shared error helpers can build a translated payload without importing this
+// file circularly. Re-exported above.
 
 // --- Clients ---
 export {
@@ -262,10 +212,26 @@ export type { TimeEntryTimes } from './time-entries/fields.js';
 export { CreateTimeEntryBodySchema } from './time-entries/create.js';
 export type { CreateTimeEntryBody } from './time-entries/create.js';
 
-export { UpdateTimeEntryBodySchema, MergedTimeEntrySchema } from './time-entries/update.js';
-export type { UpdateTimeEntryBody, MergedTimeEntry } from './time-entries/update.js';
+export {
+  UpdateTimeEntryBodySchema,
+  MergedTimeEntrySchema,
+  CompletedTimeEntrySchema,
+} from './time-entries/update.js';
+export type {
+  UpdateTimeEntryBody,
+  MergedTimeEntry,
+  CompletedTimeEntry,
+} from './time-entries/update.js';
 
 export {
+  intervalsOverlap,
+  findOverlap,
+  OVERLAP_CANDIDATE_WINDOW_DAYS,
+} from './time-entries/overlap.js';
+export type { TimeInterval } from './time-entries/overlap.js';
+
+export {
+  MAX_TIME_ENTRY_RANGE_DAYS,
   TimeEntriesListQuerySchema,
   TimeEntryListItemSchema,
   TimeEntriesListSuccessSchema,

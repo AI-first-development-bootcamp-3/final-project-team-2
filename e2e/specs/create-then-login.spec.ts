@@ -22,7 +22,7 @@ test.describe.skip('Create then login', () => {
     await page.getByRole('button', { name: 'התחבר' }).click();
 
     await expect(page).not.toHaveURL(/\/login/);
-    await expect(page.getByRole('heading', { name: 'עמוד ראשי - דיווח יומי' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'דיווח שעות' })).toBeVisible();
     await expect(page.getByText(/שינוי סיסמה|החלפת סיסמה|יש לשנות את הסיסמה/)).toHaveCount(0);
   });
 });

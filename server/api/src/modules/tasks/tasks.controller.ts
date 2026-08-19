@@ -16,19 +16,11 @@ import {
   TasksListQuerySchema,
   CreateTaskBodySchema,
   UpdateTaskBodySchema,
-  VAL_MESSAGES,
   zodIssuesToDetails,
-  type ValCode,
+  zodIssuesToHebrewDetails,
 } from '@abra/contracts';
 import { Roles } from '../../auth/auth.decorators';
 import { TasksService } from './tasks.service';
-
-function hebrewDetails(issues: Parameters<typeof zodIssuesToDetails>[0]) {
-  return zodIssuesToDetails(issues).map((detail) => ({
-    ...detail,
-    message: detail.rule in VAL_MESSAGES ? VAL_MESSAGES[detail.rule as ValCode] : detail.message,
-  }));
-}
 
 @ApiTags('tasks')
 @ApiBearerAuth()
@@ -68,7 +60,7 @@ export class TasksController {
         statusCode: 400,
         message: 'Validation failed',
         error: 'Bad Request',
-        details: hebrewDetails(parsed.error.issues),
+        details: zodIssuesToHebrewDetails(parsed.error.issues),
       });
     }
     const data = await this.tasksService.create(parsed.data);
@@ -84,7 +76,7 @@ export class TasksController {
         statusCode: 400,
         message: 'Validation failed',
         error: 'Bad Request',
-        details: hebrewDetails(parsed.error.issues),
+        details: zodIssuesToHebrewDetails(parsed.error.issues),
       });
     }
     const data = await this.tasksService.update(id, parsed.data);
