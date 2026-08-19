@@ -61,7 +61,7 @@ export function EditUserModal({ user, onClose, onSuccess }: EditUserModalProps) 
       aria-modal="true"
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
     >
-      <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl" dir="rtl">
+      <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-xl" dir="rtl">
         <h3 className="mb-4 text-lg font-bold">עריכת פרטי משתמש</h3>
         {error ? (
           <div role="alert" className="mb-4 rounded bg-red-100 p-3 text-sm text-red-700">
@@ -76,7 +76,7 @@ export function EditUserModal({ user, onClose, onSuccess }: EditUserModalProps) 
               required
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              className="mt-1 w-full rounded border px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
             />
           </label>
           <label className="block text-sm">
@@ -86,7 +86,7 @@ export function EditUserModal({ user, onClose, onSuccess }: EditUserModalProps) 
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 w-full rounded border px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
             />
           </label>
           <label className="block text-sm">
@@ -94,7 +94,7 @@ export function EditUserModal({ user, onClose, onSuccess }: EditUserModalProps) 
             <select
               value={role}
               onChange={(e) => setRole(e.target.value as 'admin' | 'employee')}
-              className="mt-1 w-full rounded border px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
             >
               <option value="employee">משתמש רגיל</option>
               <option value="admin">אדמין</option>
@@ -108,7 +108,7 @@ export function EditUserModal({ user, onClose, onSuccess }: EditUserModalProps) 
                 placeholder="EMP-101"
                 value={employeeNumber}
                 onChange={(e) => setEmployeeNumber(e.target.value)}
-                className="mt-1 w-full rounded border px-3 py-2 text-sm"
+                className="mt-1 w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
               />
             </label>
             <label className="block text-sm">
@@ -118,7 +118,7 @@ export function EditUserModal({ user, onClose, onSuccess }: EditUserModalProps) 
                 placeholder="מפתח תוכנה"
                 value={jobTitle}
                 onChange={(e) => setJobTitle(e.target.value)}
-                className="mt-1 w-full rounded border px-3 py-2 text-sm"
+                className="mt-1 w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
               />
             </label>
           </div>
@@ -130,7 +130,7 @@ export function EditUserModal({ user, onClose, onSuccess }: EditUserModalProps) 
                 placeholder="מלאה"
                 value={employmentType}
                 onChange={(e) => setEmploymentType(e.target.value)}
-                className="mt-1 w-full rounded border px-3 py-2 text-sm"
+                className="mt-1 w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
               />
             </label>
             <label className="block text-sm">
@@ -141,7 +141,7 @@ export function EditUserModal({ user, onClose, onSuccess }: EditUserModalProps) 
                 max="100"
                 value={employmentPercentage}
                 onChange={(e) => setEmploymentPercentage(e.target.value)}
-                className="mt-1 w-full rounded border px-3 py-2 text-sm"
+                className="mt-1 w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
               />
             </label>
           </div>
@@ -152,7 +152,7 @@ export function EditUserModal({ user, onClose, onSuccess }: EditUserModalProps) 
               placeholder="פיתוח"
               value={orgUnit}
               onChange={(e) => setOrgUnit(e.target.value)}
-              className="mt-1 w-full rounded border px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
             />
           </label>
 
@@ -160,14 +160,14 @@ export function EditUserModal({ user, onClose, onSuccess }: EditUserModalProps) 
             <button
               type="button"
               onClick={onClose}
-              className="rounded border px-4 py-2 text-sm font-medium hover:bg-neutral-100"
+              className="rounded-lg bg-slate-400 px-6 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-500"
             >
               ביטול
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+              className="rounded-lg bg-blue-600 px-6 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
             >
               {loading ? 'שומר…' : 'שמור שינויים'}
             </button>

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ProjectListItem, ProjectsListSuccess, ReportType } from '@abra/contracts';
 import { DataTable, type DataTableColumn } from '@/components/ui/data-table';
 import { PageHeader } from '@/components/ui/page-header';
+import { EmptyState } from '@/components/ui/empty-state';
 import { SearchField } from '@/components/ui/toolbar';
 import { apiFetch } from '@/lib/api/client';
 import { useDebouncedValue } from '@/lib/use-debounced-value';
@@ -161,7 +162,7 @@ export function ReportingSettingsPage() {
           </button>
         </div>
       ) : null}
-      {!loading && result && result.data.length === 0 ? <p>לא נמצאו פרויקטים</p> : null}
+      {!loading && result && result.data.length === 0 ? <EmptyState /> : null}
 
       {/* A failed update must not hide the table — the error renders as a
           dismissible banner above it and the admin can retry immediately. */}

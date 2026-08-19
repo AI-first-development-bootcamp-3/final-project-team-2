@@ -9,6 +9,7 @@ import type {
 } from '@abra/contracts';
 import { DataTable, type SortOrder } from '@/components/ui/data-table';
 import { PageHeader } from '@/components/ui/page-header';
+import { EmptyState } from '@/components/ui/empty-state';
 import { PrimaryButton, SearchField } from '@/components/ui/toolbar';
 import { apiFetch } from '@/lib/api/client';
 import { TaskCreateForm } from './task-create-form';
@@ -166,12 +167,12 @@ export function TasksPage() {
 
       <div className="mb-4 flex flex-wrap items-end gap-3">
         <SearchField placeholder="חיפוש לפי שם משימה" value={q} onChange={onSearchChange} />
-        <label className="flex flex-col text-sm">
+        <label className="flex flex-col gap-1 text-sm font-medium text-neutral-700">
           פרויקט
           <select
             value={projectId}
             onChange={(e) => handleProjectFilterChange(e.target.value)}
-            className="rounded border px-2 py-1"
+            className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
           >
             <option value="">כל הפרויקטים</option>
             {projects.map((p) => (
@@ -181,7 +182,7 @@ export function TasksPage() {
             ))}
           </select>
         </label>
-        <label className="flex flex-col text-sm">
+        <label className="flex flex-col gap-1 text-sm font-medium text-neutral-700">
           סטטוס
           <select
             value={status}
@@ -189,7 +190,7 @@ export function TasksPage() {
               setStatus(e.target.value);
               setPage(1);
             }}
-            className="rounded border px-2 py-1"
+            className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
           >
             <option value="">הכל</option>
             <option value="open">פתוחה</option>
@@ -211,7 +212,7 @@ export function TasksPage() {
 
       {loading ? <p>טוען…</p> : null}
       {error ? <p role="alert">{error}</p> : null}
-      {!loading && !error && result && result.data.length === 0 ? <p>לא נמצאו משימות</p> : null}
+      {!loading && !error && result && result.data.length === 0 ? <EmptyState /> : null}
       {!loading && !error && result && result.data.length > 0 ? (
         <DataTable
           columns={columns}
@@ -256,7 +257,7 @@ export function TasksPage() {
           aria-modal="true"
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
         >
-          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl" dir="rtl">
+          <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-xl" dir="rtl">
             <h3 className="mb-2 text-lg font-bold text-red-600">השבתת משימה</h3>
             <p className="mb-4 text-sm text-neutral-700">
               האם אתה בטוח שברצונך להשבית את המשימה <strong>{deactivatingTask.name}</strong>?
@@ -269,7 +270,7 @@ export function TasksPage() {
               <button
                 type="button"
                 onClick={() => setDeactivatingTask(null)}
-                className="rounded border px-4 py-2 text-sm font-medium hover:bg-neutral-100"
+                className="rounded-lg bg-slate-400 px-6 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-500"
               >
                 ביטול
               </button>

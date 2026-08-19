@@ -10,7 +10,11 @@ export function createAssignmentsColumns(params: {
       id: 'userFullName',
       header: 'שם עובד',
       sortable: true,
-      cell: (row) => row.userFullName,
+      cell: (row) => (
+        <span className="inline-block rounded-full bg-neutral-100 px-3 py-1 text-xs font-medium text-neutral-700 ring-1 ring-neutral-200">
+          {row.userFullName}
+        </span>
+      ),
     },
     {
       id: 'userEmail',

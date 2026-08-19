@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { UserListItem, UsersListQuery, UsersListSuccess } from '@abra/contracts';
 import { DataTable, type SortOrder } from '@/components/ui/data-table';
 import { PageHeader } from '@/components/ui/page-header';
+import { EmptyState } from '@/components/ui/empty-state';
 import { FilterSelect, PrimaryButton, SearchField } from '@/components/ui/toolbar';
 import { apiFetch } from '@/lib/api/client';
 import { DeactivateUserModal } from './deactivate-user-modal';
@@ -170,7 +171,7 @@ export function UsersPage() {
 
       {loading ? <p>טוען…</p> : null}
       {error ? <p role="alert">{error}</p> : null}
-      {!loading && !error && result && result.data.length === 0 ? <p>לא נמצאו משתמשים</p> : null}
+      {!loading && !error && result && result.data.length === 0 ? <EmptyState /> : null}
       {!loading && !error && result && result.data.length > 0 ? (
         <DataTable
           columns={columns}

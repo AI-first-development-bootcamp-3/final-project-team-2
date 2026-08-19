@@ -113,13 +113,13 @@ export function ClientCreateForm({ open, onClose, onCreated }: ClientCreateFormP
         void handleSubmit();
       }}
     >
-      <label className="flex flex-col text-sm">
+      <label className="flex flex-col gap-1 text-sm font-medium text-neutral-700">
         שם לקוח
         <input
           required
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="rounded border px-2 py-1"
+          className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
         />
         {fieldErrors.name ? (
           <p role="alert" className="text-sm text-red-600">
@@ -127,12 +127,12 @@ export function ClientCreateForm({ open, onClose, onCreated }: ClientCreateFormP
           </p>
         ) : null}
       </label>
-      <label className="flex flex-col text-sm">
+      <label className="flex flex-col gap-1 text-sm font-medium text-neutral-700">
         פרטי קשר
         <textarea
           value={contactInfo}
           onChange={(e) => setContactInfo(e.target.value)}
-          className="rounded border px-2 py-1"
+          className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
           rows={2}
         />
         {fieldErrors.contactInfo ? (

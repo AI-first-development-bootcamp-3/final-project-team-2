@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { ClientListItem, ClientsListQuery, ClientsListSuccess } from '@abra/contracts';
 import { DataTable, type SortOrder } from '@/components/ui/data-table';
 import { PageHeader } from '@/components/ui/page-header';
+import { EmptyState } from '@/components/ui/empty-state';
 import { PrimaryButton, SearchField } from '@/components/ui/toolbar';
 import { apiFetch } from '@/lib/api/client';
 import { createClientsColumns } from './clients-columns';
@@ -129,7 +130,7 @@ export function ClientsPage() {
 
       <div className="mb-4 flex flex-wrap items-end gap-3">
         <SearchField placeholder="חיפוש לפי שם לקוח" value={q} onChange={onSearchChange} />
-        <label className="flex flex-col text-sm">
+        <label className="flex flex-col gap-1 text-sm font-medium text-neutral-700">
           סטטוס
           <select
             value={isActive}
@@ -137,7 +138,7 @@ export function ClientsPage() {
               setIsActive(e.target.value);
               setPage(1);
             }}
-            className="rounded border px-2 py-1"
+            className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
           >
             <option value="">הכל</option>
             <option value="true">פעיל</option>
@@ -159,7 +160,7 @@ export function ClientsPage() {
 
       {loading ? <p>טוען…</p> : null}
       {error ? <p role="alert">{error}</p> : null}
-      {!loading && !error && result && result.data.length === 0 ? <p>לא נמצאו לקוחות</p> : null}
+      {!loading && !error && result && result.data.length === 0 ? <EmptyState /> : null}
       {!loading && !error && result && result.data.length > 0 ? (
         <DataTable
           columns={columns}

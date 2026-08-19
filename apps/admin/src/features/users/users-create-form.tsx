@@ -120,45 +120,45 @@ export function UsersCreateForm({ open, onClose, onCreated }: UsersCreateFormPro
         void handleSubmit();
       }}
     >
-      <label className="flex flex-col text-sm">
+      <label className="flex flex-col gap-1 text-sm font-medium text-neutral-700">
         שם מלא
         <input
           required
           value={fullName}
           onChange={(event) => setFullName(event.target.value)}
-          className="rounded border px-2 py-1"
+          className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
         />
         {fieldErrors.fullName ? <p role="alert">{fieldErrors.fullName}</p> : null}
       </label>
-      <label className="flex flex-col text-sm">
+      <label className="flex flex-col gap-1 text-sm font-medium text-neutral-700">
         אימייל
         <input
           required
           type="email"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
-          className="rounded border px-2 py-1"
+          className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
         />
         {fieldErrors.email ? <p role="alert">{fieldErrors.email}</p> : null}
       </label>
-      <label className="flex flex-col text-sm">
+      <label className="flex flex-col gap-1 text-sm font-medium text-neutral-700">
         סיסמה ראשונית
         <input
           required
           type="password"
           value={password}
           onChange={(event) => setPassword(event.target.value)}
-          className="rounded border px-2 py-1"
+          className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
         />
         {fieldErrors.password ? <p role="alert">{fieldErrors.password}</p> : null}
       </label>
-      <label className="flex flex-col text-sm">
+      <label className="flex flex-col gap-1 text-sm font-medium text-neutral-700">
         תפקיד
         <select
           required
           value={role}
           onChange={(event) => setRole(event.target.value as 'employee' | 'admin')}
-          className="rounded border px-2 py-1"
+          className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
         >
           <option value="employee">רגיל</option>
           <option value="admin">אדמין</option>
