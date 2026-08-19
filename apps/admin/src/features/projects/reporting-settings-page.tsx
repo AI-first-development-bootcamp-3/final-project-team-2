@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ProjectListItem, ProjectsListSuccess, ReportType } from '@abra/contracts';
 import { DataTable, type DataTableColumn } from '@/components/ui/data-table';
+import { PageHeader } from '@/components/ui/page-header';
+import { EmptyState } from '@/components/ui/empty-state';
+import { SearchField } from '@/components/ui/toolbar';
 import { apiFetch } from '@/lib/api/client';
 import { useDebouncedValue } from '@/lib/use-debounced-value';
 
@@ -106,9 +109,10 @@ export function ReportingSettingsPage() {
 
   return (
     <section dir="rtl">
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <h2 className="text-xl font-semibold text-neutral-900">הגדרת דיווחי שעות</h2>
-      </div>
+      <PageHeader
+        title="הגדרת דיווחי שעות"
+        subtitle="כאן תוכל להגדיר את סוג הדיווח עבור כל פרויקט."
+      />
 
       {successMessage ? (
         <div
@@ -129,19 +133,15 @@ export function ReportingSettingsPage() {
       ) : null}
 
       <div className="mb-4 flex flex-wrap items-end gap-3">
-        <label className="flex flex-col text-sm">
-          חיפוש פרויקט / לקוח
-          <input
-            type="search"
-            value={q}
-            onChange={(e) => {
-              setQ(e.target.value);
-              setPage(1);
-            }}
-            placeholder="חפש לפי שם..."
-            className="rounded border px-2 py-1"
-          />
-        </label>
+        <SearchField
+          label="חיפוש פרויקט / לקוח"
+          placeholder="חיפוש לפי שם לקוח/פרויקט"
+          value={q}
+          onChange={(value) => {
+            setQ(value);
+            setPage(1);
+          }}
+        />
       </div>
 
       {loading ? <p>טוען…</p> : null}
@@ -162,7 +162,7 @@ export function ReportingSettingsPage() {
           </button>
         </div>
       ) : null}
-      {!loading && result && result.data.length === 0 ? <p>לא נמצאו פרויקטים</p> : null}
+      {!loading && result && result.data.length === 0 ? <EmptyState /> : null}
 
       {/* A failed update must not hide the table — the error renders as a
           dismissible banner above it and the admin can retry immediately. */}

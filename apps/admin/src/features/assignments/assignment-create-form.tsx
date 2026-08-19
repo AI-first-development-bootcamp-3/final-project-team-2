@@ -133,13 +133,13 @@ export function AssignmentCreateForm({ open, onClose, onCreated }: AssignmentCre
         void handleSubmit();
       }}
     >
-      <label className="flex flex-col text-sm">
+      <label className="flex flex-col gap-1 text-sm font-medium text-neutral-700">
         עובד
         <select
           required
           value={userId}
           onChange={(e) => setUserId(e.target.value)}
-          className="rounded border px-2 py-1"
+          className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
         >
           <option value="">בחר עובד</option>
           {users.map((u) => (
@@ -154,13 +154,13 @@ export function AssignmentCreateForm({ open, onClose, onCreated }: AssignmentCre
           </p>
         ) : null}
       </label>
-      <label className="flex flex-col text-sm">
+      <label className="flex flex-col gap-1 text-sm font-medium text-neutral-700">
         משימה
         <select
           required
           value={taskId}
           onChange={(e) => setTaskId(e.target.value)}
-          className="rounded border px-2 py-1"
+          className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
         >
           <option value="">בחר משימה</option>
           {tasks.map((t) => (

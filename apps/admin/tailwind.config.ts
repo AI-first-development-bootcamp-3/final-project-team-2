@@ -11,6 +11,14 @@ const config: Config = {
         navy: '#141E3E',
         darkGray: '#53575B',
         lightBg: '#F2F2F7',
+        // Exact Figma tokens (read from the admin-portal frames via CSS/SVG export)
+        linkBlue: '#0C69FF',
+        ink: '#212525',
+        divider: '#ECECEC',
+        grayIcon: '#848891',
+      },
+      fontFamily: {
+        sans: ['"Assistant Variable"', 'Assistant', 'system-ui', 'sans-serif'],
       },
     },
   },

@@ -28,8 +28,9 @@ describe('AdminSidebar', () => {
 
   it('highlights the active route', () => {
     renderSidebar('/admin/clients');
-    const clientsLink = screen.getByText('לקוחות');
-    expect(clientsLink.className).toContain('bg-neutral-900');
+    const clientsLink = screen.getByText('לקוחות').closest('a');
+    expect(clientsLink).toHaveAttribute('aria-current', 'page');
+    expect(clientsLink?.className).toContain('bg-white/10');
   });
 
   it('logout calls logoutAndRedirect', async () => {

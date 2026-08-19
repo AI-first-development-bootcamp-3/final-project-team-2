@@ -1,5 +1,6 @@
 import type { UserListItem } from '@abra/contracts';
 import type { DataTableColumn } from '@/components/ui/data-table';
+import { IconAction } from '@/components/ui/icon-action';
 
 const ROLE_LABEL: Record<UserListItem['role'], string> = {
   employee: 'משתמש רגיל',
@@ -46,37 +47,13 @@ export function createUsersColumns(params: {
       header: 'פעולות',
       sortable: false,
       cell: (row) => (
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => params.onEdit(row)}
-            className="rounded border px-2 py-1 text-xs font-medium text-neutral-700 hover:bg-neutral-100"
-          >
-            ערוך
-          </button>
-          <button
-            type="button"
-            onClick={() => params.onResetPassword(row)}
-            className="rounded border border-amber-300 bg-amber-50 px-2 py-1 text-xs font-medium text-amber-700 hover:bg-amber-100"
-          >
-            איפוס סיסמה
-          </button>
+        <div className="flex items-center gap-1">
+          <IconAction kind="edit" label="ערוך" onClick={() => params.onEdit(row)} />
+          <IconAction kind="key" label="איפוס סיסמה" onClick={() => params.onResetPassword(row)} />
           {row.isActive ? (
-            <button
-              type="button"
-              onClick={() => params.onDeactivate(row)}
-              className="rounded border border-red-300 bg-red-50 px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-100"
-            >
-              השבת
-            </button>
+            <IconAction kind="trash" label="השבת" onClick={() => params.onDeactivate(row)} />
           ) : (
-            <button
-              type="button"
-              onClick={() => params.onRestore(row)}
-              className="rounded border border-green-300 bg-green-50 px-2 py-1 text-xs font-medium text-green-700 hover:bg-green-100"
-            >
-              הפעל מחדש
-            </button>
+            <IconAction kind="restore" label="הפעל מחדש" onClick={() => params.onRestore(row)} />
           )}
         </div>
       ),

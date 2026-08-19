@@ -8,6 +8,9 @@ import type {
   UsersListSuccess,
 } from '@abra/contracts';
 import { DataTable, type SortOrder } from '@/components/ui/data-table';
+import { PageHeader } from '@/components/ui/page-header';
+import { EmptyState } from '@/components/ui/empty-state';
+import { PrimaryButton, SearchField } from '@/components/ui/toolbar';
 import { apiFetch } from '@/lib/api/client';
 import { AssignmentCreateForm } from './assignment-create-form';
 import { createAssignmentsColumns } from './assignments-columns';
@@ -121,16 +124,10 @@ export function AssignmentsPage() {
 
   return (
     <section>
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <h2 className="text-xl font-semibold">שיוכים</h2>
-        <button
-          type="button"
-          className="rounded border bg-neutral-900 px-3 py-1 text-white hover:bg-neutral-800"
-          onClick={() => setCreateOpen(true)}
-        >
-          שיוך חדש
-        </button>
-      </div>
+      <PageHeader
+        title="שיוכים"
+        subtitle="כאן תוכל לשייך עובדים למשימות מתוך פרויקטים שונים של לקוחות."
+      />
 
       {successMessage ? (
         <div
@@ -149,16 +146,14 @@ export function AssignmentsPage() {
       ) : null}
 
       <div className="mb-4 flex flex-wrap items-end gap-3">
-        <label className="flex flex-col text-sm">
-          חיפוש
-          <input
-            type="search"
-            value={q}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="rounded border px-2 py-1"
-          />
-        </label>
-        <label className="flex flex-col text-sm">
+        <SearchField
+          className="ms-auto"
+          placeholder="חיפוש לפי שם עובד"
+          value={q}
+          onChange={onSearchChange}
+        />
+        <PrimaryButton onClick={() => setCreateOpen(true)}>שיוך חדש</PrimaryButton>
+        <label className="flex flex-col gap-1 text-sm font-medium text-neutral-700">
           עובד
           <select
             value={userId}
@@ -166,7 +161,7 @@ export function AssignmentsPage() {
               setUserId(e.target.value);
               setPage(1);
             }}
-            className="rounded border px-2 py-1"
+            className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
           >
             <option value="">כל העובדים</option>
             {users.map((u) => (
@@ -176,7 +171,7 @@ export function AssignmentsPage() {
             ))}
           </select>
         </label>
-        <label className="flex flex-col text-sm">
+        <label className="flex flex-col gap-1 text-sm font-medium text-neutral-700">
           משימה
           <select
             value={taskId}
@@ -184,7 +179,7 @@ export function AssignmentsPage() {
               setTaskId(e.target.value);
               setPage(1);
             }}
-            className="rounded border px-2 py-1"
+            className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
           >
             <option value="">כל המשימות</option>
             {tasks.map((t) => (
@@ -198,7 +193,7 @@ export function AssignmentsPage() {
 
       {loading ? <p>טוען…</p> : null}
       {error ? <p role="alert">{error}</p> : null}
-      {!loading && !error && result && result.data.length === 0 ? <p>לא נמצאו שיוכים</p> : null}
+      {!loading && !error && result && result.data.length === 0 ? <EmptyState /> : null}
       {!loading && !error && result && result.data.length > 0 ? (
         <DataTable
           columns={columns}
@@ -230,7 +225,7 @@ export function AssignmentsPage() {
           aria-modal="true"
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
         >
-          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl" dir="rtl">
+          <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-xl" dir="rtl">
             <h3 className="mb-2 text-lg font-bold text-red-600">הסרת שיוך</h3>
             <p className="mb-4 text-sm text-neutral-700">
               האם אתה בטוח שברצונך להסיר את השיוך של העובד{' '}
@@ -241,7 +236,7 @@ export function AssignmentsPage() {
               <button
                 type="button"
                 onClick={() => setRemovingAssignment(null)}
-                className="rounded border px-4 py-2 text-sm font-medium hover:bg-neutral-100"
+                className="rounded-lg bg-slate-400 px-6 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-500"
               >
                 ביטול
               </button>

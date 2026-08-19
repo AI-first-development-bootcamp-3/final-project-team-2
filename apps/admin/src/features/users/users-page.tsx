@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { UserListItem, UsersListQuery, UsersListSuccess } from '@abra/contracts';
 import { DataTable, type SortOrder } from '@/components/ui/data-table';
-import { logoutAndRedirect } from '@/lib/api';
+import { PageHeader } from '@/components/ui/page-header';
+import { EmptyState } from '@/components/ui/empty-state';
+import { FilterSelect, PrimaryButton, SearchField } from '@/components/ui/toolbar';
 import { apiFetch } from '@/lib/api/client';
 import { DeactivateUserModal } from './deactivate-user-modal';
 import { EditUserModal } from './edit-user-modal';
@@ -104,27 +106,10 @@ export function UsersPage() {
 
   return (
     <section>
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <h2 className="text-xl font-semibold">משתמשים</h2>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            className="rounded border px-3 py-1"
-            onClick={() => {
-              void logoutAndRedirect();
-            }}
-          >
-            התנתק
-          </button>
-          <button
-            type="button"
-            className="rounded border bg-neutral-900 px-3 py-1 text-white"
-            onClick={() => setCreateOpen(true)}
-          >
-            יצירת משתמש
-          </button>
-        </div>
-      </div>
+      <PageHeader
+        title="משתמשים"
+        subtitle="כאן תוכל לנהל את משתמשי המערכת — עריכה, איפוס סיסמה והשבתה."
+      />
 
       {successMessage ? (
         <div
@@ -142,47 +127,32 @@ export function UsersPage() {
         </div>
       ) : null}
 
-      <div className="mb-4 flex flex-wrap items-end gap-3">
-        <label className="flex flex-col text-sm">
-          חיפוש
-          <input
-            type="search"
-            value={q}
-            onChange={(event) => onSearchChange(event.target.value)}
-            className="rounded border px-2 py-1"
-          />
-        </label>
-        <label className="flex flex-col text-sm">
-          תפקיד
-          <select
-            value={role}
-            onChange={(event) => {
-              setRole(event.target.value);
-              setPage(1);
-            }}
-            className="rounded border px-2 py-1"
-          >
-            <option value="">הכל</option>
-            <option value="admin">אדמין</option>
-            <option value="employee">משתמש רגיל</option>
-          </select>
-        </label>
-        <label className="flex flex-col text-sm">
-          סטטוס
-          <select
-            value={isActive}
-            onChange={(event) => {
-              setIsActive(event.target.value);
-              setPage(1);
-            }}
-            className="rounded border px-2 py-1"
-          >
-            <option value="">הכל</option>
-            <option value="true">פעיל</option>
-            <option value="false">לא פעיל</option>
-          </select>
-        </label>
-        <label className="flex items-center gap-2 text-sm">
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <FilterSelect
+          label="תפקיד"
+          value={role}
+          onChange={(event) => {
+            setRole(event.target.value);
+            setPage(1);
+          }}
+        >
+          <option value="">הכל</option>
+          <option value="admin">אדמין</option>
+          <option value="employee">משתמש רגיל</option>
+        </FilterSelect>
+        <FilterSelect
+          label="סטטוס"
+          value={isActive}
+          onChange={(event) => {
+            setIsActive(event.target.value);
+            setPage(1);
+          }}
+        >
+          <option value="">הכל</option>
+          <option value="true">פעיל</option>
+          <option value="false">לא פעיל</option>
+        </FilterSelect>
+        <label className="flex items-center gap-2 text-sm text-neutral-600">
           <input
             type="checkbox"
             checked={includeDeleted}
@@ -193,11 +163,18 @@ export function UsersPage() {
           />
           כולל מושבתים
         </label>
+        <SearchField
+          className="ms-auto"
+          placeholder="חיפוש לפי שם או אימייל"
+          value={q}
+          onChange={onSearchChange}
+        />
+        <PrimaryButton onClick={() => setCreateOpen(true)}>יצירת משתמש</PrimaryButton>
       </div>
 
       {loading ? <p>טוען…</p> : null}
       {error ? <p role="alert">{error}</p> : null}
-      {!loading && !error && result && result.data.length === 0 ? <p>לא נמצאו משתמשים</p> : null}
+      {!loading && !error && result && result.data.length === 0 ? <EmptyState /> : null}
       {!loading && !error && result && result.data.length > 0 ? (
         <DataTable
           columns={columns}
