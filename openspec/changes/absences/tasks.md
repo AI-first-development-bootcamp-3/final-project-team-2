@@ -22,8 +22,8 @@
 - [x] 3.3 Add `packages/contracts/src/absences/split.ts`: a pure `splitIntoWorkingRuns(startDate, endDate)` returning one `{ startDate, endDate }` per contiguous working-day run, built on the existing Asia/Jerusalem helpers in `day-status/local-date.ts` — no new dependency (D1).
 - [x] 3.4 Unit-test the splitter across the matrix: within one week, one weekend, two weekends, single day, Sunday start, Thursday end, a fifteen-day span, and both weekend-boundary rejections.
 - [x] 3.5 Add `update.ts` (all fields optional, same rules when present) and `list.ts` (month filter, optional `userId` for admins, `AbsenceListItemSchema` carrying `groupId` and `missingDocument`).
-- [x] 3.5a Build `AbsenceListItemSchema` by **extending `MonthAbsenceSchema`** from `packages/contracts/src/months/query.ts` rather than redeclaring `startDate` / `endDate`. KAN-80 wrote that schema for this purpose; extending it keeps the month query's `absences` array valid as it starts returning real rows, and keeps the shape feeding `computeDayStatus` unchanged.
-- [x] 3.5b Add `isHalfDay` to `MonthAbsenceSchema` (optional) so the month query carries what the half-day target rule needs, and confirm `months.service` populates it once absences exist.
+- [x] 3.5a `AbsenceListItemSchema` declares `startDate` / `endDate` / `isHalfDay` as exactly the shape `DayStatusAbsence` reads. **Superseded**: this change is now based on `dev`, where `MonthAbsenceSchema` does not exist (PR #72 is still open). Whichever of the two lands second must make one derive from the other rather than leaving two hand-maintained copies of the bounds.
+- [ ] 3.5b **Blocked on PR #72** — add `isHalfDay` to `MonthAbsenceSchema` and have `months.service` populate `absences` from these rows. Cannot be done from a `dev` base; belongs to whichever branch merges second.
 - [ ] 3.6 Add `packages/contracts/src/attachments/`: file type and size schemas carrying VAL-60/61 (D8).
 - [x] 3.7 Extend the `ValCode` union and `VAL_MESSAGES` in `index.ts` with Hebrew messages for VAL-40…45, VAL-60…62, and `VAL-ABSENCE-OVERLAP` (D10).
 - [x] 3.8 Export the absence and attachment surface from `packages/contracts/src/index.ts`.
@@ -31,17 +31,17 @@
 
 ## 4. Absences API (KAN-90)
 
-- [ ] 4.1 Scaffold `server/api/src/modules/absences/` (module, controller, service) following the time-entries module; guard with `JwtGuard` + `RolesGuard`; register in `app.module.ts`. Import `MonthLockService` from `TimeEntriesModule`, which already exports it for this epic.
-- [ ] 4.2 Implement the table-driven locked-month guard from D4 as one method taking `(operation, type, year, month)`, delegating to `MonthLockService.isMonthLocked` and throwing 403 with VAL-45 where the matrix says so.
-- [ ] 4.3 Unit-test the guard by iterating the D4 matrix cell by cell, including the reopened-month row and both sick/military create exceptions.
-- [ ] 4.4 Implement `POST /api/v1/absences`: validate through the zod pipe, force ownership to the JWT `userId`, run the locked-month guard against every month the split touches, reject the whole request if any row's month refuses it (D4), then write all rows in one `prisma.$transaction` under a fresh `groupId` (D1, D2).
-- [ ] 4.5 Implement the absence-overlap check (`VAL-ABSENCE-OVERLAP`): a date-range query against the user's non-deleted absences, excluding the group being edited (D10).
-- [ ] 4.6 Implement `GET /api/v1/absences` with a month filter, employee-scoped to the caller and admin-scoped by optional `userId`; and `GET /api/v1/absences/:id` returning 404 for another user's absence.
-- [ ] 4.7 Compute `missingDocument` on reads: true only for `sick` / `military` with no non-deleted attachment (D5, Epic 9 seam).
-- [ ] 4.8 Implement `PATCH /api/v1/absences/:id`: owner only, month open, re-running every rule on the merged values, replacing the whole group's rows under the same `groupId` in one transaction (D2).
-- [ ] 4.9 Implement `DELETE /api/v1/absences/:id`: owner only, month open, soft-deleting every row in the group via the existing Prisma extension — no new delete logic (D2).
+- [x] 4.1 Scaffold `server/api/src/modules/absences/` (module, controller, service) following the time-entries module; guard with `JwtGuard` + `RolesGuard`; register in `app.module.ts`. Import `MonthLockService` from `TimeEntriesModule`, which already exports it for this epic.
+- [x] 4.2 Implement the table-driven locked-month guard from D4 as one method taking `(operation, type, year, month)`, delegating to `MonthLockService.isMonthLocked` and throwing 403 with VAL-45 where the matrix says so.
+- [x] 4.3 Unit-test the guard by iterating the D4 matrix cell by cell, including the reopened-month row and both sick/military create exceptions.
+- [x] 4.4 Implement `POST /api/v1/absences`: validate through the zod pipe, force ownership to the JWT `userId`, run the locked-month guard against every month the split touches, reject the whole request if any row's month refuses it (D4), then write all rows in one `prisma.$transaction` under a fresh `groupId` (D1, D2).
+- [x] 4.5 Implement the absence-overlap check (`VAL-ABSENCE-OVERLAP`): a date-range query against the user's non-deleted absences, excluding the group being edited (D10).
+- [x] 4.6 Implement `GET /api/v1/absences` with a month filter, employee-scoped to the caller and admin-scoped by optional `userId`; and `GET /api/v1/absences/:id` returning 404 for another user's absence.
+- [x] 4.7 Compute `missingDocument` on reads: true only for `sick` / `military` with no non-deleted attachment (D5, Epic 9 seam).
+- [x] 4.8 Implement `PATCH /api/v1/absences/:id`: owner only, month open, re-running every rule on the merged values, replacing the whole group's rows under the same `groupId` in one transaction (D2).
+- [x] 4.9 Implement `DELETE /api/v1/absences/:id`: owner only, month open, soft-deleting every row in the group via the existing Prisma extension — no new delete logic (D2).
 - [ ] 4.10 Confirm admin create is rejected with 403, admin read is permitted, and unauthenticated requests are 401.
-- [ ] 4.11 Document every endpoint in Swagger with request and response schemas and the bearer requirement.
+- [x] 4.11 Document every endpoint in Swagger with request and response schemas and the bearer requirement.
 - [ ] 4.12 Integration-test every scenario in `specs/absences-api/spec.md` against the database, including a mid-transaction failure storing nothing, a range reaching into a locked month storing nothing, group delete removing both rows, and group edit re-splitting.
 - [ ] 4.13 Verify `pnpm --filter @abra/api test:coverage` passes the 70% gate.
 
