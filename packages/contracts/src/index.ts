@@ -17,7 +17,7 @@ export type AuditAction = z.infer<typeof AuditAction>;
 export { ListMetaSchema, listSuccessSchema } from './common/list-envelope.js';
 export type { ListMeta } from './common/list-envelope.js';
 
-export { ApiErrorSchema, ApiErrorDetailSchema, zodIssuesToDetails } from './common/api-error.js';
+export { ApiErrorSchema, ApiErrorDetailSchema, zodIssuesToDetails, partitionDetails, ROOT_DETAIL_FIELD } from './common/api-error.js';
 export type { ApiError, ApiErrorDetail } from './common/api-error.js';
 
 export {
@@ -101,6 +101,7 @@ export type ValCode =
   | 'VAL-31'
   | 'VAL-32'
   | 'VAL-33'
+  | 'VAL-33A'
   | 'VAL-34'
   | 'VAL-35'
   | 'VAL-36'
@@ -133,6 +134,11 @@ export const VAL_MESSAGES: Record<ValCode, string> = {
   'VAL-31': 'שעת הסיום חייבת להיות מאוחרת משעת ההתחלה',
   'VAL-32': 'קיים כבר דיווח שעות חופף בטווח זה',
   'VAL-33': 'אינך משויך למשימה שנבחרה',
+  // The employee holds the assignment, but the task itself is no longer open
+  // for manual reporting — closed, removed, under an inactive project or
+  // client, or on a punch-clock project. VAL-33's message would blame the
+  // wrong thing.
+  'VAL-33A': 'המשימה שנבחרה אינה זמינה לדיווח',
   'VAL-34': 'החודש נעול ולא ניתן לעדכן דיווחי שעות',
   'VAL-35': 'יש לבחור משימה',
   'VAL-36': 'יש לבחור מיקום עבודה',
@@ -262,8 +268,12 @@ export type { TimeEntryTimes } from './time-entries/fields.js';
 export { CreateTimeEntryBodySchema } from './time-entries/create.js';
 export type { CreateTimeEntryBody } from './time-entries/create.js';
 
-export { UpdateTimeEntryBodySchema, MergedTimeEntrySchema } from './time-entries/update.js';
-export type { UpdateTimeEntryBody, MergedTimeEntry } from './time-entries/update.js';
+export { UpdateTimeEntryBodySchema, MergedTimeEntrySchema, CompletedTimeEntrySchema } from './time-entries/update.js';
+export type {
+  UpdateTimeEntryBody,
+  MergedTimeEntry,
+  CompletedTimeEntry,
+} from './time-entries/update.js';
 
 export {
   intervalsOverlap,
@@ -273,6 +283,7 @@ export {
 export type { TimeInterval } from './time-entries/overlap.js';
 
 export {
+  MAX_TIME_ENTRY_RANGE_DAYS,
   TimeEntriesListQuerySchema,
   TimeEntryListItemSchema,
   TimeEntriesListSuccessSchema,
