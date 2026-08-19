@@ -45,6 +45,6 @@ Every implementation task is TDD (red-green-refactor): the ".a" task writes fail
 
 ## 7. Wrap-up
 
-- [ ] 7.1 Full test suites green (`packages/contracts`, `server/api`, `apps/mobile`, e2e); lint + build pass
-- [ ] 7.2 Move KAN-80–KAN-84 through In Progress → In Review as PRs open; link PRs to tickets
+- [ ] 7.1 Full test suites green — unit suites are: contracts 234, api 313, mobile 38, admin 102; lint/typecheck/build pass (two pre-existing lint warnings in `prisma.service.ts`). OPEN: the e2e run (see 6.2)
+- [x] 7.2 Jira updated: KAN-80/81/83 → In Review, KAN-82/84 → In Progress; draft PR #72 opened onto `feat/kan-79-edit-delete` (ticket keys in the PR title/commits for the Jira link)
 - [ ] 7.3 If the time-entry stack merged mid-work: re-target branches to `dev` and drop the stacking note
