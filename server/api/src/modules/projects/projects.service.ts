@@ -15,8 +15,13 @@ const PROJECT_LIST_SELECT = {
   client_id: true,
   is_active: true,
   report_type: true,
+  lead_manager_id: true,
+  start_date: true,
+  end_date: true,
+  description: true,
   deleted_at: true,
   client: { select: { name: true } },
+  lead_manager: { select: { full_name: true } },
 } as const;
 
 type ProjectRow = {
@@ -25,9 +30,19 @@ type ProjectRow = {
   client_id: string;
   is_active: boolean;
   report_type: ReportType;
+  lead_manager_id: string | null;
+  start_date: Date | null;
+  end_date: Date | null;
+  description: string | null;
   deleted_at: Date | null;
   client: { name: string };
+  lead_manager: { full_name: string } | null;
 };
+
+// The columns are DATE, so the contract carries plain YYYY-MM-DD strings.
+function toIsoDate(value: Date | null): string | null {
+  return value ? value.toISOString().slice(0, 10) : null;
+}
 
 function toListItem(row: ProjectRow): ProjectListItem {
   return {
@@ -38,7 +53,17 @@ function toListItem(row: ProjectRow): ProjectListItem {
     isActive: row.is_active,
     isDeleted: row.deleted_at != null,
     reportType: row.report_type,
+    leadManagerId: row.lead_manager_id,
+    leadManagerName: row.lead_manager?.full_name ?? null,
+    startDate: toIsoDate(row.start_date),
+    endDate: toIsoDate(row.end_date),
+    description: row.description,
   };
+}
+
+// Prisma DATE columns take Date objects; the contract carries YYYY-MM-DD.
+function toDbDate(value: string | null | undefined): Date | null {
+  return value ? new Date(`${value}T00:00:00.000Z`) : null;
 }
 
 function buildOrderBy(query: ProjectsListQuery): Prisma.ProjectOrderByWithRelationInput {
@@ -90,11 +115,18 @@ export class ProjectsService {
 
   async create(input: CreateProjectBody): Promise<ProjectListItem> {
     await this.validateClientId(input.clientId);
+    if (input.leadManagerId) {
+      await this.validateLeadManagerId(input.leadManagerId);
+    }
 
     const row = await this.prisma.project.create({
       data: {
         name: input.name,
         client_id: input.clientId,
+        lead_manager_id: input.leadManagerId ?? null,
+        start_date: toDbDate(input.startDate),
+        end_date: toDbDate(input.endDate),
+        description: input.description ?? null,
       },
       select: PROJECT_LIST_SELECT,
     });
@@ -111,6 +143,10 @@ export class ProjectsService {
       await this.validateClientId(payload.clientId);
     }
 
+    if (payload.leadManagerId && payload.leadManagerId !== existing.lead_manager_id) {
+      await this.validateLeadManagerId(payload.leadManagerId);
+    }
+
     const row = await this.prisma.project.update({
       where: { id },
       data: {
@@ -118,6 +154,10 @@ export class ProjectsService {
         ...(payload.clientId !== undefined ? { client_id: payload.clientId } : {}),
         ...(payload.isActive !== undefined ? { is_active: payload.isActive } : {}),
         ...(payload.reportType !== undefined ? { report_type: payload.reportType } : {}),
+        ...(payload.leadManagerId !== undefined ? { lead_manager_id: payload.leadManagerId } : {}),
+        ...(payload.startDate !== undefined ? { start_date: toDbDate(payload.startDate) } : {}),
+        ...(payload.endDate !== undefined ? { end_date: toDbDate(payload.endDate) } : {}),
+        ...(payload.description !== undefined ? { description: payload.description } : {}),
       },
       select: PROJECT_LIST_SELECT,
     });
@@ -167,6 +207,28 @@ export class ProjectsService {
             field: 'clientId',
             rule: 'VAL-23',
             message: VAL_MESSAGES['VAL-23'],
+          },
+        ],
+      });
+    }
+  }
+
+  // Mirrors validateClientId: an unknown or removed user cannot lead a project.
+  private async validateLeadManagerId(leadManagerId: string): Promise<void> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: leadManagerId },
+      select: { id: true, deleted_at: true },
+    });
+    if (!user || user.deleted_at) {
+      throw new UnprocessableEntityException({
+        statusCode: 422,
+        message: 'Validation failed',
+        error: 'Unprocessable Entity',
+        details: [
+          {
+            field: 'leadManagerId',
+            rule: 'VAL-29',
+            message: VAL_MESSAGES['VAL-29'],
           },
         ],
       });
