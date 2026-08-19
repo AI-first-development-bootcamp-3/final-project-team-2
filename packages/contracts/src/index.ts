@@ -171,9 +171,11 @@ export type { MyAssignment, MyAssignmentsResponse } from './me/assignments.js';
 export {
   DayStatus,
   FULL_DAY_MINUTES,
+  HALF_DAY_MINUTES,
   computeDayStatus,
   minutesForDay,
   isCoveredByAbsence,
+  targetMinutesForDay,
 } from './day-status/day-status.js';
 export type {
   DayStatusEntry,

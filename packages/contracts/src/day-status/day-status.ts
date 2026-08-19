@@ -20,6 +20,16 @@ export type DayStatus = z.infer<typeof DayStatus>;
  */
 export const FULL_DAY_MINUTES = 540;
 
+/**
+ * A half-day absence leaves four and a half hours still owed.
+ *
+ * This resolves OQ-04: the half-day split is expressed as a reduced *target*,
+ * not as phantom reported hours. A half-day absence therefore does not claim
+ * the day — the employee is still prompted for the hours they owe — while a
+ * full-day absence keeps its absolute precedence (D3).
+ */
+export const HALF_DAY_MINUTES = 270;
+
 /** The shape day-status needs from a time entry. */
 export interface DayStatusEntry {
   /** UTC instant the entry started. */
@@ -34,6 +44,16 @@ export interface DayStatusAbsence {
   startDate: string;
   /** `YYYY-MM-DD` local date. */
   endDate: string;
+  /**
+   * Whether the absence covers only half the day (D3). Optional, and absent is
+   * read as a full day, so callers written before the Absences epic keep their
+   * existing meaning and compile unchanged.
+   *
+   * Which half it is does not affect the target: morning and afternoon both
+   * leave the same 4h30 owed, so the period is a reporting detail rather than a
+   * day-status input.
+   */
+  isHalfDay?: boolean;
 }
 
 export interface DayStatusInput {
@@ -53,6 +73,13 @@ export interface DayStatusResult {
   totalMinutes: number;
   /** The same total in hours, for display. */
   totalHours: number;
+  /**
+   * Minutes the day expects: 540 ordinarily, 270 under one half-day absence, 0
+   * when an absence covers the whole day. Callers size the quota bar against
+   * this rather than against `FULL_DAY_MINUTES`, so a half-day is not shown as
+   * half-empty (D3).
+   */
+  targetMinutes: number;
 }
 
 function toDate(value: Date | string): Date {
@@ -126,41 +153,85 @@ export function minutesForDay(entries: readonly DayStatusEntry[], date: string):
   return Math.floor(totalMs / 60_000);
 }
 
-/** Whether an absence covers the given local day. Both bounds are inclusive. */
-export function isCoveredByAbsence(absences: readonly DayStatusAbsence[], date: string): boolean {
+/** Whether one absence covers the given local day. Both bounds are inclusive. */
+function covers(absence: DayStatusAbsence, date: string): boolean {
   // `YYYY-MM-DD` sorts lexicographically in date order, so string comparison is
   // a correct range check and avoids re-parsing into instants.
-  return absences.some((absence) => absence.startDate <= date && date <= absence.endDate);
+  return absence.startDate <= date && date <= absence.endDate;
+}
+
+/**
+ * Whether any absence — half-day or full — covers the given local day.
+ *
+ * Note this answers "is there an absence here", not "is the day off": a single
+ * half-day absence covers the day in this sense while still leaving 4h30 owed.
+ * `targetMinutesForDay` is what decides the day's expectations.
+ */
+export function isCoveredByAbsence(absences: readonly DayStatusAbsence[], date: string): boolean {
+  return absences.some((absence) => covers(absence, date));
+}
+
+/**
+ * Minutes the given day expects, after the absences covering it (D3).
+ *
+ * The ladder is ordered by precedence:
+ *   - no absence            → a full nine-hour day
+ *   - any full-day absence  → nothing owed; it outranks a half-day on the same
+ *                             date, so the two together still yield 0
+ *   - two or more half-days → the halves account for the whole day
+ *   - one half-day          → half the day still owed
+ */
+export function targetMinutesForDay(absences: readonly DayStatusAbsence[], date: string): number {
+  const covering = absences.filter((absence) => covers(absence, date));
+
+  if (covering.length === 0) {
+    return FULL_DAY_MINUTES;
+  }
+
+  if (covering.some((absence) => absence.isHalfDay !== true)) {
+    return 0;
+  }
+
+  if (covering.length > 1) {
+    return 0;
+  }
+
+  return HALF_DAY_MINUTES;
 }
 
 /**
  * Classifies one Asia/Jerusalem day.
  *
- * An absence outranks the hour count — a day off that was partly worked still
- * reads as an absence — but the hours are reported either way so callers can
- * show both.
+ * An absence covering the whole day outranks the hour count — a day off that
+ * was partly worked still reads as an absence — but the hours are reported
+ * either way so callers can show both. A half-day absence instead halves the
+ * target and the day classifies on hours as usual, so the four hour-based
+ * statuses keep their meanings against whatever the day actually expects.
  */
 export function computeDayStatus(input: DayStatusInput): DayStatusResult {
   const { date, entries, absences = [] } = input;
 
   const totalMinutes = minutesForDay(entries, date);
   const totalHours = totalMinutes / 60;
+  const targetMinutes = targetMinutesForDay(absences, date);
 
-  if (isCoveredByAbsence(absences, date)) {
-    return { status: 'absence', totalMinutes, totalHours };
+  // Only an absence accounting for the whole day drives the target to zero, so
+  // this is the old "covered by an absence" branch, narrowed to full days.
+  if (targetMinutes === 0) {
+    return { status: 'absence', totalMinutes, totalHours, targetMinutes };
   }
 
   if (totalMinutes === 0) {
-    return { status: 'empty', totalMinutes, totalHours };
+    return { status: 'empty', totalMinutes, totalHours, targetMinutes };
   }
 
-  if (totalMinutes < FULL_DAY_MINUTES) {
-    return { status: 'partial', totalMinutes, totalHours };
+  if (totalMinutes < targetMinutes) {
+    return { status: 'partial', totalMinutes, totalHours, targetMinutes };
   }
 
-  if (totalMinutes === FULL_DAY_MINUTES) {
-    return { status: 'full', totalMinutes, totalHours };
+  if (totalMinutes === targetMinutes) {
+    return { status: 'full', totalMinutes, totalHours, targetMinutes };
   }
 
-  return { status: 'excess', totalMinutes, totalHours };
+  return { status: 'excess', totalMinutes, totalHours, targetMinutes };
 }

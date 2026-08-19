@@ -3,7 +3,9 @@ import {
   computeDayStatus,
   minutesForDay,
   isCoveredByAbsence,
+  targetMinutesForDay,
   FULL_DAY_MINUTES,
+  HALF_DAY_MINUTES,
   DayStatus,
   type DayStatusEntry,
 } from './day-status.js';
@@ -308,5 +310,203 @@ describe('computeDayStatus — malformed rows degrade instead of throwing', () =
     expect(() =>
       computeDayStatus({ date: '2026-08-10', entries: [{ startAt: 'garbage', endAt: 'garbage' }] }),
     ).not.toThrow();
+  });
+});
+
+describe('HALF_DAY_MINUTES', () => {
+  it('is four and a half hours expressed in whole minutes', () => {
+    expect(HALF_DAY_MINUTES).toBe(270);
+  });
+
+  it('is exactly half a full day, so the two constants cannot drift apart', () => {
+    expect(HALF_DAY_MINUTES * 2).toBe(FULL_DAY_MINUTES);
+  });
+});
+
+describe('targetMinutesForDay', () => {
+  const fullDay = { startDate: DAY, endDate: DAY };
+  const halfDay = { startDate: DAY, endDate: DAY, isHalfDay: true };
+
+  it('expects a full nine hours when no absence covers the day', () => {
+    expect(targetMinutesForDay([], DAY)).toBe(FULL_DAY_MINUTES);
+  });
+
+  it('expects a full nine hours when an absence covers a different day', () => {
+    expect(targetMinutesForDay([halfDay], NEXT_DAY)).toBe(FULL_DAY_MINUTES);
+  });
+
+  it('halves the day under a single half-day absence', () => {
+    expect(targetMinutesForDay([halfDay], DAY)).toBe(HALF_DAY_MINUTES);
+  });
+
+  it('expects nothing under a full-day absence', () => {
+    expect(targetMinutesForDay([fullDay], DAY)).toBe(0);
+  });
+
+  it('reads a missing isHalfDay as a full day, so existing rows keep their meaning', () => {
+    expect(targetMinutesForDay([{ startDate: DAY, endDate: DAY }], DAY)).toBe(0);
+    expect(targetMinutesForDay([{ startDate: DAY, endDate: DAY, isHalfDay: false }], DAY)).toBe(0);
+  });
+
+  it('expects nothing when two half-days together account for the whole day', () => {
+    expect(targetMinutesForDay([halfDay, halfDay], DAY)).toBe(0);
+  });
+
+  it('lets a full-day absence outrank a half-day one on the same date', () => {
+    expect(targetMinutesForDay([halfDay, fullDay], DAY)).toBe(0);
+    expect(targetMinutesForDay([fullDay, halfDay], DAY)).toBe(0);
+  });
+
+  it('halves only the covered days of a half-day range', () => {
+    const range = [{ startDate: '2026-08-10', endDate: '2026-08-11', isHalfDay: true }];
+    expect(targetMinutesForDay(range, '2026-08-09')).toBe(FULL_DAY_MINUTES);
+    expect(targetMinutesForDay(range, '2026-08-10')).toBe(HALF_DAY_MINUTES);
+    expect(targetMinutesForDay(range, '2026-08-11')).toBe(HALF_DAY_MINUTES);
+    expect(targetMinutesForDay(range, '2026-08-12')).toBe(FULL_DAY_MINUTES);
+  });
+});
+
+describe('computeDayStatus — half-day absences', () => {
+  const halfDay = { startDate: DAY, endDate: DAY, isHalfDay: true };
+
+  // The whole point of D3: a half-day must not read as settled, or the employee
+  // is never prompted for the 4h30 they still owe.
+  it('does not claim the day, so an unworked half-day is empty rather than absence', () => {
+    const result = computeDayStatus({ date: DAY, entries: [], absences: [halfDay] });
+    expect(result.status).toBe('empty');
+    expect(result.totalHours).toBe(0);
+    expect(result.targetMinutes).toBe(HALF_DAY_MINUTES);
+  });
+
+  it('reports partial below the reduced target', () => {
+    const result = computeDayStatus({
+      date: DAY,
+      entries: [entry('09:00', '11:00')],
+      absences: [halfDay],
+    });
+    expect(result.status).toBe('partial');
+    expect(result.totalMinutes).toBe(120);
+    expect(result.targetMinutes).toBe(HALF_DAY_MINUTES);
+  });
+
+  it('reports full at exactly four and a half hours', () => {
+    const result = computeDayStatus({
+      date: DAY,
+      entries: [entry('09:00', '13:30')],
+      absences: [halfDay],
+    });
+    expect(result.status).toBe('full');
+    expect(result.totalMinutes).toBe(HALF_DAY_MINUTES);
+  });
+
+  it('reports excess above the reduced target', () => {
+    const result = computeDayStatus({
+      date: DAY,
+      entries: [entry('09:00', '15:00')],
+      absences: [halfDay],
+    });
+    expect(result.status).toBe('excess');
+    expect(result.totalMinutes).toBe(360);
+    expect(result.targetMinutes).toBe(HALF_DAY_MINUTES);
+  });
+
+  // The reduced target has its own boundary, and it has to be as sharp as the
+  // nine-hour one: 4h29 is not a finished half-day.
+  it('separates 4h29 and 4h31 without either becoming full', () => {
+    const under = computeDayStatus({
+      date: DAY,
+      entries: [entry('09:00', '13:29')],
+      absences: [halfDay],
+    });
+    const over = computeDayStatus({
+      date: DAY,
+      entries: [entry('09:00', '13:31')],
+      absences: [halfDay],
+    });
+
+    expect(under.status).toBe('partial');
+    expect(under.totalMinutes).toBe(269);
+    expect(over.status).toBe('excess');
+    expect(over.totalMinutes).toBe(271);
+  });
+
+  // Six hours is a full day short of nine, but a whole half-day and then some.
+  it('classifies the same six hours as partial on an ordinary day and excess on a half-day', () => {
+    const entries = [entry('09:00', '15:00')];
+    expect(computeDayStatus({ date: DAY, entries }).status).toBe('partial');
+    expect(computeDayStatus({ date: DAY, entries, absences: [halfDay] }).status).toBe('excess');
+  });
+
+  // The period a half-day falls in is not a day-status input at all — both
+  // halves leave the same 4h30 owed — so two employees, one off each half, are
+  // classified identically.
+  it('treats a morning and an afternoon half-day the same, since neither carries a period here', () => {
+    const morning = computeDayStatus({
+      date: DAY,
+      entries: [entry('13:00', '15:00')],
+      absences: [halfDay],
+    });
+    const afternoon = computeDayStatus({
+      date: DAY,
+      entries: [entry('09:00', '11:00')],
+      absences: [halfDay],
+    });
+
+    expect(morning.status).toBe('partial');
+    expect(afternoon.status).toBe('partial');
+    expect(morning.targetMinutes).toBe(afternoon.targetMinutes);
+  });
+
+  it('reports absence when two half-days cover the day between them', () => {
+    const result = computeDayStatus({ date: DAY, entries: [], absences: [halfDay, halfDay] });
+    expect(result.status).toBe('absence');
+    expect(result.targetMinutes).toBe(0);
+  });
+
+  it('lets a full-day absence outrank a half-day one on the same date', () => {
+    const result = computeDayStatus({
+      date: DAY,
+      entries: [entry('09:00', '13:00')],
+      absences: [halfDay, { startDate: DAY, endDate: DAY }],
+    });
+    expect(result.status).toBe('absence');
+    expect(result.targetMinutes).toBe(0);
+    expect(result.totalHours).toBe(4);
+  });
+});
+
+describe('computeDayStatus — targetMinutes is always reported', () => {
+  it('reports the nine-hour target on an ordinary day', () => {
+    expect(computeDayStatus({ date: DAY, entries: [] }).targetMinutes).toBe(FULL_DAY_MINUTES);
+    expect(computeDayStatus({ date: DAY, entries: [entry('09:00', '18:00')] }).targetMinutes).toBe(
+      FULL_DAY_MINUTES,
+    );
+  });
+
+  it('reports a zero target on a full-day absence', () => {
+    const result = computeDayStatus({
+      date: DAY,
+      entries: [],
+      absences: [{ startDate: DAY, endDate: DAY }],
+    });
+    expect(result.status).toBe('absence');
+    expect(result.targetMinutes).toBe(0);
+  });
+
+  it('reports the nine-hour target when the absences supplied cover other days', () => {
+    const result = computeDayStatus({
+      date: DAY,
+      entries: [],
+      absences: [{ startDate: '2026-08-01', endDate: '2026-08-05', isHalfDay: true }],
+    });
+    expect(result.targetMinutes).toBe(FULL_DAY_MINUTES);
+  });
+});
+
+describe('isCoveredByAbsence — half-days still count as coverage', () => {
+  // The predicate answers "is there an absence here", which a half-day is. The
+  // day-off decision belongs to targetMinutesForDay, not to this.
+  it('reports a half-day absence as covering its date', () => {
+    expect(isCoveredByAbsence([{ startDate: DAY, endDate: DAY, isHalfDay: true }], DAY)).toBe(true);
   });
 });

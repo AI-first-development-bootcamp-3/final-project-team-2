@@ -7,13 +7,13 @@
 
 ## 2. Day-status change (half-day targets) — land before Epic 6 consumes it
 
-- [ ] 2.1 Extend `DayStatusAbsence` in `packages/contracts/src/day-status/day-status.ts` with `isHalfDay?: boolean`; keep both bounds inclusive and the field optional so existing callers compile unchanged (D3).
-- [ ] 2.2 Add `HALF_DAY_MINUTES = 270` beside `FULL_DAY_MINUTES`, and return `targetMinutes` on `DayStatusResult`.
-- [ ] 2.3 Implement the target rules: no absence → 540; one half-day absence → 270; two half-day absences or any full-day absence → target 0 and status `absence` (D3). A full-day absence outranks a half-day one on the same date.
-- [ ] 2.4 Classify against `targetMinutes` rather than the 540 constant, so `empty` / `partial` / `full` / `excess` keep their meanings on a half-day.
-- [ ] 2.5 Unit-test every scenario in `specs/day-status/spec.md`, including 4h29 vs 4h30 vs 6h against a half-day target, both periods, two half-days, full-plus-half, and target reported on an ordinary day.
-- [ ] 2.6 Confirm every pre-existing day-status test still passes untouched — the four hour-based thresholds and full-day precedence are unchanged (Risks).
-- [ ] 2.7 Verify `pnpm --filter @abra/contracts test:coverage` passes the 70% gate.
+- [x] 2.1 Extend `DayStatusAbsence` in `packages/contracts/src/day-status/day-status.ts` with `isHalfDay?: boolean`; keep both bounds inclusive and the field optional so existing callers compile unchanged (D3).
+- [x] 2.2 Add `HALF_DAY_MINUTES = 270` beside `FULL_DAY_MINUTES`, and return `targetMinutes` on `DayStatusResult`.
+- [x] 2.3 Implement the target rules: no absence → 540; one half-day absence → 270; two half-day absences or any full-day absence → target 0 and status `absence` (D3). A full-day absence outranks a half-day one on the same date.
+- [x] 2.4 Classify against `targetMinutes` rather than the 540 constant, so `empty` / `partial` / `full` / `excess` keep their meanings on a half-day.
+- [x] 2.5 Unit-test every scenario in `specs/day-status/spec.md`, including 4h29 vs 4h30 vs 6h against a half-day target, both periods, two half-days, full-plus-half, and target reported on an ordinary day.
+- [x] 2.6 Confirm every pre-existing day-status test still passes untouched — the four hour-based thresholds and full-day precedence are unchanged (Risks).
+- [x] 2.7 Verify `pnpm --filter @abra/contracts test:coverage` passes the 70% gate.
 
 ## 3. Absence contracts (KAN-89)
 
