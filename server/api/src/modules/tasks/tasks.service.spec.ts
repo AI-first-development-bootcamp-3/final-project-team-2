@@ -81,6 +81,26 @@ describe('TasksService', () => {
         }),
       );
     });
+
+    it('bypasses the soft-delete filter when includeDeleted is true', async () => {
+      await service.list({
+        page: 1,
+        limit: 20,
+        sort: 'name',
+        order: 'asc',
+        includeDeleted: true,
+      });
+      expect(prisma.task.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ deleted_at: {} }),
+        }),
+      );
+      expect(prisma.task.count).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ deleted_at: {} }),
+        }),
+      );
+    });
   });
 
   describe('findOne', () => {

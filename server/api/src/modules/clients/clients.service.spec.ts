@@ -51,8 +51,21 @@ describe('ClientsService', () => {
         name: 'Acme Corp',
         contactInfo: 'info@acme.com',
         isActive: true,
+        isDeleted: false,
       });
       expect(result.meta).toEqual({ page: 1, limit: 20, total: 1 });
+    });
+
+    it('maps isDeleted from deleted_at when includeDeleted is true', async () => {
+      prisma.client.findMany.mockResolvedValue([{ ...ACME, deleted_at: new Date() }]);
+      const result = await service.list({
+        page: 1,
+        limit: 20,
+        sort: 'name',
+        order: 'asc',
+        includeDeleted: true,
+      });
+      expect(result.data[0]?.isDeleted).toBe(true);
     });
 
     it('passes search query to prisma', async () => {

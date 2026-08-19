@@ -32,6 +32,7 @@ export {
 export type { ApiError, ApiErrorDetail } from './common/api-error.js';
 
 export {
+  EmploymentType,
   UsersListQuerySchema,
   UsersListSortSchema,
   UsersListOrderSchema,
@@ -93,7 +94,6 @@ export type RefreshResponse = z.infer<typeof RefreshResponse>;
 // Rule codes and their Hebrew messages live in common/val-messages.js, so the
 // shared error helpers can build a translated payload without importing this
 // file circularly. Re-exported above.
-
 // --- Clients ---
 export {
   ClientsListQuerySchema,
@@ -157,11 +157,17 @@ export {
   AssignmentsListQuerySchema,
   AssignmentListItemSchema,
   AssignmentsListSuccessSchema,
+  AssignedEmployeeSchema,
+  AssignmentsByTaskItemSchema,
+  AssignmentsByTaskListSuccessSchema,
 } from './assignments/list.js';
 export type {
   AssignmentsListQuery,
   AssignmentListItem,
   AssignmentsListSuccess,
+  AssignedEmployee,
+  AssignmentsByTaskItem,
+  AssignmentsByTaskListSuccess,
 } from './assignments/list.js';
 
 export { CreateAssignmentBodySchema, AssignmentCreateSuccessSchema } from './assignments/create.js';

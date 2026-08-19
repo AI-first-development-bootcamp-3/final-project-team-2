@@ -47,6 +47,14 @@ export const ProjectListItemSchema = z.object({
   // Required on purpose: the DB column is NOT NULL with a default, so a
   // missing field is a contract violation — defaulting here would mask it.
   reportType: ReportType,
+  // KAN-120: nullable (not optional) — the API always returns these columns,
+  // so a missing field is a contract violation, same as reportType above.
+  leadManagerId: z.string().uuid().nullable(),
+  leadManagerName: z.string().nullable(),
+  // ISO date strings (YYYY-MM-DD); the columns are DATE, not timestamps.
+  startDate: z.string().nullable(),
+  endDate: z.string().nullable(),
+  description: z.string().nullable(),
 });
 
 export const ProjectsListSuccessSchema = listSuccessSchema(ProjectListItemSchema);

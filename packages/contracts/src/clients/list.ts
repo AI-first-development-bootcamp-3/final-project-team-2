@@ -40,6 +40,7 @@ export const ClientListItemSchema = z.object({
   name: z.string(),
   contactInfo: z.string().nullable(),
   isActive: z.boolean(),
+  isDeleted: z.boolean(),
 });
 
 export const ClientsListSuccessSchema = listSuccessSchema(ClientListItemSchema);

@@ -200,12 +200,12 @@ export function TasksPage() {
             <option value="closed">סגורה</option>
           </select>
         </label>
-        <label className="flex items-center gap-2 text-sm">
+        <label className="flex items-center gap-2 text-sm text-neutral-600">
           <input
             type="checkbox"
             checked={includeDeleted}
-            onChange={(e) => {
-              setIncludeDeleted(e.target.checked);
+            onChange={(event) => {
+              setIncludeDeleted(event.target.checked);
               setPage(1);
             }}
           />

@@ -28,7 +28,7 @@ export class AssignmentsController {
   constructor(private readonly assignmentsService: AssignmentsService) {}
 
   @Get()
-  @ApiOperation({ summary: 'List assignments (admin)' })
+  @ApiOperation({ summary: 'List assignments (admin); groupBy=task returns one row per task' })
   async list(@Query() query: Record<string, unknown>) {
     const parsed = AssignmentsListQuerySchema.safeParse(query);
     if (!parsed.success) {
@@ -38,6 +38,9 @@ export class AssignmentsController {
         error: 'Bad Request',
         details: zodIssuesToDetails(parsed.error.issues),
       });
+    }
+    if (parsed.data.groupBy === 'task') {
+      return this.assignmentsService.listGroupedByTask(parsed.data);
     }
     return this.assignmentsService.list(parsed.data);
   }

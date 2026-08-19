@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type {
-  AssignmentListItem,
-  AssignmentsListSuccess,
+  AssignmentsByTaskListSuccess,
   TaskListItem,
   TasksListSuccess,
   UserListItem,
@@ -13,13 +12,15 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { PrimaryButton, SearchField } from '@/components/ui/toolbar';
 import { apiFetch } from '@/lib/api/client';
 import { AssignmentCreateForm } from './assignment-create-form';
-import { createAssignmentsColumns } from './assignments-columns';
+import { createAssignmentsColumns, type RemoveTarget } from './assignments-columns';
 
 const PAGE_SIZE = 20;
 
+// KAN-122: the list is grouped by task on the server (groupBy=task) — one row
+// per task with an employees array — so pagination and totals are already at
+// the task level and match the design (Admin Web Portal Spec §4.2).
 function buildAssignmentsPath(params: {
   page: number;
-  sort: string;
   order: SortOrder;
   q: string;
   userId: string;
@@ -28,7 +29,7 @@ function buildAssignmentsPath(params: {
   const search = new URLSearchParams({
     page: String(params.page),
     limit: String(PAGE_SIZE),
-    sort: params.sort,
+    groupBy: 'task',
     order: params.order,
   });
   const trimmed = params.q.trim();
@@ -40,18 +41,17 @@ function buildAssignmentsPath(params: {
 
 export function AssignmentsPage() {
   const [page, setPage] = useState(1);
-  const [sort, setSort] = useState<string>('userFullName');
   const [order, setOrder] = useState<SortOrder>('asc');
   const [q, setQ] = useState('');
   const [userId, setUserId] = useState('');
   const [taskId, setTaskId] = useState('');
   const [users, setUsers] = useState<UserListItem[]>([]);
   const [tasks, setTasks] = useState<TaskListItem[]>([]);
-  const [result, setResult] = useState<AssignmentsListSuccess | null>(null);
+  const [result, setResult] = useState<AssignmentsByTaskListSuccess | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
-  const [removingAssignment, setRemovingAssignment] = useState<AssignmentListItem | null>(null);
+  const [removing, setRemoving] = useState<RemoveTarget | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -65,14 +65,14 @@ export function AssignmentsPage() {
   }, []);
 
   const path = useMemo(
-    () => buildAssignmentsPath({ page, sort, order, q, userId, taskId }),
-    [page, sort, order, q, userId, taskId],
+    () => buildAssignmentsPath({ page, order, q, userId, taskId }),
+    [page, order, q, userId, taskId],
   );
 
   const fetchAssignments = useCallback(() => {
     setLoading(true);
     setError(null);
-    apiFetch<AssignmentsListSuccess>(path)
+    apiFetch<AssignmentsByTaskListSuccess>(path)
       .then((data) => {
         setResult(data);
       })
@@ -91,8 +91,7 @@ export function AssignmentsPage() {
     fetchAssignments();
   }, [fetchAssignments]);
 
-  const onSortChange = useCallback((nextSort: string, nextOrder: SortOrder) => {
-    setSort(nextSort);
+  const onSortChange = useCallback((_nextSort: string, nextOrder: SortOrder) => {
     setOrder(nextOrder);
     setPage(1);
   }, []);
@@ -103,11 +102,11 @@ export function AssignmentsPage() {
   }, []);
 
   const handleRemove = async () => {
-    if (!removingAssignment) return;
+    if (!removing) return;
     try {
-      await apiFetch(`/assignments/${removingAssignment.id}`, { method: 'DELETE' });
+      await apiFetch(`/assignments/${removing.employee.assignmentId}`, { method: 'DELETE' });
       setSuccessMessage('השיוך הוסר בהצלחה');
-      setRemovingAssignment(null);
+      setRemoving(null);
       fetchAssignments();
     } catch {
       setError('שגיאה בהסרת השיוך');
@@ -117,7 +116,7 @@ export function AssignmentsPage() {
   const columns = useMemo(
     () =>
       createAssignmentsColumns({
-        onRemove: (assignment) => setRemovingAssignment(assignment),
+        onRemove: (target) => setRemoving(target),
       }),
     [],
   );
@@ -198,11 +197,11 @@ export function AssignmentsPage() {
         <DataTable
           columns={columns}
           data={result.data}
-          getRowId={(row) => row.id}
+          getRowId={(row) => row.taskId}
           page={result.meta.page}
           limit={result.meta.limit}
           total={result.meta.total}
-          sort={sort}
+          sort="taskName"
           order={order}
           onPageChange={setPage}
           onSortChange={onSortChange}
@@ -217,9 +216,10 @@ export function AssignmentsPage() {
           setSuccessMessage('השיוך נוצר בהצלחה');
           fetchAssignments();
         }}
+        onSomeCreated={fetchAssignments}
       />
 
-      {removingAssignment ? (
+      {removing ? (
         <div
           role="dialog"
           aria-modal="true"
@@ -229,13 +229,13 @@ export function AssignmentsPage() {
             <h3 className="mb-2 text-lg font-bold text-red-600">הסרת שיוך</h3>
             <p className="mb-4 text-sm text-neutral-700">
               האם אתה בטוח שברצונך להסיר את השיוך של העובד{' '}
-              <strong>{removingAssignment.userFullName}</strong> למשימה{' '}
-              <strong>{removingAssignment.taskName}</strong>?
+              <strong>{removing.employee.userFullName}</strong> למשימה{' '}
+              <strong>{removing.task.taskName}</strong>?
             </p>
             <div className="mt-6 flex justify-end gap-3">
               <button
                 type="button"
-                onClick={() => setRemovingAssignment(null)}
+                onClick={() => setRemoving(null)}
                 className="rounded-lg bg-slate-400 px-6 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-500"
               >
                 ביטול

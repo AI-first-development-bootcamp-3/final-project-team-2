@@ -42,6 +42,12 @@ enum HalfDayPeriod {
   afternoon
 }
 
+// KAN-118: worker/manager type shown in the admin employee picker (decided 16 Aug)
+enum EmploymentType {
+  worker
+  manager
+}
+
 enum AuditAction {
   create
   update
@@ -64,12 +70,20 @@ model User {
   updated_at    DateTime @updatedAt
   deleted_at    DateTime?
 
+  // KAN-118: HR metadata for the admin portal (decided 16 Aug; missed KAN-32)
+  employee_number    String?         @db.VarChar(50)
+  role_title         String?         @db.VarChar(255)
+  employment_type    EmploymentType?
+  employment_percent Int?
+  org_unit           String?         @db.VarChar(255)
+
   task_assignments TaskAssignment[]
   time_entries     TimeEntry[]
   absences         Absence[]
   locked_months    MonthLock[]      @relation("LockedBy")
   unlocked_months  MonthLock[]      @relation("UnlockedBy")
   audit_logs       AuditLog[]
+  managed_projects Project[]        @relation("ProjectLeadManager")
 
   // Partial unique index handled via raw SQL in migration (Step 6a)
   @@map("users")
@@ -99,8 +113,15 @@ model Project {
   updated_at  DateTime   @updatedAt
   deleted_at  DateTime?
 
-  client Client @relation(fields: [client_id], references: [id])
-  tasks  Task[]
+  // KAN-118: decided 16 Aug (Admin Web Portal Spec §5.2); missed KAN-32
+  lead_manager_id String?   @db.Uuid
+  start_date      DateTime? @db.Date
+  end_date        DateTime? @db.Date
+  description     String?   @db.Text
+
+  client       Client @relation(fields: [client_id], references: [id])
+  lead_manager User?  @relation("ProjectLeadManager", fields: [lead_manager_id], references: [id])
+  tasks        Task[]
 
   @@map("projects")
 }

@@ -57,8 +57,10 @@ describe('UsersPage', () => {
     renderPage();
 
     expect(await screen.findByRole('columnheader', { name: /שם מלא/ })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: /מס' עובד/ })).toBeInTheDocument();
     expect(screen.getByRole('columnheader', { name: /אימייל/ })).toBeInTheDocument();
     expect(screen.getByRole('columnheader', { name: /תפקיד/ })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: /יחידה ארגונית/ })).toBeInTheDocument();
     expect(screen.getByRole('columnheader', { name: /סטטוס/ })).toBeInTheDocument();
     expect(screen.getByRole('columnheader', { name: /פעולות/ })).toBeInTheDocument();
 
@@ -97,6 +99,97 @@ describe('UsersPage', () => {
       );
     });
   });
+
+  it(
+    'shows HR data in the table and round-trips it through the edit modal',
+    { timeout: 20000 },
+    async () => {
+      const user = userEvent.setup();
+      const aliceWithHr = {
+        ...alice,
+        employeeNumber: 'EMP-101',
+        roleTitle: 'מפתחת תוכנה',
+        employmentType: 'worker' as const,
+        employmentPercent: 80,
+        orgUnit: 'פיתוח',
+      };
+      const aliceSaved = { ...aliceWithHr, employmentPercent: 60, orgUnit: 'תפעול' };
+      let current = aliceWithHr;
+      apiFetch.mockImplementation((path: string, init?: RequestInit) => {
+        if (init?.method === 'PATCH') {
+          current = aliceSaved;
+          return Promise.resolve(aliceSaved);
+        }
+        return Promise.resolve({ data: [current], meta: { page: 1, limit: 20, total: 1 } });
+      });
+
+      renderPage();
+
+      expect(await screen.findByText('EMP-101')).toBeInTheDocument();
+      expect(screen.getByText('פיתוח')).toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: 'ערוך' }));
+
+      expect(screen.getByLabelText('מספר עובד')).toHaveValue('EMP-101');
+      expect(screen.getByLabelText('תואר תפקיד')).toHaveValue('מפתחת תוכנה');
+      expect(screen.getByLabelText('סוג העסקה')).toHaveValue('worker');
+      expect(screen.getByLabelText('אחוז משרה')).toHaveValue(80);
+      expect(screen.getByLabelText('יחידה ארגונית')).toHaveValue('פיתוח');
+
+      await user.clear(screen.getByLabelText('אחוז משרה'));
+      await user.type(screen.getByLabelText('אחוז משרה'), '60');
+      await user.clear(screen.getByLabelText('יחידה ארגונית'));
+      await user.type(screen.getByLabelText('יחידה ארגונית'), 'תפעול');
+      await user.click(screen.getByRole('button', { name: 'שמור שינויים' }));
+
+      await waitFor(() => {
+        expect(screen.queryByRole('heading', { name: 'עריכת פרטי משתמש' })).not.toBeInTheDocument();
+      });
+
+      const patchCall = apiFetch.mock.calls.find((call) => call[1]?.method === 'PATCH');
+      expect(patchCall?.[0]).toBe(`/users/${alice.id}`);
+      expect(JSON.parse(String(patchCall?.[1]?.body))).toMatchObject({
+        employeeNumber: 'EMP-101',
+        roleTitle: 'מפתחת תוכנה',
+        employmentType: 'worker',
+        employmentPercent: 60,
+        orgUnit: 'תפעול',
+      });
+
+      expect(await screen.findByText('תפעול')).toBeInTheDocument();
+    },
+  );
+
+  it(
+    'sends null HR fields so cleared values are removed on the server',
+    { timeout: 20000 },
+    async () => {
+      const user = userEvent.setup();
+      apiFetch.mockImplementation((path: string, init?: RequestInit) => {
+        if (init?.method === 'PATCH') {
+          return Promise.resolve(alice);
+        }
+        return Promise.resolve({ data: [alice], meta: { page: 1, limit: 20, total: 1 } });
+      });
+
+      renderPage();
+
+      expect(await screen.findByText('Alice Cohen')).toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: 'ערוך' }));
+      await user.click(screen.getByRole('button', { name: 'שמור שינויים' }));
+
+      await waitFor(() => {
+        const patchCall = apiFetch.mock.calls.find((call) => call[1]?.method === 'PATCH');
+        expect(JSON.parse(String(patchCall?.[1]?.body))).toMatchObject({
+          employeeNumber: null,
+          roleTitle: null,
+          employmentType: null,
+          employmentPercent: null,
+          orgUnit: null,
+        });
+      });
+    },
+  );
 
   it('displays Hebrew error on EditUserModal email conflict 409', async () => {
     const user = userEvent.setup();

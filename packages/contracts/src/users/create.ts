@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { UserListItemSchema } from './list.js';
+import { EmploymentType, UserListItemSchema } from './list.js';
 
 export const CreateUserBodySchema = z.object({
   fullName: z
@@ -18,6 +18,11 @@ export const CreateUserBodySchema = z.object({
   role: z.enum(['employee', 'admin'], {
     errorMap: () => ({ message: 'VAL-12' }),
   }),
+  employeeNumber: z.string().trim().optional(),
+  roleTitle: z.string().trim().optional(),
+  employmentType: EmploymentType.optional(),
+  employmentPercent: z.number().int().min(0).max(100).optional(),
+  orgUnit: z.string().trim().optional(),
 });
 
 export const UserCreateSuccessSchema = z.object({

@@ -24,6 +24,7 @@ export type ValCode =
   | 'VAL-26'
   | 'VAL-27'
   | 'VAL-28'
+  | 'VAL-29'
   | 'VAL-30'
   | 'VAL-31'
   | 'VAL-32'
@@ -33,6 +34,8 @@ export type ValCode =
   | 'VAL-35'
   | 'VAL-36'
   | 'VAL-38'
+  | 'VAL-39'
+  | 'VAL-40'
   | 'VAL-DATE-RANGE'
   | 'VAL-EMPTY-UPDATE'
   | 'VAL-RUNNING-ENTRY';
@@ -55,6 +58,7 @@ export const VAL_MESSAGES: Record<ValCode, string> = {
   'VAL-26': 'יש לבחור משתמש ומשימה תקינים',
   'VAL-27': 'השיוך כבר קיים במערכת',
   'VAL-28': 'יש לבחור אופן דיווח תקין',
+  'VAL-29': 'יש לבחור מנהל תקין',
   // Time entries (§8.5). VAL-37 (one running timer per user) belongs to the
   // Punch Clock epic and is intentionally absent here.
   'VAL-30': 'שעת התחלה היא שדה חובה',
@@ -70,6 +74,9 @@ export const VAL_MESSAGES: Record<ValCode, string> = {
   'VAL-35': 'יש לבחור משימה',
   'VAL-36': 'יש לבחור מיקום עבודה',
   'VAL-38': 'התאריך אינו תואם את יום תחילת הדיווח',
+  // Projects (KAN-120): lead-manager/date-range fields
+  'VAL-39': 'יש להזין תאריך תקין',
+  'VAL-40': 'תאריך הסיום לא יכול להיות לפני תאריך ההתחלה',
   'VAL-DATE-RANGE': 'יש לציין תאריך יחיד או טווח תאריכים תקין',
   'VAL-EMPTY-UPDATE': 'לא נשלחו שדות לעדכון',
   // Punch Clock (KAN-79): PATCH/DELETE of a running entry is refused outright

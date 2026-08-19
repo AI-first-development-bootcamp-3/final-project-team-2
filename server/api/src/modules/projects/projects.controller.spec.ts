@@ -7,14 +7,21 @@ import { ProjectsModule } from './projects.module';
 import { PrismaService } from '../../prisma/prisma.service';
 import { stubAuthGuards } from '../../auth/auth.testing';
 
+const MANAGER_ID = '990e8400-e29b-41d4-a716-446655440001';
+
 const PROJECT = {
   id: '550e8400-e29b-41d4-a716-446655440000',
   name: 'Project Alpha',
   client_id: '660e8400-e29b-41d4-a716-446655440000',
   is_active: true,
   report_type: 'TOTAL_HOURS' as const,
+  lead_manager_id: null as string | null,
+  start_date: null as Date | null,
+  end_date: null as Date | null,
+  description: null as string | null,
   deleted_at: null as Date | null,
   client: { name: 'Acme Corp' },
+  lead_manager: null as { full_name: string } | null,
 };
 
 const TASK = {
@@ -45,6 +52,9 @@ async function createApp(auth: 'none' | 'admin' | 'employee' = 'admin') {
       findUnique: vi
         .fn()
         .mockResolvedValue({ id: PROJECT.client_id, is_active: true, deleted_at: null }),
+    },
+    user: {
+      findUnique: vi.fn().mockResolvedValue({ id: MANAGER_ID, deleted_at: null }),
     },
     task: {
       findMany: vi.fn().mockResolvedValue([TASK]),
@@ -79,6 +89,11 @@ const ITEM = {
   isActive: true,
   isDeleted: false,
   reportType: 'TOTAL_HOURS',
+  leadManagerId: null,
+  leadManagerName: null,
+  startDate: null,
+  endDate: null,
+  description: null,
 };
 
 describe('GET /api/v1/projects', () => {
@@ -409,6 +424,111 @@ describe('POST /api/v1/projects', () => {
       .expect(422);
   });
 
+  it('creates a project with lead manager, dates, and description and echoes them back', async () => {
+    const created = await createApp('admin');
+    app = created.app;
+    created.prisma.project.create.mockResolvedValue({
+      ...PROJECT,
+      lead_manager_id: MANAGER_ID,
+      lead_manager: { full_name: 'Dana Manager' },
+      start_date: new Date('2026-01-01T00:00:00.000Z'),
+      end_date: new Date('2026-06-30T00:00:00.000Z'),
+      description: 'Alpha description',
+    });
+
+    const response = await request(app.getHttpServer())
+      .post('/api/v1/projects')
+      .set('Authorization', 'Bearer admin-token')
+      .send({
+        name: 'Project Alpha',
+        clientId: PROJECT.client_id,
+        leadManagerId: MANAGER_ID,
+        startDate: '2026-01-01',
+        endDate: '2026-06-30',
+        description: 'Alpha description',
+      })
+      .expect(201);
+
+    expect(response.body.data).toMatchObject({
+      leadManagerId: MANAGER_ID,
+      leadManagerName: 'Dana Manager',
+      startDate: '2026-01-01',
+      endDate: '2026-06-30',
+      description: 'Alpha description',
+    });
+    expect(created.prisma.project.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          lead_manager_id: MANAGER_ID,
+          start_date: new Date('2026-01-01T00:00:00.000Z'),
+          end_date: new Date('2026-06-30T00:00:00.000Z'),
+          description: 'Alpha description',
+        }),
+      }),
+    );
+  });
+
+  it('returns 400 with VAL-40 when endDate is before startDate', async () => {
+    ({ app } = await createApp('admin'));
+    const response = await request(app.getHttpServer())
+      .post('/api/v1/projects')
+      .set('Authorization', 'Bearer admin-token')
+      .send({
+        name: 'Project Alpha',
+        clientId: PROJECT.client_id,
+        startDate: '2026-06-30',
+        endDate: '2026-01-01',
+      })
+      .expect(400);
+
+    expect(response.body.details).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          field: 'endDate',
+          rule: 'VAL-40',
+          message: VAL_MESSAGES['VAL-40'],
+        }),
+      ]),
+    );
+  });
+
+  it('returns 422 with VAL-29 for an unknown lead manager', async () => {
+    const created = await createApp('admin');
+    app = created.app;
+    created.prisma.user.findUnique.mockResolvedValue(null);
+
+    const response = await request(app.getHttpServer())
+      .post('/api/v1/projects')
+      .set('Authorization', 'Bearer admin-token')
+      .send({ name: 'P', clientId: PROJECT.client_id, leadManagerId: MANAGER_ID })
+      .expect(422);
+
+    expect(response.body.details).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          field: 'leadManagerId',
+          rule: 'VAL-29',
+          message: VAL_MESSAGES['VAL-29'],
+        }),
+      ]),
+    );
+  });
+
+  it('returns 422 with VAL-29 for a removed lead manager', async () => {
+    const created = await createApp('admin');
+    app = created.app;
+    created.prisma.user.findUnique.mockResolvedValue({
+      id: MANAGER_ID,
+      deleted_at: new Date(),
+    });
+
+    await request(app.getHttpServer())
+      .post('/api/v1/projects')
+      .set('Authorization', 'Bearer admin-token')
+      .send({ name: 'P', clientId: PROJECT.client_id, leadManagerId: MANAGER_ID })
+      .expect(422);
+  });
+
   it('allows a second project to reuse an existing name', async () => {
     const created = await createApp('admin');
     app = created.app;
@@ -528,6 +648,61 @@ describe('PATCH /api/v1/projects/:id', () => {
 
     expect(created.prisma.task.update).not.toHaveBeenCalled();
     expect(created.prisma.task.updateMany).not.toHaveBeenCalled();
+  });
+
+  it('updates lead manager, dates, and description via PATCH', async () => {
+    const created = await createApp('admin');
+    app = created.app;
+    created.prisma.project.update.mockResolvedValue({
+      ...PROJECT,
+      lead_manager_id: MANAGER_ID,
+      lead_manager: { full_name: 'Dana Manager' },
+      start_date: new Date('2026-01-01T00:00:00.000Z'),
+      end_date: new Date('2026-06-30T00:00:00.000Z'),
+      description: 'Updated description',
+    });
+
+    const response = await request(app.getHttpServer())
+      .patch(`/api/v1/projects/${PROJECT.id}`)
+      .set('Authorization', 'Bearer admin-token')
+      .send({
+        leadManagerId: MANAGER_ID,
+        startDate: '2026-01-01',
+        endDate: '2026-06-30',
+        description: 'Updated description',
+      })
+      .expect(200);
+
+    expect(response.body.data).toMatchObject({
+      leadManagerId: MANAGER_ID,
+      leadManagerName: 'Dana Manager',
+      startDate: '2026-01-01',
+      endDate: '2026-06-30',
+      description: 'Updated description',
+    });
+  });
+
+  it('clears lead manager, dates, and description with nulls via PATCH', async () => {
+    const created = await createApp('admin');
+    app = created.app;
+
+    await request(app.getHttpServer())
+      .patch(`/api/v1/projects/${PROJECT.id}`)
+      .set('Authorization', 'Bearer admin-token')
+      .send({ leadManagerId: null, startDate: null, endDate: null, description: null })
+      .expect(200);
+
+    expect(created.prisma.user.findUnique).not.toHaveBeenCalled();
+    expect(created.prisma.project.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          lead_manager_id: null,
+          start_date: null,
+          end_date: null,
+          description: null,
+        }),
+      }),
+    );
   });
 
   it('returns 404 for unknown or removed id', async () => {

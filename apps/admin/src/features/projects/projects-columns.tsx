@@ -14,7 +14,7 @@ export function createProjectsColumns(params: {
       header: 'שם',
       sortable: true,
       cell: (row) => (
-        <span className={row.isDeleted ? 'text-neutral-500' : undefined}>{row.name}</span>
+        <span className={row.isDeleted ? 'text-neutral-400' : undefined}>{row.name}</span>
       ),
     },
     {
@@ -22,7 +22,7 @@ export function createProjectsColumns(params: {
       header: 'לקוח',
       sortable: true,
       cell: (row) => (
-        <span className={row.isDeleted ? 'text-neutral-500' : undefined}>{row.clientName}</span>
+        <span className={row.isDeleted ? 'text-neutral-400' : undefined}>{row.clientName}</span>
       ),
     },
     {
