@@ -3,9 +3,7 @@ import { MyAssignmentsResponseSchema, type MyAssignment } from '@abra/contracts'
 import { authFetch } from '../../lib/api';
 
 export type AssignmentsState =
-  | { status: 'loading' }
-  | { status: 'error' }
-  | { status: 'ready'; assignments: MyAssignment[] };
+  { status: 'loading' } | { status: 'error' } | { status: 'ready'; assignments: MyAssignment[] };
 
 /**
  * Loads the employee's task assignments once.

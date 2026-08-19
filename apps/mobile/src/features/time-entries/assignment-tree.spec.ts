@@ -54,7 +54,12 @@ describe('toProjectGroups', () => {
     const groups = toProjectGroups(
       [
         assignment(),
-        assignment({ taskId: 't2', projectId: 'p2', projectName: 'Punch', reportType: 'CLOCK_IN_OUT' }),
+        assignment({
+          taskId: 't2',
+          projectId: 'p2',
+          projectName: 'Punch',
+          reportType: 'CLOCK_IN_OUT',
+        }),
       ],
       { reportType: 'TOTAL_HOURS' },
     );

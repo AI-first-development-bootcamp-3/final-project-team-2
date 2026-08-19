@@ -25,7 +25,12 @@ export function PickerSheet({
   children,
 }: PickerSheetProps) {
   return (
-    <div dir="rtl" className="flex h-full w-full flex-col bg-lightBg" role="dialog" aria-label={title}>
+    <div
+      dir="rtl"
+      className="flex h-full w-full flex-col bg-lightBg"
+      role="dialog"
+      aria-label={title}
+    >
       <header className="relative flex items-center justify-center px-4 py-4">
         <h2 className="text-base font-semibold text-navy">{title}</h2>
         <button

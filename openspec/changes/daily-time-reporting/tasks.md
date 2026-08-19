@@ -68,24 +68,24 @@
 
 ## 7. Entry form (KAN-73)
 
-- [ ] 7.1 Delete `apps/mobile/src/features/time-entries/task-picker.tsx` and its spec; its `filterOpenAssignments` predicates are unconditionally true and the API already filters closed and deleted rows (D8).
-- [ ] 7.2 Add an assignments hook fetching `GET /me/assignments` once through `authFetch`, exposing loading, error, and empty states.
-- [ ] 7.3 Build the cascading Client → Project → Task picker by grouping that one response; changing the client clears the project and task selections; offer only `TOTAL_HOURS` projects (D8).
-- [ ] 7.4 Build `EntryForm` with a `mode` prop serving `/entry/new` and `/entry/:id`, using `react-hook-form` with the zod resolver over the contracts schemas: start and end times, location from office / client site / home, optional description. An end time earlier in the clock than the start is submitted as the following day.
-- [ ] 7.5 Convert between the Asia/Jerusalem values shown to the employee and the UTC instants sent to the API, deriving `date` with the shared helper so VAL-38 is satisfied (D3).
-- [ ] 7.6 Render server `details[]` against their fields in Hebrew from `VAL_MESSAGES`, preserving entered values on rejection (D9).
-- [ ] 7.7 Render read-only with no save action when the entry's month is locked.
-- [ ] 7.8 Component-test the scenarios in `specs/daily-reporting-ui/spec.md`: picker scoping, cascade reset, closed and deactivated work hidden, no-assignments state, clock-in/clock-out project excluded, night-shift entry, overlap message shown against its field, read-only locked mode, edit mode pre-filled.
+- [x] 7.1 Delete `apps/mobile/src/features/time-entries/task-picker.tsx` and its spec; its `filterOpenAssignments` predicates are unconditionally true and the API already filters closed and deleted rows (D8).
+- [x] 7.2 Add an assignments hook fetching `GET /me/assignments` once through `authFetch`, exposing loading, error, and empty states.
+- [x] 7.3 Build the cascading Client → Project → Task picker by grouping that one response; changing the client clears the project and task selections; offer only `TOTAL_HOURS` projects (D8).
+- [x] 7.4 Build `EntryForm` with a `mode` prop serving `/entry/new` and `/entry/:id`, using `react-hook-form` with the zod resolver over the contracts schemas: start and end times, location from office / client site / home, optional description. An end time earlier in the clock than the start is submitted as the following day.
+- [x] 7.5 Convert between the Asia/Jerusalem values shown to the employee and the UTC instants sent to the API, deriving `date` with the shared helper so VAL-38 is satisfied (D3).
+- [x] 7.6 Render server `details[]` against their fields in Hebrew from `VAL_MESSAGES`, preserving entered values on rejection (D9).
+- [x] 7.7 Render read-only with no save action when the entry's month is locked.
+- [x] 7.8 Component-test the scenarios in `specs/daily-reporting-ui/spec.md`: picker scoping, cascade reset, closed and deactivated work hidden, no-assignments state, clock-in/clock-out project excluded, night-shift entry, overlap message shown against its field, read-only locked mode, edit mode pre-filled.
 
 ## 8. Daily report screen (KAN-72)
 
-- [ ] 8.1 Replace `DashboardPlaceholder` in `apps/mobile/src/App.tsx` with the daily report at `/`, and add the `/entry/new` and `/entry/:id` routes behind `ProtectedRoute`.
-- [ ] 8.2 Build the entries list for today at 393px RTL: time range, task, project, client, location, description, with edit and delete actions per row.
-- [ ] 8.3 Build the quota bar consuming `computeDayStatus` from contracts — never its own thresholds — showing total hours against the 9-hour target, styled per status, and updating after every add, edit, or delete. Pass `absences: []` for now (D4).
-- [ ] 8.4 Implement the empty, loading, error, and month-locked states; in a locked month show the entries, mark the month closed, and withhold add, edit, and delete.
-- [ ] 8.5 Add delete confirmation, refreshing the list and quota bar on success.
-- [ ] 8.6 Component-test the quota bar across all five statuses including exactly 9h, plus each screen state and the confirm-versus-dismiss delete paths.
-- [ ] 8.7 Verify `pnpm --filter @abra/mobile test:coverage` passes the 70% gate.
+- [x] 8.1 Replace `DashboardPlaceholder` in `apps/mobile/src/App.tsx` with the daily report at `/`, and add the `/entry/new` and `/entry/:id` routes behind `ProtectedRoute`.
+- [x] 8.2 Build the entries list for today at 393px RTL: time range, task, project, client, location, description, with edit and delete actions per row.
+- [x] 8.3 Build the quota bar consuming `computeDayStatus` from contracts — never its own thresholds — showing total hours against the 9-hour target, styled per status, and updating after every add, edit, or delete. Pass `absences: []` for now (D4).
+- [x] 8.4 Implement the empty, loading, error, and month-locked states; in a locked month show the entries, mark the month closed, and withhold add, edit, and delete.
+- [x] 8.5 Add delete confirmation, refreshing the list and quota bar on success.
+- [x] 8.6 Component-test the quota bar across all five statuses including exactly 9h, plus each screen state and the confirm-versus-dismiss delete paths.
+- [x] 8.7 Verify `pnpm --filter @abra/mobile test:coverage` passes the 70% gate.
 
 ## 9. End-to-end (KAN-75)
 
