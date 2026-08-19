@@ -18,6 +18,11 @@ The system SHALL allow an authenticated employee to create a time entry against 
 - **WHEN** a request attempts to specify a different owner for the entry
 - **THEN** the entry is still recorded against the authenticated employee
 
+#### Scenario: An entry read back can be submitted again
+
+- **WHEN** a request supplies an explicit empty description in the form the read path returns it
+- **THEN** the entry is accepted and stored with no description, as an omitted description would be
+
 #### Scenario: Administrator is not an employee reporter
 
 - **WHEN** a user with the admin role calls the employee time-entry endpoints
@@ -109,6 +114,16 @@ The system SHALL reject an entry whose interval overlaps any existing entry of t
 - **WHEN** an employee submits an entry whose interval matches another employee's entry
 - **THEN** the entry is accepted
 
+#### Scenario: Overlap with an entry longer than a day
+
+- **WHEN** an employee holds a 48-hour entry and submits a one-hour entry falling inside it
+- **THEN** the request is rejected with rule `VAL-32`
+
+#### Scenario: Concurrent writes for the same period
+
+- **WHEN** two requests for the same overlapping period are processed concurrently
+- **THEN** at most one entry is stored, and the other is rejected with rule `VAL-32`
+
 ### Requirement: Employee must be assigned to the task
 
 The system SHALL reject an entry against a task the employee is not assigned to, reporting rule `VAL-33`. Assignment SHALL be verified on both create and update.
@@ -127,6 +142,37 @@ The system SHALL reject an entry against a task the employee is not assigned to,
 
 - **WHEN** an employee edits an existing entry to point at a task they are not assigned to
 - **THEN** the request is rejected with rule `VAL-33`
+
+### Requirement: Task must be open for reporting
+
+The system SHALL reject a new report of hours against a task that is closed or deleted, whose project is inactive or deleted, whose client is inactive or deleted, or whose project reports by punch clock rather than total hours — reporting rule `VAL-33A`. An assignment record SHALL NOT by itself be sufficient authority to report, because it is not removed when the work above it is closed or deleted.
+
+This check SHALL apply to a create, and to an update that moves an entry onto a different task. An update that leaves the entry on its existing task SHALL be held only to the assignment rule, so that an entry recorded while its task was open remains correctable and deletable afterwards.
+
+#### Scenario: Reporting against a closed task
+
+- **WHEN** an employee submits an entry against a task they are assigned to that has since been closed
+- **THEN** the request is rejected with rule `VAL-33A`
+
+#### Scenario: Reporting under a deactivated client
+
+- **WHEN** an employee submits an entry against an assigned task whose client has been deactivated or deleted
+- **THEN** the request is rejected with rule `VAL-33A`
+
+#### Scenario: Reporting against a punch-clock project
+
+- **WHEN** an employee submits a manual entry against an assigned task whose project reports by punch clock
+- **THEN** the request is rejected with rule `VAL-33A`
+
+#### Scenario: Existing entry stays correctable after its task closes
+
+- **WHEN** an employee edits or deletes an existing entry whose task has since been closed, without changing the task
+- **THEN** the request is accepted
+
+#### Scenario: Moving an entry onto unavailable work
+
+- **WHEN** an employee edits an entry to point at an assigned task that is closed
+- **THEN** the request is rejected with rule `VAL-33A`
 
 ### Requirement: Month lock blocks writes
 
@@ -214,6 +260,16 @@ The system SHALL return an employee's own entries for a requested single day or 
 - **WHEN** an entry references a task, project, or client that has since been closed or deactivated
 - **THEN** the entry is still returned with its task, project, and client names intact
 
+#### Scenario: A day that does not exist
+
+- **WHEN** an employee requests entries for a well-formed date naming no real day, such as `2026-02-30` or `2026-13-01`
+- **THEN** the request is rejected as a validation error rather than answering about a different day or failing as a server error
+
+#### Scenario: A range too wide to answer
+
+- **WHEN** an employee requests a range wider than 366 days
+- **THEN** the request is rejected as a validation error, because the response is returned unpaged
+
 ### Requirement: Employee edits own entries
 
 The system SHALL allow an employee to update their own entry while its month is open, re-applying the end-after-start, overlap, and assignment rules to the updated values. An employee SHALL NOT be able to edit an entry belonging to another user.
@@ -238,6 +294,21 @@ The system SHALL allow an employee to update their own entry while its month is 
 - **WHEN** an employee attempts to update an unknown entry
 - **THEN** the request is rejected as not found
 
+#### Scenario: Another user's entry is indistinguishable from a missing one
+
+- **WHEN** an employee attempts to update an entry belonging to somebody else
+- **THEN** the response is the same as for an unknown entry, so the caller cannot learn that the entry exists
+
+#### Scenario: An entry deleted while an edit is in flight
+
+- **WHEN** an entry is deleted after an edit has been authorised but before it is written
+- **THEN** the edit is reported as not found, and the deleted entry is left unchanged
+
+#### Scenario: A route identifier that is not a valid identifier
+
+- **WHEN** an edit or delete names an entry with a malformed identifier
+- **THEN** the request is reported as not found, not as a server error
+
 ### Requirement: Employee deletes own entries
 
 The system SHALL allow an employee to delete their own entry while its month is open. Deletion SHALL be soft: the record SHALL be retained and excluded from all subsequent reads, day totals, and overlap checks.
@@ -255,7 +326,26 @@ The system SHALL allow an employee to delete their own entry while its month is 
 #### Scenario: Delete of another user's entry
 
 - **WHEN** an employee attempts to delete an entry they do not own
-- **THEN** the request is rejected
+- **THEN** the request is rejected as not found, revealing nothing about its existence
+
+### Requirement: Running entries are not edited or deleted here
+
+An entry with no end time SHALL NOT be editable or deletable through the ordinary entry endpoints. The system SHALL refuse such a request with a rule identifying the entry as running, rather than reporting a rule against a field the caller did not supply. Completing or cancelling a running entry is the timer's responsibility.
+
+#### Scenario: Editing a running entry
+
+- **WHEN** an employee attempts to update an entry that has no end time
+- **THEN** the request is refused and the response identifies the entry as running
+
+#### Scenario: Editing a running entry reports no misleading rule
+
+- **WHEN** that refusal is returned
+- **THEN** it does not report a missing or invalid end time against a field the caller never sent
+
+#### Scenario: Deleting a running entry
+
+- **WHEN** an employee attempts to delete an entry that has no end time
+- **THEN** the request is refused and the response identifies the entry as running
 
 ### Requirement: Field-level validation errors
 

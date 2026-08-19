@@ -57,8 +57,13 @@ let currentUser: { userId: string; role: string } | null = null;
 
 const prismaMock = {
   timeEntry: {
+    count: vi.fn(),
     create: vi.fn(),
     findMany: vi.fn(),
+    findFirst: vi.fn(),
+    findFirstOrThrow: vi.fn(),
+    updateMany: vi.fn(),
+    delete: vi.fn(),
   },
   monthLock: {
     findUnique: vi.fn(),
@@ -110,8 +115,42 @@ function monthIs(lock: { is_locked: boolean }): void {
   prismaMock.monthLock.findUnique.mockResolvedValue(lock);
 }
 
+/**
+ * An assignment to an open task under an active project and client — what the
+ * picker would have offered. The write path reads the catalogue state through
+ * the assignment row, so the fixture has to carry it.
+ */
 function taskIsAssigned(): void {
-  prismaMock.taskAssignment.findUnique.mockResolvedValue({ id: 'assignment-1' });
+  prismaMock.taskAssignment.findUnique.mockResolvedValue({
+    id: 'assignment-1',
+    task: {
+      status: 'open',
+      deleted_at: null,
+      project: {
+        is_active: true,
+        deleted_at: null,
+        report_type: 'TOTAL_HOURS',
+        client: { is_active: true, deleted_at: null },
+      },
+    },
+  });
+}
+
+/** Assigned, but the work is no longer open for reporting (VAL-33A). */
+function taskIsClosed(): void {
+  prismaMock.taskAssignment.findUnique.mockResolvedValue({
+    id: 'assignment-1',
+    task: {
+      status: 'closed',
+      deleted_at: null,
+      project: {
+        is_active: true,
+        deleted_at: null,
+        report_type: 'TOTAL_HOURS',
+        client: { is_active: true, deleted_at: null },
+      },
+    },
+  });
 }
 
 function taskIsNotAssigned(): void {
@@ -144,7 +183,11 @@ afterAll(async () => {
 beforeEach(() => {
   vi.clearAllMocks();
   prismaMock.timeEntry.create.mockResolvedValue(ROW);
-  prismaMock.timeEntry.findMany.mockResolvedValue([ROW]);
+  // findMany serves both the list read and the overlap-candidate lookup, so it
+  // defaults to "no neighbours"; the GET suite supplies rows explicitly.
+  prismaMock.timeEntry.findMany.mockResolvedValue([]);
+  // No clashing entry unless a test says otherwise.
+  prismaMock.timeEntry.count.mockResolvedValue(0);
   monthIsOpen();
   taskIsAssigned();
   signedInAsEmployee();
@@ -250,9 +293,43 @@ describe('POST /api/v1/time-entries', () => {
     );
     expect(prismaMock.timeEntry.create).not.toHaveBeenCalled();
   });
+
+  it('refuses a write against an assigned-but-closed task with VAL-33A', async () => {
+    // The assignment row survives the task being closed, so a direct API call
+    // could otherwise report hours the picker would never have offered (D9).
+    taskIsClosed();
+
+    const response = await request(app.getHttpServer())
+      .post('/api/v1/time-entries')
+      .send(validBody)
+      .expect(403);
+
+    expect(response.body.details).toEqual(
+      expect.arrayContaining([expect.objectContaining({ field: 'taskId', rule: 'VAL-33A' })]),
+    );
+    expect(prismaMock.timeEntry.create).not.toHaveBeenCalled();
+  });
+
+  it('rejects an overlapping entry with VAL-32', async () => {
+    prismaMock.timeEntry.count.mockResolvedValue(1);
+
+    const response = await request(app.getHttpServer())
+      .post('/api/v1/time-entries')
+      .send(validBody)
+      .expect(409);
+
+    expect(response.body.details).toEqual(
+      expect.arrayContaining([expect.objectContaining({ rule: 'VAL-32' })]),
+    );
+    expect(prismaMock.timeEntry.create).not.toHaveBeenCalled();
+  });
 });
 
 describe('GET /api/v1/time-entries', () => {
+  beforeEach(() => {
+    prismaMock.timeEntry.findMany.mockResolvedValue([ROW]);
+  });
+
   it('returns the caller own entries for a day', async () => {
     const response = await request(app.getHttpServer())
       .get('/api/v1/time-entries?date=2026-08-10')
@@ -296,6 +373,28 @@ describe('GET /api/v1/time-entries', () => {
       .expect(400);
   });
 
+  it('answers 400, not 500, for a month that does not exist', async () => {
+    // `new Date('2026-13-01')` is an Invalid Date; unguarded it reached Prisma
+    // and came back as a 500.
+    await request(app.getHttpServer())
+      .get('/api/v1/time-entries?from=2026-13-01&to=2026-13-05')
+      .expect(400);
+    expect(prismaMock.timeEntry.findMany).not.toHaveBeenCalled();
+  });
+
+  it('rejects a day that does not exist rather than answering about another one', async () => {
+    // V8 rolls 30 February over to March 2 — a 200 about a day nobody asked for.
+    await request(app.getHttpServer()).get('/api/v1/time-entries?date=2026-02-30').expect(400);
+    expect(prismaMock.timeEntry.findMany).not.toHaveBeenCalled();
+  });
+
+  it('rejects a range too wide to answer in one unpaged response', async () => {
+    await request(app.getHttpServer())
+      .get('/api/v1/time-entries?from=1900-01-01&to=2100-12-31')
+      .expect(400);
+    expect(prismaMock.timeEntry.findMany).not.toHaveBeenCalled();
+  });
+
   it('still permits reads in a locked month', async () => {
     monthIs({ is_locked: true });
 
@@ -306,5 +405,139 @@ describe('GET /api/v1/time-entries', () => {
     signedInAsAdmin();
 
     await request(app.getHttpServer()).get('/api/v1/time-entries?date=2026-08-10').expect(403);
+  });
+});
+
+describe('PATCH /api/v1/time-entries/:id', () => {
+  beforeEach(() => {
+    prismaMock.timeEntry.findFirst.mockResolvedValue(ROW);
+    prismaMock.timeEntry.updateMany.mockResolvedValue({ count: 1 });
+    prismaMock.timeEntry.findFirstOrThrow.mockResolvedValue(ROW);
+  });
+
+  it('updates the entry and returns it', async () => {
+    const response = await request(app.getHttpServer())
+      .patch(`/api/v1/time-entries/${ROW.id}`)
+      .send({ location: 'home' })
+      .expect(200);
+
+    expect(response.body.data).toMatchObject({ id: ROW.id });
+  });
+
+  it('rejects an empty patch', async () => {
+    await request(app.getHttpServer()).patch(`/api/v1/time-entries/${ROW.id}`).send({}).expect(400);
+  });
+
+  it('answers 404 for an entry the caller does not own', async () => {
+    prismaMock.timeEntry.findFirst.mockResolvedValue(null);
+
+    await request(app.getHttpServer())
+      .patch(`/api/v1/time-entries/${ROW.id}`)
+      .send({ location: 'home' })
+      .expect(404);
+  });
+
+  it('answers 409 for a running entry, naming VAL-RUNNING-ENTRY', async () => {
+    prismaMock.timeEntry.findFirst.mockResolvedValue({ ...ROW, end_at: null });
+
+    const response = await request(app.getHttpServer())
+      .patch(`/api/v1/time-entries/${ROW.id}`)
+      .send({ description: 'typo fix' })
+      .expect(409);
+
+    expect(response.body.details).toEqual(
+      expect.arrayContaining([expect.objectContaining({ rule: 'VAL-RUNNING-ENTRY' })]),
+    );
+  });
+
+  it('answers 403 in a locked month', async () => {
+    monthIs({ is_locked: true });
+
+    await request(app.getHttpServer())
+      .patch(`/api/v1/time-entries/${ROW.id}`)
+      .send({ location: 'home' })
+      .expect(403);
+  });
+
+  it('refuses an admin', async () => {
+    signedInAsAdmin();
+
+    await request(app.getHttpServer())
+      .patch(`/api/v1/time-entries/${ROW.id}`)
+      .send({ location: 'home' })
+      .expect(403);
+  });
+});
+
+describe('a route id that is not a UUID', () => {
+  /**
+   * `TimeEntry.id` is `@db.Uuid`, so a malformed value used to reach Prisma and
+   * raise P2023 — and with nothing mapping Prisma errors, the caller got a 500
+   * where both endpoints document a 404.
+   */
+  it('answers 404 on PATCH rather than failing in the database', async () => {
+    await request(app.getHttpServer())
+      .patch('/api/v1/time-entries/not-a-uuid')
+      .send({ location: 'home' })
+      .expect(404);
+
+    expect(prismaMock.timeEntry.findFirst).not.toHaveBeenCalled();
+  });
+
+  it('answers 404 on DELETE rather than failing in the database', async () => {
+    await request(app.getHttpServer()).delete('/api/v1/time-entries/not-a-uuid').expect(404);
+
+    expect(prismaMock.timeEntry.findFirst).not.toHaveBeenCalled();
+  });
+
+  it('still reaches the service for a well-formed id', async () => {
+    prismaMock.timeEntry.findFirst.mockResolvedValue(ROW);
+    prismaMock.timeEntry.updateMany.mockResolvedValue({ count: 1 });
+    prismaMock.timeEntry.findFirstOrThrow.mockResolvedValue(ROW);
+
+    await request(app.getHttpServer())
+      .patch(`/api/v1/time-entries/${ROW.id}`)
+      .send({ location: 'home' })
+      .expect(200);
+  });
+});
+
+describe('DELETE /api/v1/time-entries/:id', () => {
+  beforeEach(() => {
+    prismaMock.timeEntry.findFirst.mockResolvedValue(ROW);
+    prismaMock.timeEntry.delete.mockResolvedValue(ROW);
+  });
+
+  it('deletes the entry and answers 204 with no body', async () => {
+    const response = await request(app.getHttpServer())
+      .delete(`/api/v1/time-entries/${ROW.id}`)
+      .expect(204);
+
+    expect(response.body).toEqual({});
+    expect(prismaMock.timeEntry.delete).toHaveBeenCalledOnce();
+  });
+
+  it('answers 404 for an entry the caller does not own', async () => {
+    prismaMock.timeEntry.findFirst.mockResolvedValue(null);
+
+    await request(app.getHttpServer()).delete(`/api/v1/time-entries/${ROW.id}`).expect(404);
+  });
+
+  it('answers 403 in a locked month', async () => {
+    monthIs({ is_locked: true });
+
+    await request(app.getHttpServer()).delete(`/api/v1/time-entries/${ROW.id}`).expect(403);
+  });
+
+  it('answers 409 for a running entry', async () => {
+    prismaMock.timeEntry.findFirst.mockResolvedValue({ ...ROW, end_at: null });
+
+    await request(app.getHttpServer()).delete(`/api/v1/time-entries/${ROW.id}`).expect(409);
+  });
+
+  it('refuses an admin', async () => {
+    signedInAsAdmin();
+
+    await request(app.getHttpServer()).delete(`/api/v1/time-entries/${ROW.id}`).expect(403);
   });
 });

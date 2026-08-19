@@ -1,29 +1,35 @@
-import { BadRequestException, Body, Controller, Get, Post, Query, Req } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  NotFoundException,
+  Param,
+  Patch,
+  Post,
+  Query,
+  Req,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import {
   CreateTimeEntryBodySchema,
   TimeEntriesListQuerySchema,
-  VAL_MESSAGES,
-  zodIssuesToDetails,
-  type ValCode,
+  UpdateTimeEntryBodySchema,
+  zodIssuesToHebrewDetails,
 } from '@abra/contracts';
 import { Roles } from '../../auth/auth.decorators';
 import type { AuthenticatedUser } from '../../auth/jwt.guard';
 import { TimeEntriesService } from './time-entries.service';
 
-function hebrewDetails(issues: Parameters<typeof zodIssuesToDetails>[0]) {
-  return zodIssuesToDetails(issues).map((detail) => ({
-    ...detail,
-    message: detail.rule in VAL_MESSAGES ? VAL_MESSAGES[detail.rule as ValCode] : detail.message,
-  }));
-}
-
-function badRequest(issues: Parameters<typeof zodIssuesToDetails>[0]): never {
+function badRequest(issues: Parameters<typeof zodIssuesToHebrewDetails>[0]): never {
   throw new BadRequestException({
     statusCode: 400,
     message: 'Validation failed',
     error: 'Bad Request',
-    details: hebrewDetails(issues),
+    details: zodIssuesToHebrewDetails(issues),
   });
 }
 
@@ -35,6 +41,25 @@ function badRequest(issues: Parameters<typeof zodIssuesToDetails>[0]): never {
  * Admins report no hours of their own (ADR-26) and are refused here; their
  * access to employee entries belongs to the Month Close epic.
  */
+/**
+ * An id that is not a UUID names no entry, so it is reported as missing.
+ *
+ * `TimeEntry.id` is `@db.Uuid`, so handing a malformed value to Prisma raises
+ * P2023 — and with no filter mapping Prisma errors, the caller got a 500 where
+ * the endpoint documents a 404. Answering "not found" also keeps this
+ * consistent with an entry owned by somebody else, which is deliberately
+ * indistinguishable from one that does not exist.
+ */
+function entryIdOrNotFound(id: string): string {
+  if (!UUID_PATTERN.test(id)) {
+    throw new NotFoundException('דיווח השעות לא נמצא');
+  }
+
+  return id;
+}
+
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 @ApiTags('time-entries')
 @ApiBearerAuth()
 @Controller('time-entries')
@@ -73,5 +98,44 @@ export class TimeEntriesController {
 
     const data = await this.timeEntries.list(req.user.userId, parsed.data);
     return { data };
+  }
+
+  @Patch(':id')
+  @ApiOperation({ summary: "Edit one of the signed-in employee's own entries" })
+  @ApiResponse({ status: 200, description: 'The updated entry.' })
+  @ApiResponse({ status: 400, description: 'The merged entry breaks a rule (VAL-30/31/35/36/38).' })
+  @ApiResponse({ status: 403, description: 'Month locked (VAL-34) or task not assigned (VAL-33).' })
+  @ApiResponse({ status: 404, description: 'No such entry belonging to the caller.' })
+  @ApiResponse({
+    status: 409,
+    description: 'Overlaps another entry (VAL-32), or the entry is running (VAL-RUNNING-ENTRY).',
+  })
+  async update(
+    @Req() req: { user: AuthenticatedUser },
+    @Param('id') id: string,
+    @Body() body: unknown,
+  ) {
+    const parsed = UpdateTimeEntryBodySchema.safeParse(body);
+    if (!parsed.success) {
+      badRequest(parsed.error.issues);
+    }
+
+    const data = await this.timeEntries.update(req.user.userId, entryIdOrNotFound(id), parsed.data);
+    return { data };
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: "Delete one of the signed-in employee's own entries",
+    description:
+      'Soft delete: the row is retained and excluded from every subsequent read, day total, and overlap check.',
+  })
+  @ApiResponse({ status: 204, description: 'Deleted.' })
+  @ApiResponse({ status: 403, description: 'Month locked (VAL-34).' })
+  @ApiResponse({ status: 404, description: 'No such entry belonging to the caller.' })
+  @ApiResponse({ status: 409, description: 'The entry is running (VAL-RUNNING-ENTRY).' })
+  async remove(@Req() req: { user: AuthenticatedUser }, @Param('id') id: string): Promise<void> {
+    await this.timeEntries.remove(req.user.userId, entryIdOrNotFound(id));
   }
 }
