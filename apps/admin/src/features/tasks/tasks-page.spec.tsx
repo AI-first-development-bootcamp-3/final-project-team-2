@@ -91,6 +91,31 @@ describe('TasksPage', () => {
     expect(select.value).toBe(mockProject.id);
   });
 
+  it('toggling כולל מושבתים adds includeDeleted=true to the request path', async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    expect(await screen.findByText('Design Login Flow')).toBeInTheDocument();
+    const listCallsBefore = apiFetch.mock.calls
+      .map((call) => String(call[0]))
+      .filter((path) => path.startsWith('/tasks?'));
+    expect(listCallsBefore.at(-1)).not.toContain('includeDeleted');
+
+    await user.click(screen.getByRole('checkbox', { name: 'כולל מושבתים' }));
+
+    await waitFor(() => {
+      const lastListCall = String(
+        apiFetch.mock.calls
+          .map((call) => String(call[0]))
+          .filter((path) => path.startsWith('/tasks?'))
+          .at(-1),
+      );
+      expect(lastListCall).toContain('includeDeleted=true');
+      expect(lastListCall).toContain('page=1');
+    });
+    expect(screen.getByText('Old Task Flow')).toHaveClass('text-neutral-400');
+  });
+
   it('submits TaskCreateForm and handles 422 VAL-25 error', async () => {
     const user = userEvent.setup();
     renderPage();

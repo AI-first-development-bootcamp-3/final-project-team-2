@@ -11,19 +11,29 @@ export function createTasksColumns(params: {
       id: 'name',
       header: 'שם משימה',
       sortable: true,
-      cell: (row) => row.name,
+      cell: (row) => (
+        <span className={row.status === 'closed' ? 'text-neutral-400' : undefined}>{row.name}</span>
+      ),
     },
     {
       id: 'projectName',
       header: 'פרויקט',
       sortable: false,
-      cell: (row) => row.projectName,
+      cell: (row) => (
+        <span className={row.status === 'closed' ? 'text-neutral-400' : undefined}>
+          {row.projectName}
+        </span>
+      ),
     },
     {
       id: 'clientName',
       header: 'לקוח',
       sortable: false,
-      cell: (row) => row.clientName,
+      cell: (row) => (
+        <span className={row.status === 'closed' ? 'text-neutral-400' : undefined}>
+          {row.clientName}
+        </span>
+      ),
     },
     {
       id: 'status',

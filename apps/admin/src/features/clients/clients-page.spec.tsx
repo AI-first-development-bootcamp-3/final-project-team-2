@@ -21,6 +21,7 @@ const activeClient = {
   name: 'Acme Corp',
   contactInfo: 'contact@acme.com',
   isActive: true,
+  isDeleted: false,
 };
 
 const inactiveClient = {
@@ -28,6 +29,15 @@ const inactiveClient = {
   name: 'Old Corp',
   contactInfo: null,
   isActive: false,
+  isDeleted: false,
+};
+
+const deletedClient = {
+  id: '550e8400-e29b-41d4-a716-446655440012',
+  name: 'Removed Corp',
+  contactInfo: null,
+  isActive: true,
+  isDeleted: true,
 };
 
 function renderPage() {
@@ -70,6 +80,32 @@ describe('ClientsPage', () => {
       const lastCall = apiFetch.mock.calls.at(-1);
       expect(String(lastCall?.[0])).toContain('q=acme');
     });
+  });
+
+  it('toggling כולל מושבתים adds includeDeleted=true and shows muted removed rows', async () => {
+    const user = userEvent.setup();
+    apiFetch.mockImplementation((path: string) => {
+      if (String(path).includes('includeDeleted=true')) {
+        return Promise.resolve({
+          data: [activeClient, deletedClient],
+          meta: { page: 1, limit: 20, total: 2 },
+        });
+      }
+      return Promise.resolve({ data: [activeClient], meta: { page: 1, limit: 20, total: 1 } });
+    });
+
+    renderPage();
+    await screen.findByText('Acme Corp');
+    expect(screen.queryByText('Removed Corp')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('checkbox', { name: 'כולל מושבתים' }));
+
+    expect(await screen.findByText('Removed Corp')).toBeInTheDocument();
+    const lastCall = String(apiFetch.mock.calls.at(-1)?.[0]);
+    expect(lastCall).toContain('includeDeleted=true');
+    expect(lastCall).toContain('page=1');
+    expect(screen.getByText('הוסר')).toBeInTheDocument();
+    expect(screen.getByText('Removed Corp')).toHaveClass('text-neutral-400');
   });
 
   it('opens create modal with name and contactInfo fields', async () => {

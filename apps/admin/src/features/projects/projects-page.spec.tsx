@@ -183,7 +183,7 @@ describe('ProjectsPage', () => {
     });
   });
 
-  it('include-removed shows distinguishable removed rows and is not labeled כולל מושבתים', async () => {
+  it('toggling כולל מושבתים adds includeDeleted=true and shows distinguishable removed rows', async () => {
     const user = userEvent.setup();
     apiFetch.mockImplementation((path: string) => {
       if (String(path).startsWith('/clients')) {
@@ -204,12 +204,20 @@ describe('ProjectsPage', () => {
     renderPage();
     expect(await screen.findByText('Acme Mobile App')).toBeInTheDocument();
     expect(screen.queryByText('Removed Website')).not.toBeInTheDocument();
-    expect(screen.queryByText('כולל מושבתים')).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('checkbox', { name: /מוסר/ }));
+    await user.click(screen.getByRole('checkbox', { name: 'כולל מושבתים' }));
 
     expect(await screen.findByText('Removed Website')).toBeInTheDocument();
+    const lastListCall = String(
+      apiFetch.mock.calls
+        .map((call) => String(call[0]))
+        .filter((path) => path.startsWith('/projects?'))
+        .at(-1),
+    );
+    expect(lastListCall).toContain('includeDeleted=true');
+    expect(lastListCall).toContain('page=1');
     expect(screen.getByText('הוסר')).toBeInTheDocument();
+    expect(screen.getByText('Removed Website')).toHaveClass('text-neutral-400');
     expect(screen.getByText('Acme Mobile App')).toBeInTheDocument();
   });
 
