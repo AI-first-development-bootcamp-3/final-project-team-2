@@ -19,13 +19,13 @@ const ICONS = {
 } as const;
 
 const COLORS = {
-  edit: 'text-blue-600 hover:bg-blue-50',
+  edit: 'text-linkBlue hover:bg-blue-50',
   trash: 'text-red-600 hover:bg-red-50',
   key: 'text-amber-600 hover:bg-amber-50',
   restore: 'text-green-600 hover:bg-green-50',
   unlink: 'text-red-600 hover:bg-red-50',
   plus: 'text-green-600 hover:bg-green-50',
-  list: 'text-blue-600 hover:bg-blue-50',
+  list: 'text-linkBlue hover:bg-blue-50',
 } as const;
 
 export function IconAction(props: {

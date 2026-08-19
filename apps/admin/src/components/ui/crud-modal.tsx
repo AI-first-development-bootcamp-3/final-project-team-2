@@ -75,7 +75,7 @@ export function CrudModal({
             </div>
             <span
               aria-hidden="true"
-              className="ml-6 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white"
+              className="ml-6 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-linkBlue text-white"
             >
               <svg
                 viewBox="0 0 24 24"
@@ -95,7 +95,7 @@ export function CrudModal({
           <div className="mt-8 space-y-2">
             <button
               type="submit"
-              className="w-full rounded-lg bg-blue-600 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:bg-neutral-400"
+              className="w-full rounded-lg bg-linkBlue py-2.5 text-base font-bold text-white transition-colors hover:bg-linkBlue/90 disabled:bg-neutral-400"
               disabled={saving}
             >
               {saving ? 'שומר…' : submitLabel}

@@ -11,7 +11,7 @@ export function createAssignmentsColumns(params: {
       header: 'שם עובד',
       sortable: true,
       cell: (row) => (
-        <span className="inline-block rounded-full bg-neutral-100 px-3 py-1 text-xs font-medium text-neutral-700 ring-1 ring-neutral-200">
+        <span className="inline-block rounded bg-divider px-3 py-1 text-sm text-ink">
           {row.userFullName}
         </span>
       ),

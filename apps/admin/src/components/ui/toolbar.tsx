@@ -1,8 +1,9 @@
 import type { ReactNode, SelectHTMLAttributes } from 'react';
 
-// Figma toolbar controls (node 1-32935): a large white rounded search field
-// with an inline magnifier and placeholder, and a blue pill primary button.
-// Labels stay in the DOM (sr-only) so getByLabel selectors keep working.
+// Figma toolbar controls, exact values from the design frames: search Field is
+// 400×48 white with an inline magnifier and #848891 placeholder; the primary
+// button (base_Button) is #0C69FF, 48px tall, 12×16 padding, radius 8, bold
+// label. Labels stay in the DOM (sr-only) so getByLabel selectors keep working.
 
 export function SearchField(props: {
   label?: string;
@@ -12,14 +13,14 @@ export function SearchField(props: {
 }) {
   const label = props.label ?? 'חיפוש';
   return (
-    <label className="relative block w-full max-w-md">
+    <label className="relative block w-full max-w-[400px]">
       <span className="sr-only">{label}</span>
       <input
         type="search"
         value={props.value}
         placeholder={props.placeholder}
         onChange={(event) => props.onChange(event.target.value)}
-        className="h-10 w-full rounded-lg bg-white pl-4 pr-10 text-sm text-neutral-800 shadow-sm ring-1 ring-neutral-200 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-navy/40"
+        className="h-12 w-full rounded-lg bg-white pl-4 pr-10 text-sm text-ink shadow-sm ring-1 ring-divider placeholder:text-grayIcon focus:outline-none focus:ring-2 focus:ring-linkBlue/40"
       />
       <svg
         viewBox="0 0 24 24"
@@ -27,7 +28,7 @@ export function SearchField(props: {
         stroke="currentColor"
         strokeWidth="1.8"
         strokeLinecap="round"
-        className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400"
+        className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-grayIcon"
         aria-hidden="true"
       >
         <circle cx="11" cy="11" r="7" />
@@ -47,7 +48,7 @@ export function FilterSelect({
       <span>{label}</span>
       <select
         {...rest}
-        className="h-10 rounded-lg bg-white px-3 text-sm text-neutral-800 shadow-sm ring-1 ring-neutral-200 focus:outline-none focus:ring-2 focus:ring-navy/40"
+        className="h-12 rounded-lg bg-white px-3 text-sm text-ink shadow-sm ring-1 ring-divider focus:outline-none focus:ring-2 focus:ring-linkBlue/40"
       >
         {children}
       </select>
@@ -65,7 +66,7 @@ export function PrimaryButton(props: {
       type="button"
       onClick={props.onClick}
       disabled={props.disabled}
-      className="h-10 rounded-full bg-blue-600 px-6 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 disabled:opacity-50"
+      className="h-12 rounded-lg bg-linkBlue px-4 text-lg font-bold text-white shadow-sm transition-colors hover:bg-linkBlue/90 disabled:opacity-50"
     >
       {props.children}
     </button>

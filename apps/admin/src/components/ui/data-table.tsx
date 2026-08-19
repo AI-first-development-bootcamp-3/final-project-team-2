@@ -77,10 +77,10 @@ export function DataTable<T>({
             {data.map((row) => (
               <tr
                 key={getRowId(row)}
-                className="border-t border-neutral-100 transition-colors hover:bg-neutral-50"
+                className="h-[54px] border-t border-divider transition-colors hover:bg-neutral-50"
               >
                 {columns.map((column) => (
-                  <td key={column.id} className="px-4 py-3 text-sm">
+                  <td key={column.id} className="px-4 py-2 text-sm text-ink">
                     {column.cell(row)}
                   </td>
                 ))}
