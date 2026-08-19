@@ -37,9 +37,9 @@ See `proposal.md` — Why. Current state that shapes the design:
 3. **Response schema lives in `packages/contracts` as `MonthQueryResponse` (zod).**
    Entries carry what `DayStatusEntry` + the drill-down need: `startAt`, `endAt`, duration, client/project/task **names** (denormalized at query time so soft-deleted rows still render, §8.3), location, description. Absences are typed as the existing `DayStatusAbsence` shape (`startDate`/`endDate`, room for Epic 7 to extend additively). Lock is `{ isLocked: boolean, lockedAt: string | null }`.
 
-4. **Month boundaries: convert the Asia/Jerusalem month to a UTC instant range server-side.**
-   Query `startAt >= utc(monthStart 00:00 local)` and `< utc(nextMonthStart 00:00 local)`, DST-aware (Israel observes DST — do not hardcode +02/+03). Attribution-by-start (VAL-38) then falls out of the query itself; no post-filtering.
-   _Alternative rejected:_ fetch a padded range and filter by `toLocalDateOrNull` in JS — correct but hides the contract in app code; the boundary conversion is small and testable on its own.
+4. **Month boundaries: filter on the stored local-day `date` column; delegate the read to `TimeEntriesService.list()`.**
+   (Revised during implementation.) Entries already persist a `date` column holding the Asia/Jerusalem start day — VAL-38 enforces `date === toLocalDate(startAt)` at write time — and `list()` already accepts an inclusive `from`/`to` local-date range that was added expressly for KAN-80 (its comment says so). The months service therefore computes the month's first/last local date (a pure, DST-free calculation) and delegates to the existing read path, inheriting its scoping and §8.3 denormalization instead of repeating them.
+   _Alternative rejected (original plan):_ a DST-aware Asia/Jerusalem→UTC instant-range conversion — obsolete, because attribution-by-start is already materialized in the `date` column at write time.
 
 5. **Branch from the stack tip (`feat/kan-79-edit-delete`).**
    Everything this change reads lives on the stack. Re-target to `dev` when the stack merges. KAN-82's edit round-trip additionally reuses the Epic 5 entry form (KAN-73 branch, in review) — sequence the client tasks so the calendar/drill-down _view_ ships first and the edit hook-up lands once KAN-73 merges, rather than stacking on two review branches at once.
