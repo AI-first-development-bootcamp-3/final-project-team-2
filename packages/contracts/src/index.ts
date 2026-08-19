@@ -189,11 +189,17 @@ export {
   AssignmentsListQuerySchema,
   AssignmentListItemSchema,
   AssignmentsListSuccessSchema,
+  AssignedEmployeeSchema,
+  AssignmentsByTaskItemSchema,
+  AssignmentsByTaskListSuccessSchema,
 } from './assignments/list.js';
 export type {
   AssignmentsListQuery,
   AssignmentListItem,
   AssignmentsListSuccess,
+  AssignedEmployee,
+  AssignmentsByTaskItem,
+  AssignmentsByTaskListSuccess,
 } from './assignments/list.js';
 
 export { CreateAssignmentBodySchema, AssignmentCreateSuccessSchema } from './assignments/create.js';
