@@ -40,6 +40,36 @@ describe('App Routing & Guards', () => {
     expect(screen.getByRole('heading', { name: 'עמוד ראשי - דיווח יומי' })).toBeInTheDocument();
   });
 
+  it('renders the monthly view for an authenticated visitor on /monthly', () => {
+    setAuthSession({
+      accessToken: 'valid-token',
+      user: {
+        id: '7d9d2c8e-8f9a-4b6e-9d3e-2f1a5b8c9d0e',
+        email: 'user@example.com',
+        fullName: 'Test User',
+        role: 'employee',
+      },
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/monthly']}>
+        <AppRoutes />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole('button', { name: 'החודש הבא' })).toBeInTheDocument();
+  });
+
+  it('redirects unauthenticated visitor from /monthly to /login', () => {
+    render(
+      <MemoryRouter initialEntries={['/monthly']}>
+        <AppRoutes />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole('heading', { name: 'ברוכים הבאים!' })).toBeInTheDocument();
+  });
+
   it('redirects unknown path * to /login', () => {
     render(
       <MemoryRouter initialEntries={['/unknown-route']}>

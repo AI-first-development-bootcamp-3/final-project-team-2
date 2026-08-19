@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { LoginPage } from './features/auth/LoginPage';
+import { MonthlyPage } from './features/monthly/monthly-page';
 import { isAuthenticated } from './lib/auth';
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -33,6 +34,14 @@ export function AppRoutes() {
         element={
           <ProtectedRoute>
             <DashboardPlaceholder />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/monthly"
+        element={
+          <ProtectedRoute>
+            <MonthlyPage />
           </ProtectedRoute>
         }
       />
