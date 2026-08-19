@@ -36,6 +36,7 @@ describe('ClientListItemSchema', () => {
       name: 'Acme Corp',
       contactInfo: 'contact@acme.com',
       isActive: true,
+      isDeleted: false,
     };
     expect(ClientListItemSchema.parse(item)).toEqual(item);
   });
@@ -46,8 +47,20 @@ describe('ClientListItemSchema', () => {
       name: 'Acme Corp',
       contactInfo: null,
       isActive: true,
+      isDeleted: false,
     };
     expect(ClientListItemSchema.parse(item).contactInfo).toBeNull();
+  });
+
+  it('requires the isDeleted deletion indicator', () => {
+    const item = {
+      id: '550e8400-e29b-41d4-a716-446655440000',
+      name: 'Acme Corp',
+      contactInfo: null,
+      isActive: true,
+    };
+    expect(ClientListItemSchema.safeParse(item).success).toBe(false);
+    expect(ClientListItemSchema.parse({ ...item, isDeleted: true }).isDeleted).toBe(true);
   });
 });
 
@@ -60,6 +73,7 @@ describe('ClientsListSuccessSchema', () => {
           name: 'Acme',
           contactInfo: null,
           isActive: true,
+          isDeleted: false,
         },
       ],
       meta: { page: 1, limit: 20, total: 1 },

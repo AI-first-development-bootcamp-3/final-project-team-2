@@ -85,6 +85,7 @@ describe('GET /api/v1/clients', () => {
           name: 'Acme Corp',
           contactInfo: 'info@acme.com',
           isActive: true,
+          isDeleted: false,
         },
       ],
       meta: { page: 1, limit: 20, total: 1 },

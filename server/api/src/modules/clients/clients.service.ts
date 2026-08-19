@@ -19,6 +19,7 @@ const CLIENT_LIST_SELECT = {
   name: true,
   contact_info: true,
   is_active: true,
+  deleted_at: true,
 } as const;
 
 function toListItem(row: {
@@ -26,12 +27,14 @@ function toListItem(row: {
   name: string;
   contact_info: string | null;
   is_active: boolean;
+  deleted_at: Date | null;
 }): ClientListItem {
   return {
     id: row.id,
     name: row.name,
     contactInfo: row.contact_info,
     isActive: row.is_active,
+    isDeleted: row.deleted_at != null,
   };
 }
 
