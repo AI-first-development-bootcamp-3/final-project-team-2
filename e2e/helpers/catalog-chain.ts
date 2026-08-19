@@ -90,13 +90,25 @@ export async function assignEmployeeViaConsole(
   await page.getByRole('button', { name: 'שיוך חדש' }).click();
   const dialog = page.getByRole('dialog', { name: 'שיוך חדש' });
   await expect(dialog).toBeVisible();
-  const employeeLabel = `${params.fullName} (${params.email})`;
   const taskLabel = `${params.taskName} (${params.projectName} - ${params.clientName})`;
-  await expect(dialog.getByLabel('עובד')).toContainText(employeeLabel, { timeout: 15_000 });
-  await dialog.getByLabel('עובד').selectOption({ label: employeeLabel });
   await expect(dialog.getByLabel('משימה')).toContainText(taskLabel, { timeout: 15_000 });
   await dialog.getByLabel('משימה').selectOption({ label: taskLabel });
-  await dialog.getByRole('button', { name: 'שמירה' }).click();
+
+  // KAN-121: the employee dropdown is now a rich picker — search by name
+  // (server-side q on /users), wait for the round-trip, then tick the row's
+  // selection checkbox before submitting.
+  const encodedName = encodeURIComponent(params.fullName).replace(/%20/g, '+');
+  const pendingUsers = page.waitForResponse((res) => {
+    const url = res.url();
+    return url.includes('/users?') && url.includes(`q=${encodedName}`) && res.ok();
+  });
+  await dialog.getByLabel('חיפוש לפי שם עובד').fill(params.fullName);
+  await pendingUsers;
+  const employeeRow = dialog.getByRole('row').filter({ hasText: params.fullName });
+  await expect(employeeRow).toBeVisible({ timeout: 15_000 });
+  await employeeRow.getByRole('checkbox', { name: `בחירת ${params.fullName}` }).check();
+
+  await dialog.getByRole('button', { name: 'שייך עובד למשימה' }).click();
   await expect(dialog).toBeHidden();
   await expect(page.getByRole('status')).toContainText('השיוך נוצר בהצלחה');
 
