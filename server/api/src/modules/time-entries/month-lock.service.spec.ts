@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ForbiddenException } from '@nestjs/common';
 import { MonthLockService } from './month-lock.service';
 
-function createPrisma(lock: { is_locked: boolean } | null) {
+function createPrisma(lock: { is_locked: boolean; locked_at?: Date } | null) {
   return {
     monthLock: {
       findUnique: vi.fn().mockResolvedValue(lock),
@@ -81,6 +81,41 @@ describe('MonthLockService', () => {
 
     it('permits writes again', async () => {
       await expect(service.assertMonthNotLocked(2026, 7)).resolves.toBeUndefined();
+    });
+  });
+
+  describe('getLockStatus', () => {
+    it('reads a never-locked month as open with no timestamp', async () => {
+      const service = createService(createPrisma(null));
+
+      await expect(service.getLockStatus(2026, 8)).resolves.toEqual({
+        isLocked: false,
+        lockedAt: null,
+      });
+    });
+
+    it('reads a locked month with its lock instant', async () => {
+      const service = createService(
+        createPrisma({ is_locked: true, locked_at: new Date('2026-09-01T08:00:00.000Z') }),
+      );
+
+      await expect(service.getLockStatus(2026, 8)).resolves.toEqual({
+        isLocked: true,
+        lockedAt: '2026-09-01T08:00:00.000Z',
+      });
+    });
+
+    it('reads a reopened month as open with no timestamp', async () => {
+      // A stale locked_at survives on the reopened row; the status must not
+      // leak it — the month is open, full stop.
+      const service = createService(
+        createPrisma({ is_locked: false, locked_at: new Date('2026-09-01T08:00:00.000Z') }),
+      );
+
+      await expect(service.getLockStatus(2026, 7)).resolves.toEqual({
+        isLocked: false,
+        lockedAt: null,
+      });
     });
   });
 });

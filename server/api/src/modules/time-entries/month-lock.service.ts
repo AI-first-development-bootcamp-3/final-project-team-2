@@ -17,6 +17,12 @@ import { PrismaService } from '../../prisma/prisma.service';
  * The Month Close epic (KAN-98) adds the lock/unlock *write* endpoints and the
  * pre-lock warnings on top of this; it does not need to change what is here.
  */
+export interface MonthLockStatus {
+  isLocked: boolean;
+  /** ISO 8601 instant of the lock, or null while the month is open. */
+  lockedAt: string | null;
+}
+
 @Injectable()
 export class MonthLockService {
   constructor(private readonly prisma: PrismaService) {}
@@ -29,6 +35,26 @@ export class MonthLockService {
     });
 
     return lock?.is_locked === true;
+  }
+
+  /**
+   * The month's lock state as clients render it (KAN-80/KAN-83).
+   *
+   * A reopened row keeps its stale `locked_at`, so the timestamp is only
+   * reported while the lock is actually in force — an open month always reads
+   * `lockedAt: null` whatever its history.
+   */
+  async getLockStatus(year: number, month: number): Promise<MonthLockStatus> {
+    const lock = await this.prisma.monthLock.findUnique({
+      where: { year_month: { year, month } },
+      select: { is_locked: true, locked_at: true },
+    });
+
+    if (lock?.is_locked !== true) {
+      return { isLocked: false, lockedAt: null };
+    }
+
+    return { isLocked: true, lockedAt: lock.locked_at.toISOString() };
   }
 
   /**

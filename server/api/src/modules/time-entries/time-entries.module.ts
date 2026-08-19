@@ -12,7 +12,9 @@ import { TimeEntriesService } from './time-entries.service';
   controllers: [TimeEntriesController],
   providers: [TimeEntriesService, AssignmentScopeService, MonthLockService, JwtGuard, RolesGuard],
   // The Month Close and Absences epics need the same guards on their own
-  // writes, so they are exported rather than kept module-private.
-  exports: [AssignmentScopeService, MonthLockService],
+  // writes, so they are exported rather than kept module-private. The list
+  // read is exported for the monthly view (KAN-80), which delegates to it
+  // rather than repeating its scoping and denormalisation.
+  exports: [AssignmentScopeService, MonthLockService, TimeEntriesService],
 })
 export class TimeEntriesModule {}
