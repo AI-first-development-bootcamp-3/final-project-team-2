@@ -237,6 +237,50 @@ describe('POST /api/v1/time-entries', () => {
     expect(rules).toEqual(expect.arrayContaining(['VAL-30', 'VAL-31', 'VAL-35', 'VAL-36']));
   });
 
+  it('reports a cross-field rule alongside a field that failed its own', async () => {
+    // Zod aborts an object parse at the first missing field, which used to skip
+    // the cross-field rules entirely: the employee was told only about the
+    // location and paid a second round trip to learn the times were backwards.
+    const response = await request(app.getHttpServer())
+      .post('/api/v1/time-entries')
+      .send({
+        taskId: TASK_ID,
+        date: '2026-08-10',
+        startAt: '2026-08-10T15:00:00.000Z',
+        endAt: '2026-08-10T06:00:00.000Z',
+      })
+      .expect(400);
+
+    const rules = response.body.details.map((detail: { rule: string }) => detail.rule);
+    expect(rules).toEqual(expect.arrayContaining(['VAL-36', 'VAL-31']));
+  });
+
+  it('does not pile derived rules onto a field that already failed', async () => {
+    // '2026-08-09' fails VAL-30 as an instant but parses as a date, so VAL-31
+    // and VAL-38 used to be computed from a value already rejected.
+    const response = await request(app.getHttpServer())
+      .post('/api/v1/time-entries')
+      .send({ ...validBody, startAt: '2026-08-09', endAt: '2026-08-08T06:00:00.000Z' })
+      .expect(400);
+
+    const rules = response.body.details.map((detail: { rule: string }) => detail.rule);
+    expect(rules).toEqual(['VAL-30']);
+  });
+
+  it('answers a duplicated query param with VAL-DATE-RANGE, not raw zod English', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/api/v1/time-entries?date=2026-08-10&date=2026-08-11')
+      .expect(400);
+
+    expect(response.body.details).toEqual([
+      expect.objectContaining({
+        field: 'date',
+        rule: 'VAL-DATE-RANGE',
+        message: VAL_MESSAGES['VAL-DATE-RANGE'],
+      }),
+    ]);
+  });
+
   it('returns a Hebrew message alongside each rule code', async () => {
     const response = await request(app.getHttpServer())
       .post('/api/v1/time-entries')

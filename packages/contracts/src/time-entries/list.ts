@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { nonAborting } from '../common/non-aborting.js';
 import { LOCAL_DATE_PATTERN, isCalendarDate } from '../day-status/local-date.js';
 import { TimeEntryLocationSchema } from './fields.js';
 
@@ -19,11 +20,19 @@ const MS_PER_DAY = 24 * 60 * 60 * 1000;
  * Shape *and* calendar validity — a regex alone lets `2026-13-01` through to
  * `new Date()`, which answers with an Invalid Date, and `2026-02-30`, which
  * quietly becomes March 2.
+ *
+ * The type errors are spelled out because this is a *query* parameter: Express
+ * hands a duplicated `?date=a&date=b` over as an array, and the default zod
+ * message for that is raw English under the `VAL-QUERY` fallback rule, which
+ * has no Hebrew entry. Wrapped so a bad value cannot abort the object and skip
+ * the range rules below.
  */
-const localDateQuery = z
-  .string()
-  .regex(LOCAL_DATE_PATTERN, { message: 'VAL-DATE-RANGE' })
-  .refine(isCalendarDate, { message: 'VAL-DATE-RANGE' });
+const localDateQuery = nonAborting(
+  z
+    .string({ required_error: 'VAL-DATE-RANGE', invalid_type_error: 'VAL-DATE-RANGE' })
+    .regex(LOCAL_DATE_PATTERN, { message: 'VAL-DATE-RANGE' })
+    .refine(isCalendarDate, { message: 'VAL-DATE-RANGE' }),
+);
 
 /** Inclusive day count between two dates already known to be real. */
 function rangeLengthInDays(from: string, to: string): number {
@@ -75,6 +84,13 @@ export const TimeEntriesListQuerySchema = z
           path: [value.from === undefined ? 'from' : 'to'],
           message: 'VAL-DATE-RANGE',
         });
+        return;
+      }
+
+      // A value that failed its own schema passes through raw, and comparing
+      // that would be meaningless — VAL-DATE-RANGE has already been reported
+      // against it.
+      if (typeof value.from !== 'string' || typeof value.to !== 'string') {
         return;
       }
 

@@ -151,3 +151,41 @@ describe('TimeEntryListItemSchema', () => {
     expect(TimeEntryListItemSchema.safeParse({ ...item, date: 'yesterday' }).success).toBe(false);
   });
 });
+
+/**
+ * Nest runs on Express, which hands a duplicated `?date=a&date=b` over as an
+ * array. That aborted `z.string()` with a raw English message under the
+ * `VAL-QUERY` fallback rule — which has no Hebrew entry — and skipped the
+ * range rules entirely.
+ */
+describe('TimeEntriesListQuerySchema — wrong-typed query values', () => {
+  function messagesFor(query: unknown): string[] {
+    const result = TimeEntriesListQuerySchema.safeParse(query);
+    if (result.success) return [];
+    return result.error.issues.map((issue) => issue.message);
+  }
+
+  it('reports VAL-DATE-RANGE for a duplicated date param', () => {
+    expect(messagesFor({ date: ['2026-08-10', '2026-08-11'] })).toEqual(['VAL-DATE-RANGE']);
+  });
+
+  it('reports VAL-DATE-RANGE for a duplicated range param', () => {
+    const messages = messagesFor({ from: ['2026-08-01', '2026-08-02'], to: '2026-08-31' });
+    expect(messages).toContain('VAL-DATE-RANGE');
+    expect(messages.every((message) => message === 'VAL-DATE-RANGE')).toBe(true);
+  });
+
+  it('never leaks a raw zod type message', () => {
+    for (const query of [{ date: 42 }, { date: {} }, { from: null, to: '2026-08-31' }]) {
+      const messages = messagesFor(query);
+      expect(messages.length).toBeGreaterThan(0);
+      expect(messages.every((message) => message === 'VAL-DATE-RANGE')).toBe(true);
+    }
+  });
+
+  it('does not crash comparing a range whose ends are not strings', () => {
+    expect(() =>
+      TimeEntriesListQuerySchema.safeParse({ from: ['a'], to: ['b'] }),
+    ).not.toThrow();
+  });
+});

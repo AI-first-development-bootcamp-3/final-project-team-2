@@ -25,6 +25,17 @@
 - [x] 3.4 Add `packages/contracts/src/time-entries/overlap.ts`: a pure `intervalsOverlap` / `findOverlap` comparison using `newStart < existingEnd && existingStart < newEnd`, skipping entries with no end time (D6, D7).
 - [x] 3.5 Unit-test the overlap comparison across the full matrix — contained, containing, partial-left, partial-right, touching boundaries allowed, 22:00–06:00 vs 05:00–07:00 in both insertion orders.
 
+### Review follow-ups (PR #49)
+
+- [x] 2.7 Add `nonAborting` (`common/non-aborting.ts`) and route every time-entry field through it. Zod skips an object's `superRefine` when any field aborts, so a missing or wrong-typed field silently dropped VAL-31 and VAL-38 — the "all violations SHALL be reported together" clause was unsatisfiable for those combinations.
+- [x] 2.8 Guard `refineTimeEntryTimes` on "the field passed its own schema" rather than "`new Date()` survives it", so a `startAt` of `2026-08-09` reports VAL-30 alone instead of VAL-30 plus a derived VAL-31 and VAL-38.
+- [x] 2.9 Let `MergedTimeEntrySchema` accept a running entry — `endAt`, `taskId`, and `location` nullable, the three rules applied only once an end time is present (§8.6, D7) — and add `CompletedTimeEntrySchema` for this epic's write path, which never edits one.
+- [x] 2.10 Sum day totals in milliseconds and floor once at the day. Per-entry `Math.round` lost sub-minute work and carried an 8h59m30s day up onto the exact 540-minute `full` boundary.
+- [x] 2.11 Make `startsOn` skip an entry with an unparseable start instead of throwing `RangeError` out of `computeDayStatus` — these run inside render, and the clients never validate API responses.
+- [x] 2.12 Give the list query explicit type errors so a duplicated `?date=a&date=b` (an array, on Express) reports VAL-DATE-RANGE instead of raw English under the `VAL-QUERY` fallback.
+- [x] 2.13 Export `ROOT_DETAIL_FIELD` and `partitionDetails` so a detail matching no rendered input — `VAL-EMPTY-UPDATE` at `(root)` — surfaces as a form-level message instead of being dropped into a key nothing reads.
+- [x] 2.14 Move the wire enums into `enums.ts` and derive `TimeEntryLocationSchema` from `WorkLocation.options`, removing the second unlinked declaration of the same enum.
+
 ## 4. Time-entries API: create and read (KAN-77)
 
 - [x] 4.1 Scaffold `server/api/src/modules/time-entries/` (module, controller, service) following the tasks module; guard with `JwtGuard` + `RolesGuard` and `@Roles('employee')`; register in `app.module.ts`.

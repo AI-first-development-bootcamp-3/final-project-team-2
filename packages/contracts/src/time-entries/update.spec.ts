@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { UpdateTimeEntryBodySchema, MergedTimeEntrySchema } from './update.js';
+import {
+  UpdateTimeEntryBodySchema,
+  MergedTimeEntrySchema,
+  CompletedTimeEntrySchema,
+} from './update.js';
+import { ROOT_DETAIL_FIELD, zodIssuesToDetails } from '../common/api-error.js';
 
 const TASK_ID = '550e8400-e29b-41d4-a716-446655440000';
 
@@ -118,5 +123,93 @@ describe('refinement robustness', () => {
 
   it('does not throw when both times are unparseable', () => {
     expect(() => UpdateTimeEntryBodySchema.safeParse({ startAt: 'x', endAt: 'y' })).not.toThrow();
+  });
+});
+
+/**
+ * A running entry has no end time, and design D7 shapes these seams so the
+ * Punch Clock epic inherits them rather than rewriting them. The merged rules
+ * previously required an end, a task, and a location unconditionally, so no
+ * running entry could ever pass the re-validation this schema prescribes for
+ * every PATCH.
+ */
+describe('MergedTimeEntrySchema — running entries (§8.6, D7)', () => {
+  const running = {
+    taskId: null,
+    date: '2026-08-10',
+    startAt: '2026-08-10T06:00:00.000Z',
+    endAt: null,
+    location: null,
+  };
+
+  it('accepts a running entry patched only in its description', () => {
+    const result = MergedTimeEntrySchema.safeParse({ ...running, description: 'lunch' });
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts a running entry whose end time is simply absent', () => {
+    expect(MergedTimeEntrySchema.safeParse(omit(running, 'endAt')).success).toBe(true);
+  });
+
+  it('exempts a running entry from VAL-31', () => {
+    // No end time means nothing to compare the start against.
+    const result = MergedTimeEntrySchema.safeParse(running);
+    expect(result.success).toBe(true);
+  });
+
+  it('still applies VAL-38 to a running entry', () => {
+    const result = MergedTimeEntrySchema.safeParse({ ...running, date: '2026-08-11' });
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.error.issues.map((issue) => issue.message)).toContain('VAL-38');
+  });
+
+  it('requires a task and a location once an end time is present', () => {
+    const result = MergedTimeEntrySchema.safeParse({
+      ...running,
+      endAt: '2026-08-10T15:00:00.000Z',
+    });
+
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.error.issues.map((issue) => issue.message)).toEqual(
+      expect.arrayContaining(['VAL-35', 'VAL-36']),
+    );
+  });
+});
+
+describe('CompletedTimeEntrySchema', () => {
+  const completed = {
+    taskId: TASK_ID,
+    date: '2026-08-10',
+    startAt: '2026-08-10T06:00:00.000Z',
+    endAt: '2026-08-10T15:00:00.000Z',
+    location: 'office' as const,
+  };
+
+  it('accepts a completed entry', () => {
+    expect(CompletedTimeEntrySchema.safeParse(completed).success).toBe(true);
+  });
+
+  it('refuses a running entry with VAL-31 — this epic never edits one', () => {
+    const result = CompletedTimeEntrySchema.safeParse({ ...completed, endAt: null, taskId: null });
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.error.issues.map((issue) => issue.message)).toContain('VAL-31');
+  });
+});
+
+describe('UpdateTimeEntryBodySchema — an empty patch is reportable', () => {
+  it('reports VAL-EMPTY-UPDATE at the root, where no input matches', () => {
+    const result = UpdateTimeEntryBodySchema.safeParse({});
+    expect(result.success).toBe(false);
+    if (result.success) return;
+
+    const details = zodIssuesToDetails(result.error.issues);
+    // Consumers must render this through `partitionDetails`; keyed by field
+    // alone it lands on a key no input reads and the save silently does nothing.
+    expect(details).toEqual([
+      expect.objectContaining({ field: ROOT_DETAIL_FIELD, rule: 'VAL-EMPTY-UPDATE' }),
+    ]);
   });
 });

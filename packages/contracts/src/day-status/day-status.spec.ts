@@ -247,3 +247,105 @@ describe('DayStatus enum', () => {
     expect(DayStatus.options).toEqual(['empty', 'partial', 'full', 'excess', 'absence']);
   });
 });
+
+/**
+ * Rounding each entry independently both lost sub-minute work and rounded a
+ * 539.5-minute day up onto the exact 540 boundary these statuses exist to
+ * protect. Seconds arrive with the Punch Clock epic (D7).
+ */
+describe('minute totals are floored once, at the day', () => {
+  const day = '2026-08-10';
+
+  it('keeps 8h59m30s partial rather than rounding it up to full', () => {
+    const result = computeDayStatus({
+      date: day,
+      // 08:00:30–17:00:00 local, 539.5 real minutes.
+      entries: [{ startAt: '2026-08-10T05:00:30.000Z', endAt: '2026-08-10T14:00:00.000Z' }],
+    });
+
+    expect(result.totalMinutes).toBe(539);
+    expect(result.status).toBe('partial');
+  });
+
+  it('does not inflate a total by rounding each entry up', () => {
+    const result = computeDayStatus({
+      date: day,
+      entries: [
+        { startAt: '2026-08-10T05:00:00.000Z', endAt: '2026-08-10T05:00:30.000Z' },
+        { startAt: '2026-08-10T06:00:00.000Z', endAt: '2026-08-10T06:00:30.000Z' },
+      ],
+    });
+
+    // Two 30-second entries are one minute of work, not two.
+    expect(result.totalMinutes).toBe(1);
+  });
+
+  it('still lands exactly on full for a clean nine hours', () => {
+    const result = computeDayStatus({
+      date: day,
+      entries: [{ startAt: '2026-08-10T06:00:00.000Z', endAt: '2026-08-10T15:00:00.000Z' }],
+    });
+
+    expect(result.totalMinutes).toBe(FULL_DAY_MINUTES);
+    expect(result.status).toBe('full');
+  });
+
+  it('sums fragments that only reach the minute together', () => {
+    const result = computeDayStatus({
+      date: day,
+      entries: [
+        { startAt: '2026-08-10T05:00:00.000Z', endAt: '2026-08-10T05:00:40.000Z' },
+        { startAt: '2026-08-10T06:00:00.000Z', endAt: '2026-08-10T06:00:40.000Z' },
+      ],
+    });
+
+    // 80 seconds: one whole minute, with the remainder dropped rather than
+    // rounded up into a minute nobody worked.
+    expect(result.totalMinutes).toBe(1);
+  });
+});
+
+/**
+ * These functions run inside render, and the client apps never runtime-validate
+ * API responses — so one unusable instant used to take out the whole quota bar
+ * or monthly calendar with a RangeError thrown two layers below the component.
+ */
+describe('an unusable instant degrades instead of throwing', () => {
+  const day = '2026-08-10';
+
+  it('does not throw on an entry with an empty startAt', () => {
+    expect(() => computeDayStatus({ date: day, entries: [{ startAt: '', endAt: null }] })).not.toThrow();
+  });
+
+  it('does not throw on an entry with an unparseable startAt', () => {
+    expect(() =>
+      computeDayStatus({ date: day, entries: [{ startAt: 'garbage', endAt: 'garbage' }] }),
+    ).not.toThrow();
+  });
+
+  it('skips the bad entry and still totals the good ones', () => {
+    const result = computeDayStatus({
+      date: day,
+      entries: [
+        { startAt: 'garbage', endAt: '2026-08-10T15:00:00.000Z' },
+        { startAt: '2026-08-10T06:00:00.000Z', endAt: '2026-08-10T15:00:00.000Z' },
+      ],
+    });
+
+    expect(result.totalMinutes).toBe(FULL_DAY_MINUTES);
+    expect(result.status).toBe('full');
+  });
+
+  it('treats an unusable start the same way as an unusable end', () => {
+    // The two ends were inconsistent: a bad endAt degraded to 0 minutes while a
+    // bad startAt threw.
+    const badStart = computeDayStatus({ date: day, entries: [{ startAt: 'x', endAt: 'y' }] });
+    const badEnd = computeDayStatus({
+      date: day,
+      entries: [{ startAt: '2026-08-10T06:00:00.000Z', endAt: 'y' }],
+    });
+
+    expect(badStart.status).toBe('empty');
+    expect(badEnd.status).toBe('empty');
+  });
+});

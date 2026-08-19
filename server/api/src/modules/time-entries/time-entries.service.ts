@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import {
-  MergedTimeEntrySchema,
+  CompletedTimeEntrySchema,
   OVERLAP_CANDIDATE_WINDOW_DAYS,
   VAL_MESSAGES,
   findOverlap,
@@ -180,7 +180,10 @@ export class TimeEntriesService {
     const from = toYearMonth(existingDate);
     await this.monthLock.assertMonthNotLocked(from.year, from.month);
 
-    const merged = MergedTimeEntrySchema.safeParse({
+    // The completed variant: this epic refuses to edit a running entry (above),
+    // so the write below needs the non-null task, end time, and location it
+    // guarantees.
+    const merged = CompletedTimeEntrySchema.safeParse({
       taskId: body.taskId ?? existing.task_id,
       date: body.date ?? existingDate,
       startAt: body.startAt ?? existing.start_at.toISOString(),

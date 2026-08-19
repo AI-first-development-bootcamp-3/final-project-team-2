@@ -308,6 +308,25 @@ The system SHALL allow an employee to delete their own entry while its month is 
 - **WHEN** an employee attempts to delete an entry they do not own
 - **THEN** the request is rejected as not found, revealing nothing about its existence
 
+### Requirement: Merged re-validation covers running entries
+
+The rules an entry is re-validated against after a patch is merged SHALL accept an entry with no end time, applying neither the end-after-start rule nor the task and location requirements to it, and SHALL apply all three as soon as an end time is present. These rules are shared with the Punch Clock epic, which owns running entries; they SHALL NOT be shaped so that a running entry can never satisfy them.
+
+#### Scenario: A running entry is re-validated
+
+- **WHEN** a running entry is merged with a patch that changes only its description
+- **THEN** the merged entry satisfies the rules
+
+#### Scenario: Completing an entry restores the requirements
+
+- **WHEN** a merged entry has an end time but no task or location
+- **THEN** `VAL-35` and `VAL-36` are reported
+
+#### Scenario: The date rule still applies while running
+
+- **WHEN** a running entry names a date other than its local start day
+- **THEN** `VAL-38` is reported
+
 ### Requirement: Running entries are not edited or deleted here
 
 An entry with no end time SHALL NOT be editable or deletable through the ordinary entry endpoints. The system SHALL refuse such a request with a rule identifying the entry as running, rather than reporting a rule against a field the caller did not supply. Completing or cancelling a running entry is the timer's responsibility.
@@ -340,6 +359,21 @@ The system SHALL report validation failures with a field-level error payload nam
 
 - **WHEN** a submission omits both the task and the location
 - **THEN** the response reports both `VAL-35` and `VAL-36`
+
+#### Scenario: A cross-field rule alongside a missing field
+
+- **WHEN** a submission has an end time earlier than its start *and* omits the location
+- **THEN** the response reports both `VAL-36` and `VAL-31`, so the employee is not sent back for a second attempt
+
+#### Scenario: No derived complaint on an already-rejected field
+
+- **WHEN** a submission carries a start time that fails its own rule but could still be read as a date
+- **THEN** only `VAL-30` is reported, and no rule derived from that value is added
+
+#### Scenario: Every rejection carries a translatable rule
+
+- **WHEN** a request supplies a value of the wrong type, including a query parameter sent more than once
+- **THEN** the response names a rule with a message in the product's language, never a raw validator message
 
 ### Requirement: Endpoints are documented
 

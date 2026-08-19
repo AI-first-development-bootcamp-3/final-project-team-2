@@ -60,12 +60,19 @@ function toDate(value: Date | string): Date {
 }
 
 /**
- * Minutes a single entry contributes.
+ * Milliseconds a single entry contributes.
  *
  * A running entry contributes nothing: work in progress must not inflate the
  * day, and VAL-31 has not yet been applied to it.
+ *
+ * Deliberately *not* rounded to minutes here. Rounding per entry both loses
+ * sub-minute work — two 30-second entries totalled 2 minutes against a true
+ * total of 1 — and rounds a 539.5-minute day up onto the exact 540 boundary
+ * this module exists to protect. Seconds arrive once the Punch Clock epic
+ * writes real timestamps (D7); the day is the only level at which rounding is
+ * safe.
  */
-function entryMinutes(entry: DayStatusEntry): number {
+function entryMilliseconds(entry: DayStatusEntry): number {
   if (entry.endAt === undefined || entry.endAt === null) {
     return 0;
   }
@@ -78,9 +85,7 @@ function entryMinutes(entry: DayStatusEntry): number {
     return 0;
   }
 
-  // Round rather than truncate so a whole-minute entry stays whole through any
-  // millisecond dust in the stored instants.
-  return Math.round(elapsed / 60_000);
+  return elapsed;
 }
 
 /**
@@ -88,17 +93,37 @@ function entryMinutes(entry: DayStatusEntry): number {
  *
  * Attribution is by *start* instant (VAL-38), so a 22:00–06:00 night shift
  * counts entirely on the day it began and contributes nothing to the next day.
+ *
+ * An unparseable start belongs to no day at all. It is skipped rather than
+ * thrown on, because these functions run inside render: the client apps never
+ * runtime-validate API responses, so one bad instant used to take out the whole
+ * quota bar or monthly calendar with a `RangeError` raised two layers below the
+ * component. An unusable `endAt` already degraded quietly; this makes the two
+ * ends consistent.
  */
 function startsOn(entry: DayStatusEntry, date: string): boolean {
-  return toLocalDate(toDate(entry.startAt)) === date;
+  const start = toDate(entry.startAt);
+  if (Number.isNaN(start.getTime())) {
+    return false;
+  }
+
+  return toLocalDate(start) === date;
 }
 
-/** Total reported minutes attributed to one local day. */
+/**
+ * Total reported minutes attributed to one local day.
+ *
+ * Summed in milliseconds and floored once, at the end. Flooring rather than
+ * rounding keeps the promise the statuses make: 8h59m30s is `partial`, because
+ * a day that was not worked in full must never read as `full`.
+ */
 export function minutesForDay(entries: readonly DayStatusEntry[], date: string): number {
-  return entries.reduce(
-    (total, entry) => (startsOn(entry, date) ? total + entryMinutes(entry) : total),
+  const elapsed = entries.reduce(
+    (total, entry) => (startsOn(entry, date) ? total + entryMilliseconds(entry) : total),
     0,
   );
+
+  return Math.floor(elapsed / 60_000);
 }
 
 /** Whether an absence covers the given local day. Both bounds are inclusive. */

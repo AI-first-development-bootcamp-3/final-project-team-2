@@ -94,6 +94,41 @@ An entry without an end time represents work still in progress and SHALL contrib
 - **WHEN** a day contains a completed 5-hour entry and one entry with no end time
 - **THEN** the total is 5 hours and the status is `partial`
 
+### Requirement: Totals are rounded once, at the day
+
+The day total SHALL be accumulated at full precision across entries and reduced to whole minutes once, by discarding any remainder. Individual entries SHALL NOT be rounded before they are summed.
+
+Rounding each entry independently both loses sub-minute work and can carry a day that falls short of nine hours up onto the `full` boundary. Discarding the remainder rather than rounding it keeps the guarantee the statuses make: a day that was not worked in full never reads as `full`.
+
+#### Scenario: A day just short of nine hours
+
+- **WHEN** a day holds a single entry of 8 hours 59 minutes and 30 seconds
+- **THEN** the total is 539 minutes and the status is `partial`
+
+#### Scenario: Sub-minute entries are not inflated
+
+- **WHEN** a day holds two entries of 30 seconds each
+- **THEN** the total is 1 minute, not 2
+
+#### Scenario: An exact nine-hour day
+
+- **WHEN** a day holds a single entry of exactly nine hours
+- **THEN** the total is 540 minutes and the status is `full`
+
+### Requirement: An unusable timestamp does not break the day
+
+An entry whose start instant cannot be parsed SHALL be excluded from the day it cannot be attributed to, and SHALL NOT raise an error. Day status is computed during render on clients that do not validate API responses, so a single unusable value SHALL NOT prevent the rest of the day from being displayed.
+
+#### Scenario: One unusable entry among valid ones
+
+- **WHEN** a day holds an entry with an unparseable start instant alongside a valid nine-hour entry
+- **THEN** the total is 540 minutes, the status is `full`, and no error is raised
+
+#### Scenario: Both ends unusable
+
+- **WHEN** an entry has neither a usable start nor a usable end
+- **THEN** it contributes nothing and no error is raised
+
 ### Requirement: Single shared implementation
 
 The day-status rules SHALL be exported from the shared contracts package and consumed by every surface that displays day status. No consumer SHALL reimplement the thresholds, the midnight-crossing rule, or the local-date bucketing.

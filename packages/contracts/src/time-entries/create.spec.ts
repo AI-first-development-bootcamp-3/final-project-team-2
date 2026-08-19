@@ -199,3 +199,86 @@ describe('CreateTimeEntryBodySchema — multiple violations', () => {
     expect(messages).toEqual(expect.arrayContaining(['VAL-30', 'VAL-31', 'VAL-35', 'VAL-36']));
   });
 });
+
+/**
+ * Zod aborts an object parse at the first missing or wrong-typed field, which
+ * skips the object's `.superRefine` entirely — so the cross-field rules were
+ * silently dropped exactly when the body was most broken, and the employee
+ * paid a second round trip to learn about them.
+ */
+describe('CreateTimeEntryBodySchema — cross-field rules survive a failed field', () => {
+  const backwards = {
+    taskId: TASK_ID,
+    date: '2026-08-10',
+    startAt: '2026-08-10T15:00:00.000Z',
+    endAt: '2026-08-10T06:00:00.000Z',
+  };
+
+  function messagesFor(body: unknown): string[] {
+    const result = CreateTimeEntryBodySchema.safeParse(body);
+    if (result.success) return [];
+    return result.error.issues.map((issue) => issue.message);
+  }
+
+  it('reports VAL-31 alongside a missing location', () => {
+    expect(messagesFor(backwards)).toEqual(expect.arrayContaining(['VAL-36', 'VAL-31']));
+  });
+
+  it('reports VAL-31 alongside an out-of-set location', () => {
+    expect(messagesFor({ ...backwards, location: 'cafe' })).toEqual(
+      expect.arrayContaining(['VAL-36', 'VAL-31']),
+    );
+  });
+
+  it('reports VAL-31 alongside a missing task', () => {
+    expect(messagesFor({ ...omit(backwards, 'taskId'), location: 'office' })).toEqual(
+      expect.arrayContaining(['VAL-35', 'VAL-31']),
+    );
+  });
+
+  it('reports VAL-38 alongside a missing location', () => {
+    const body = {
+      taskId: TASK_ID,
+      date: '2026-08-11',
+      startAt: '2026-08-10T06:00:00.000Z',
+      endAt: '2026-08-10T15:00:00.000Z',
+    };
+    expect(messagesFor(body)).toEqual(expect.arrayContaining(['VAL-36', 'VAL-38']));
+  });
+});
+
+/**
+ * The mirror image: a field that fails its own schema but still survives
+ * `new Date()` used to have derived complaints piled on top of it.
+ */
+describe('CreateTimeEntryBodySchema — no derived errors on a rejected field', () => {
+  it('reports VAL-30 alone for a date-only startAt', () => {
+    // '2026-08-09' fails `.datetime()` (VAL-30) yet `new Date()` parses it, so
+    // the old guard computed VAL-31 and VAL-38 from an already-rejected value.
+    const result = CreateTimeEntryBodySchema.safeParse({
+      ...validBody,
+      startAt: '2026-08-09',
+      endAt: '2026-08-08T06:00:00.000Z',
+    });
+
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.error.issues.map((issue) => issue.message)).toEqual(['VAL-30']);
+  });
+
+  it('reports VAL-31 alone for a date-only endAt', () => {
+    const result = CreateTimeEntryBodySchema.safeParse({ ...validBody, endAt: '2026-08-10' });
+
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.error.issues.map((issue) => issue.message)).toEqual(['VAL-31']);
+  });
+
+  it('does not derive VAL-38 from a date that failed its own schema', () => {
+    const result = CreateTimeEntryBodySchema.safeParse({ ...validBody, date: '2026-02-30' });
+
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.error.issues.map((issue) => issue.message)).toEqual(['VAL-38']);
+  });
+});

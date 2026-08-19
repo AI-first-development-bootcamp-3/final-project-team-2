@@ -2,23 +2,21 @@ import { z } from 'zod';
 import { UserRole } from './enums.js';
 
 export * from './enums.js';
+export { nonAborting } from './common/non-aborting.js';
 
-export const WorkLocation = z.enum(['office', 'client_site', 'home']);
-export type WorkLocation = z.infer<typeof WorkLocation>;
-
-export const AbsenceType = z.enum(['vacation', 'sick', 'military', 'other']);
-export type AbsenceType = z.infer<typeof AbsenceType>;
-
-export const HalfDayPeriod = z.enum(['morning', 'afternoon']);
-export type HalfDayPeriod = z.infer<typeof HalfDayPeriod>;
-
-export const AuditAction = z.enum(['create', 'update', 'delete', 'lock_month', 'unlock_month']);
-export type AuditAction = z.infer<typeof AuditAction>;
+// Wire enums live in enums.ts and are re-exported by the star export above,
+// so schemas can derive from them without importing this file circularly.
 
 export { ListMetaSchema, listSuccessSchema } from './common/list-envelope.js';
 export type { ListMeta } from './common/list-envelope.js';
 
-export { ApiErrorSchema, ApiErrorDetailSchema, zodIssuesToDetails } from './common/api-error.js';
+export {
+  ApiErrorSchema,
+  ApiErrorDetailSchema,
+  ROOT_DETAIL_FIELD,
+  partitionDetails,
+  zodIssuesToDetails,
+} from './common/api-error.js';
 export type { ApiError, ApiErrorDetail } from './common/api-error.js';
 
 export {
@@ -259,6 +257,7 @@ export {
   TimeEntryTaskIdSchema,
   TimeEntryStartAtSchema,
   TimeEntryEndAtSchema,
+  isRunning,
   refineTimeEntryTimes,
 } from './time-entries/fields.js';
 export type { TimeEntryTimes } from './time-entries/fields.js';
@@ -266,8 +265,16 @@ export type { TimeEntryTimes } from './time-entries/fields.js';
 export { CreateTimeEntryBodySchema } from './time-entries/create.js';
 export type { CreateTimeEntryBody } from './time-entries/create.js';
 
-export { UpdateTimeEntryBodySchema, MergedTimeEntrySchema } from './time-entries/update.js';
-export type { UpdateTimeEntryBody, MergedTimeEntry } from './time-entries/update.js';
+export {
+  UpdateTimeEntryBodySchema,
+  MergedTimeEntrySchema,
+  CompletedTimeEntrySchema,
+} from './time-entries/update.js';
+export type {
+  UpdateTimeEntryBody,
+  MergedTimeEntry,
+  CompletedTimeEntry,
+} from './time-entries/update.js';
 
 export {
   intervalsOverlap,
