@@ -1,12 +1,21 @@
-import { ConflictException, Injectable } from '@nestjs/common';
 import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import {
+  MergedTimeEntrySchema,
   OVERLAP_CANDIDATE_WINDOW_DAYS,
   VAL_MESSAGES,
   findOverlap,
   toYearMonth,
+  zodIssuesToDetails,
   type CreateTimeEntryBody,
   type TimeEntriesListQuery,
   type TimeEntryListItem,
+  type UpdateTimeEntryBody,
+  type ValCode,
 } from '@abra/contracts';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AssignmentScopeService } from './assignment-scope.service';
@@ -147,6 +156,150 @@ export class TimeEntriesService {
     });
 
     return (rows as TimeEntryRow[]).map(toListItem);
+  }
+
+  /**
+   * Applies a partial edit to one of the caller's own entries.
+   *
+   * The patch is merged onto the stored row and the *result* is validated
+   * against the same rules a create must satisfy, so changing one field cannot
+   * leave the entry in a state a create would have rejected — a patch that
+   * moves only `startAt` past the stored `endAt` still fails VAL-31.
+   */
+  async update(
+    userId: string,
+    entryId: string,
+    body: UpdateTimeEntryBody,
+  ): Promise<TimeEntryListItem> {
+    const existing = await this.findOwnEntryOrFail(userId, entryId);
+    this.assertNotRunning(existing.end_at);
+    const existingDate = toDateString(existing.date);
+
+    // The month the entry currently sits in must be open before it can be
+    // touched at all (§7.1).
+    const from = toYearMonth(existingDate);
+    await this.monthLock.assertMonthNotLocked(from.year, from.month);
+
+    const merged = MergedTimeEntrySchema.safeParse({
+      taskId: body.taskId ?? existing.task_id,
+      date: body.date ?? existingDate,
+      startAt: body.startAt ?? existing.start_at.toISOString(),
+      endAt: body.endAt ?? existing.end_at?.toISOString(),
+      location: body.location ?? existing.location,
+      description: body.description === undefined ? existing.description : body.description,
+    });
+
+    if (!merged.success) {
+      throw new BadRequestException({
+        statusCode: 400,
+        message: 'Validation failed',
+        error: 'Bad Request',
+        details: zodIssuesToDetails(merged.error.issues).map((detail) => ({
+          ...detail,
+          message:
+            detail.rule in VAL_MESSAGES ? VAL_MESSAGES[detail.rule as ValCode] : detail.message,
+        })),
+      });
+    }
+
+    // An edit that moves the entry into a different month needs *that* month
+    // open too, so a locked month cannot be filled by relocating entries into it.
+    const to = toYearMonth(merged.data.date);
+    if (to.year !== from.year || to.month !== from.month) {
+      await this.monthLock.assertMonthNotLocked(to.year, to.month);
+    }
+
+    await this.assignmentScope.assertUserAssignedToTask(userId, merged.data.taskId);
+    await this.assertNoOverlap(userId, merged.data.startAt, merged.data.endAt, entryId);
+
+    const row = await this.prisma.timeEntry.update({
+      where: { id: entryId },
+      data: {
+        task_id: merged.data.taskId,
+        date: toDateColumnValue(merged.data.date),
+        start_at: new Date(merged.data.startAt),
+        end_at: new Date(merged.data.endAt),
+        location: merged.data.location,
+        description: merged.data.description ?? null,
+      },
+      select: TIME_ENTRY_SELECT,
+    });
+
+    return toListItem(row as TimeEntryRow);
+  }
+
+  /**
+   * Removes one of the caller's own entries while its month is open.
+   *
+   * The delete is soft: `SOFT_DELETE_MODELS` already covers TimeEntry, so the
+   * Prisma extension rewrites this into a `deleted_at` stamp and every
+   * subsequent read, day total, and overlap check skips the row (§8.3). No
+   * delete logic of our own is involved.
+   */
+  async remove(userId: string, entryId: string): Promise<void> {
+    const existing = await this.findOwnEntryOrFail(userId, entryId);
+    this.assertNotRunning(existing.end_at);
+
+    const { year, month } = toYearMonth(toDateString(existing.date));
+    await this.monthLock.assertMonthNotLocked(year, month);
+
+    await this.prisma.timeEntry.delete({ where: { id: entryId } });
+  }
+
+  /**
+   * Refuses to edit or delete an entry that is still running.
+   *
+   * A running entry has no end time, so the merged-entry rules could only
+   * report VAL-31 against a field the caller never sent — misleading when the
+   * real answer is that this is not where running entries are handled. They are
+   * completed or cancelled through the timer (§8.6, VAL-37), which the Punch
+   * Clock epic owns; this epic never creates one.
+   */
+  private assertNotRunning(endAt: Date | null): void {
+    if (endAt !== null) {
+      return;
+    }
+
+    throw new ConflictException({
+      statusCode: 409,
+      message: 'Conflict',
+      error: 'Conflict',
+      details: [
+        {
+          field: 'endAt',
+          rule: 'VAL-RUNNING-ENTRY',
+          message: VAL_MESSAGES['VAL-RUNNING-ENTRY'],
+        },
+      ],
+    });
+  }
+
+  /**
+   * Loads an entry that belongs to the caller.
+   *
+   * An entry owned by somebody else is reported as missing rather than
+   * forbidden: answering "forbidden" would confirm the id exists, letting a
+   * caller probe for other employees' entries.
+   */
+  private async findOwnEntryOrFail(userId: string, entryId: string) {
+    const existing = await this.prisma.timeEntry.findFirst({
+      where: { id: entryId, user_id: userId },
+      select: {
+        id: true,
+        date: true,
+        start_at: true,
+        end_at: true,
+        location: true,
+        description: true,
+        task_id: true,
+      },
+    });
+
+    if (existing === null) {
+      throw new NotFoundException('דיווח השעות לא נמצא');
+    }
+
+    return existing;
   }
 
   /**

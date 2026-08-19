@@ -78,9 +78,11 @@ On update, the entry being edited is excluded from its own candidate set.
 
 ### D7 — A running entry is one with no end time
 
-`end_at IS NULL` is the single marker. Consequences agreed here so the Punch Clock epic inherits them: such an entry contributes zero minutes to a day total, is exempt from VAL-31, VAL-35, and VAL-36, and is skipped by the overlap comparison (it has no interval to compare). VAL-37, the single-running-timer rule, belongs to that epic and is not implemented here.
+`end_at IS NULL` is the single marker. Consequences agreed here so the Punch Clock epic inherits them: such an entry contributes zero minutes to a day total, is exempt from VAL-31, VAL-35, and VAL-36 on the **read and totalling** paths, and is skipped by the overlap comparison (it has no interval to compare). VAL-37, the single-running-timer rule, belongs to that epic and is not implemented here.
 
 This change never _creates_ an entry without an end time — the manual form always supplies one — but the read and totalling paths tolerate them so the timer epic does not have to revisit them.
+
+**Editing and deleting a running entry is refused, not exempted.** An earlier reading of this decision implied the write path should simply skip VAL-31/35/36 for a running entry, which would have let PATCH edit one. Two problems: the merged-entry rules could then only report VAL-31 against a field the caller never sent, which is actively misleading; and it would build a code path this epic cannot test, for an epic that has not yet specified its own behaviour. So `PATCH` and `DELETE` return 409 with `VAL-RUNNING-ENTRY` when the target has no end time. Completing or cancelling a running entry is the timer's job (§8.6), and the Punch Clock epic decides that flow explicitly rather than inheriting a silent one.
 
 ### D8 — The cascading picker is client-side grouping over one request
 
