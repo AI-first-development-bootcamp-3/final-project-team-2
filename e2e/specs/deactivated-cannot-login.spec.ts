@@ -31,6 +31,6 @@ test.describe.skip('Deactivated cannot login', () => {
 
     await expect(page).toHaveURL(/\/login$/);
     await expect(page.getByText('שם המשתמש או הסיסמה שהוזנו אינם נכונים.')).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'עמוד ראשי - דיווח יומי' })).toHaveCount(0);
+    await expect(page.getByRole('heading', { name: 'דיווח שעות' })).toHaveCount(0);
   });
 });
