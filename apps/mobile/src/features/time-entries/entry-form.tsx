@@ -3,6 +3,7 @@ import { useForm, type Resolver } from 'react-hook-form';
 import {
   ApiErrorSchema,
   CreateTimeEntryBodySchema,
+  MAX_TIME_ENTRY_RANGE_DAYS,
   TimeEntriesListSuccessSchema,
   VAL_MESSAGES,
   toLocalDate,
@@ -148,8 +149,11 @@ export function EntryForm({
       return;
     }
 
-    const from = addLocalDay(today, -400);
-    const to = addLocalDay(today, 400);
+    // Stay inside MAX_TIME_ENTRY_RANGE_DAYS (366). A ±400-day window was
+    // rejected as VAL-DATE-RANGE, so edit mode never found the row.
+    const span = Math.floor((MAX_TIME_ENTRY_RANGE_DAYS - 1) / 2);
+    const from = addLocalDay(today, -span);
+    const to = addLocalDay(today, span);
     let active = true;
 
     authFetch(`/time-entries?from=${from}&to=${to}`)
