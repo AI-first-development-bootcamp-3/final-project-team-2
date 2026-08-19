@@ -56,10 +56,12 @@ let currentUser: { userId: string; role: string } | null = null;
 
 const prismaMock = {
   timeEntry: {
+    count: vi.fn(),
     create: vi.fn(),
     findMany: vi.fn(),
     findFirst: vi.fn(),
-    update: vi.fn(),
+    findFirstOrThrow: vi.fn(),
+    updateMany: vi.fn(),
     delete: vi.fn(),
   },
   monthLock: {
@@ -177,6 +179,8 @@ beforeEach(() => {
   // findMany serves both the list read and the overlap-candidate lookup, so it
   // defaults to "no neighbours"; the GET suite supplies rows explicitly.
   prismaMock.timeEntry.findMany.mockResolvedValue([]);
+  // No clashing entry unless a test says otherwise.
+  prismaMock.timeEntry.count.mockResolvedValue(0);
   monthIsOpen();
   taskIsAssigned();
   signedInAsEmployee();
@@ -300,9 +304,7 @@ describe('POST /api/v1/time-entries', () => {
   });
 
   it('rejects an overlapping entry with VAL-32', async () => {
-    prismaMock.timeEntry.findMany.mockResolvedValue([
-      { id: 'existing-1', start_at: ROW.start_at, end_at: ROW.end_at },
-    ]);
+    prismaMock.timeEntry.count.mockResolvedValue(1);
 
     const response = await request(app.getHttpServer())
       .post('/api/v1/time-entries')
@@ -402,7 +404,8 @@ describe('GET /api/v1/time-entries', () => {
 describe('PATCH /api/v1/time-entries/:id', () => {
   beforeEach(() => {
     prismaMock.timeEntry.findFirst.mockResolvedValue(ROW);
-    prismaMock.timeEntry.update.mockResolvedValue(ROW);
+    prismaMock.timeEntry.updateMany.mockResolvedValue({ count: 1 });
+    prismaMock.timeEntry.findFirstOrThrow.mockResolvedValue(ROW);
   });
 
   it('updates the entry and returns it', async () => {
@@ -456,6 +459,39 @@ describe('PATCH /api/v1/time-entries/:id', () => {
       .patch(`/api/v1/time-entries/${ROW.id}`)
       .send({ location: 'home' })
       .expect(403);
+  });
+});
+
+describe('a route id that is not a UUID', () => {
+  /**
+   * `TimeEntry.id` is `@db.Uuid`, so a malformed value used to reach Prisma and
+   * raise P2023 — and with nothing mapping Prisma errors, the caller got a 500
+   * where both endpoints document a 404.
+   */
+  it('answers 404 on PATCH rather than failing in the database', async () => {
+    await request(app.getHttpServer())
+      .patch('/api/v1/time-entries/not-a-uuid')
+      .send({ location: 'home' })
+      .expect(404);
+
+    expect(prismaMock.timeEntry.findFirst).not.toHaveBeenCalled();
+  });
+
+  it('answers 404 on DELETE rather than failing in the database', async () => {
+    await request(app.getHttpServer()).delete('/api/v1/time-entries/not-a-uuid').expect(404);
+
+    expect(prismaMock.timeEntry.findFirst).not.toHaveBeenCalled();
+  });
+
+  it('still reaches the service for a well-formed id', async () => {
+    prismaMock.timeEntry.findFirst.mockResolvedValue(ROW);
+    prismaMock.timeEntry.updateMany.mockResolvedValue({ count: 1 });
+    prismaMock.timeEntry.findFirstOrThrow.mockResolvedValue(ROW);
+
+    await request(app.getHttpServer())
+      .patch(`/api/v1/time-entries/${ROW.id}`)
+      .send({ location: 'home' })
+      .expect(200);
   });
 });
 

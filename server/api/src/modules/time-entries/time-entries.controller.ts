@@ -6,6 +6,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  NotFoundException,
   Param,
   Patch,
   Post,
@@ -18,9 +19,7 @@ import {
   CreateTimeEntryBodySchema,
   TimeEntriesListQuerySchema,
   UpdateTimeEntryBodySchema,
-  VAL_MESSAGES,
-  zodIssuesToDetails,
-  type ValCode,
+  zodIssuesToHebrewDetails,
 } from '@abra/contracts';
 import type { AuthenticatedUser } from '../../auth/jwt.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -28,19 +27,13 @@ import { JwtGuard } from '../../common/guards/jwt.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { TimeEntriesService } from './time-entries.service';
 
-function hebrewDetails(issues: Parameters<typeof zodIssuesToDetails>[0]) {
-  return zodIssuesToDetails(issues).map((detail) => ({
-    ...detail,
-    message: detail.rule in VAL_MESSAGES ? VAL_MESSAGES[detail.rule as ValCode] : detail.message,
-  }));
-}
 
-function badRequest(issues: Parameters<typeof zodIssuesToDetails>[0]): never {
+function badRequest(issues: Parameters<typeof zodIssuesToHebrewDetails>[0]): never {
   throw new BadRequestException({
     statusCode: 400,
     message: 'Validation failed',
     error: 'Bad Request',
-    details: hebrewDetails(issues),
+    details: zodIssuesToHebrewDetails(issues),
   });
 }
 
@@ -52,6 +45,25 @@ function badRequest(issues: Parameters<typeof zodIssuesToDetails>[0]): never {
  * Admins report no hours of their own (ADR-26) and are refused here; their
  * access to employee entries belongs to the Month Close epic.
  */
+/**
+ * An id that is not a UUID names no entry, so it is reported as missing.
+ *
+ * `TimeEntry.id` is `@db.Uuid`, so handing a malformed value to Prisma raises
+ * P2023 — and with no filter mapping Prisma errors, the caller got a 500 where
+ * the endpoint documents a 404. Answering "not found" also keeps this
+ * consistent with an entry owned by somebody else, which is deliberately
+ * indistinguishable from one that does not exist.
+ */
+function entryIdOrNotFound(id: string): string {
+  if (!UUID_PATTERN.test(id)) {
+    throw new NotFoundException('דיווח השעות לא נמצא');
+  }
+
+  return id;
+}
+
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 @ApiTags('time-entries')
 @ApiBearerAuth()
 @Controller('time-entries')
@@ -113,7 +125,11 @@ export class TimeEntriesController {
       badRequest(parsed.error.issues);
     }
 
-    const data = await this.timeEntries.update(req.user.userId, id, parsed.data);
+    const data = await this.timeEntries.update(
+      req.user.userId,
+      entryIdOrNotFound(id),
+      parsed.data,
+    );
     return { data };
   }
 
@@ -129,6 +145,6 @@ export class TimeEntriesController {
   @ApiResponse({ status: 404, description: 'No such entry belonging to the caller.' })
   @ApiResponse({ status: 409, description: 'The entry is running (VAL-RUNNING-ENTRY).' })
   async remove(@Req() req: { user: AuthenticatedUser }, @Param('id') id: string): Promise<void> {
-    await this.timeEntries.remove(req.user.userId, id);
+    await this.timeEntries.remove(req.user.userId, entryIdOrNotFound(id));
   }
 }

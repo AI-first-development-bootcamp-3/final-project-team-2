@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { VAL_MESSAGES, type ValCode } from './val-messages.js';
 
 export const ApiErrorDetailSchema = z.object({
   field: z.string(),
@@ -83,4 +84,32 @@ export function partitionDetails(
   }
 
   return { fieldErrors, formErrors };
+}
+
+/**
+ * `zodIssuesToDetails` with each rule's Hebrew message substituted.
+ *
+ * Every endpoint that validates a body needs exactly this, and until now every
+ * one of them carried its own copy — six controllers plus two more inlined in
+ * the time-entries service. A change to the fallback made in one of them did
+ * not reach the others, so a single endpoint could start answering the RTL
+ * clients with a raw rule code while the rest stayed translated. One
+ * definition, next to the envelope it builds.
+ */
+export function zodIssuesToHebrewDetails(issues: z.ZodIssue[]): ApiErrorDetail[] {
+  return zodIssuesToDetails(issues).map((detail) => ({
+    ...detail,
+    message: detail.rule in VAL_MESSAGES ? VAL_MESSAGES[detail.rule as ValCode] : detail.message,
+  }));
+}
+
+/**
+ * The single-rule detail that a guard rejection carries — VAL-33 on a task,
+ * VAL-34 on a month, VAL-32 on a clash.
+ *
+ * The HTTP envelope around it stays in the API, which owns the framework's
+ * exception types; this is only the part both layers must agree on.
+ */
+export function valDetail(field: string, rule: ValCode): ApiErrorDetail {
+  return { field, rule, message: VAL_MESSAGES[rule] };
 }

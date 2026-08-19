@@ -6,16 +6,13 @@ import {
 } from '@nestjs/common';
 import {
   CompletedTimeEntrySchema,
-  OVERLAP_CANDIDATE_WINDOW_DAYS,
-  VAL_MESSAGES,
-  findOverlap,
   toYearMonth,
-  zodIssuesToDetails,
+  valDetail,
+  zodIssuesToHebrewDetails,
   type CreateTimeEntryBody,
   type TimeEntriesListQuery,
   type TimeEntryListItem,
   type UpdateTimeEntryBody,
-  type ValCode,
 } from '@abra/contracts';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AssignmentScopeService } from './assignment-scope.service';
@@ -81,8 +78,6 @@ function toDateColumnValue(localDate: string): Date {
   return new Date(`${localDate}T00:00:00.000Z`);
 }
 
-const OVERLAP_WINDOW_MS = OVERLAP_CANDIDATE_WINDOW_DAYS * 24 * 60 * 60 * 1000;
-
 function toListItem(row: TimeEntryRow): TimeEntryListItem {
   return {
     id: row.id,
@@ -98,6 +93,18 @@ function toListItem(row: TimeEntryRow): TimeEntryListItem {
     clientId: row.task?.project.client.id ?? null,
     clientName: row.task?.project.client.name ?? null,
   };
+}
+
+/** Postgres raises this when a write violates the no-overlap exclusion. */
+const EXCLUSION_VIOLATION = '23P01';
+
+function isOverlapConstraintViolation(error: unknown): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    (error as { code?: unknown }).code === EXCLUSION_VIOLATION
+  );
 }
 
 @Injectable()
@@ -123,18 +130,20 @@ export class TimeEntriesService {
     await this.assignmentScope.assertTaskAvailableForReporting(userId, body.taskId);
     await this.assertNoOverlap(userId, body.startAt, body.endAt);
 
-    const row = await this.prisma.timeEntry.create({
-      data: {
-        user_id: userId,
-        task_id: body.taskId,
-        date: toDateColumnValue(body.date),
-        start_at: new Date(body.startAt),
-        end_at: new Date(body.endAt),
-        location: body.location,
-        description: body.description ?? null,
-      },
-      select: TIME_ENTRY_SELECT,
-    });
+    const row = await this.writingWithoutOverlap(() =>
+      this.prisma.timeEntry.create({
+        data: {
+          user_id: userId,
+          task_id: body.taskId,
+          date: toDateColumnValue(body.date),
+          start_at: new Date(body.startAt),
+          end_at: new Date(body.endAt),
+          location: body.location,
+          description: body.description ?? null,
+        },
+        select: TIME_ENTRY_SELECT,
+      }),
+    );
 
     return toListItem(row as TimeEntryRow);
   }
@@ -194,11 +203,7 @@ export class TimeEntriesService {
         statusCode: 400,
         message: 'Validation failed',
         error: 'Bad Request',
-        details: zodIssuesToDetails(merged.error.issues).map((detail) => ({
-          ...detail,
-          message:
-            detail.rule in VAL_MESSAGES ? VAL_MESSAGES[detail.rule as ValCode] : detail.message,
-        })),
+        details: zodIssuesToHebrewDetails(merged.error.issues),
       });
     }
 
@@ -224,16 +229,34 @@ export class TimeEntriesService {
 
     await this.assertNoOverlap(userId, merged.data.startAt, merged.data.endAt, entryId);
 
-    const row = await this.prisma.timeEntry.update({
-      where: { id: entryId },
-      data: {
-        task_id: merged.data.taskId,
-        date: toDateColumnValue(merged.data.date),
-        start_at: new Date(merged.data.startAt),
-        end_at: new Date(merged.data.endAt),
-        location: merged.data.location,
-        description: merged.data.description ?? null,
-      },
+    // Scoped by owner and liveness, not just by id. The soft-delete extension
+    // rewrites reads and deletes but *not* updates, so without this the
+    // ownership and not-deleted guarantees would rest entirely on the
+    // `findOwnEntryOrFail` above — and a concurrent DELETE landing between the
+    // two would let this write silently mutate a soft-deleted row and answer
+    // 200 with an entry no list, total, or overlap check can see.
+    const written = await this.writingWithoutOverlap(() =>
+      this.prisma.timeEntry.updateMany({
+        where: { id: entryId, user_id: userId, deleted_at: null },
+        data: {
+          task_id: merged.data.taskId,
+          date: toDateColumnValue(merged.data.date),
+          start_at: new Date(merged.data.startAt),
+          end_at: new Date(merged.data.endAt),
+          location: merged.data.location,
+          description: merged.data.description ?? null,
+        },
+      }),
+    );
+
+    if (written.count === 0) {
+      // Deleted underneath us between the check and the write. Reported as
+      // missing, exactly as an entry owned by somebody else would be.
+      throw new NotFoundException('דיווח השעות לא נמצא');
+    }
+
+    const row = await this.prisma.timeEntry.findFirstOrThrow({
+      where: { id: entryId, user_id: userId },
       select: TIME_ENTRY_SELECT,
     });
 
@@ -267,6 +290,41 @@ export class TimeEntriesService {
    * completed or cancelled through the timer (§8.6, VAL-37), which the Punch
    * Clock epic owns; this epic never creates one.
    */
+  /**
+   * The 409 a clash produces, whether the application check caught it or the
+   * database did.
+   */
+  private overlapConflict(): ConflictException {
+    return new ConflictException({
+      statusCode: 409,
+      message: 'Conflict',
+      error: 'Conflict',
+      details: [valDetail('startAt', 'VAL-32')],
+    });
+  }
+
+  /**
+   * Runs a write, translating the no-overlap constraint into VAL-32.
+   *
+   * `assertNoOverlap` is a read followed by an unguarded write, so two
+   * concurrent requests can both pass it before either commits — a
+   * double-clicked submit would otherwise store the day twice and leave an
+   * invariant every later read depends on quietly broken, with no repair path.
+   * The database refuses the second one; this turns its error into the same
+   * answer the check would have given.
+   */
+  private async writingWithoutOverlap<T>(write: () => Promise<T>): Promise<T> {
+    try {
+      return await write();
+    } catch (error) {
+      if (isOverlapConstraintViolation(error)) {
+        throw this.overlapConflict();
+      }
+
+      throw error;
+    }
+  }
+
   private assertNotRunning(endAt: Date | null): void {
     if (endAt !== null) {
       return;
@@ -276,13 +334,7 @@ export class TimeEntriesService {
       statusCode: 409,
       message: 'Conflict',
       error: 'Conflict',
-      details: [
-        {
-          field: 'endAt',
-          rule: 'VAL-RUNNING-ENTRY',
-          message: VAL_MESSAGES['VAL-RUNNING-ENTRY'],
-        },
-      ],
+      details: [valDetail('endAt', 'VAL-RUNNING-ENTRY')],
     });
   }
 
@@ -339,40 +391,26 @@ export class TimeEntriesService {
     const start = new Date(startAt);
     const end = new Date(endAt);
 
-    const candidates = await this.prisma.timeEntry.findMany({
+    // Asked as a predicate rather than fetched as a window and scanned in JS.
+    // The window assumed no entry runs longer than a day, which nothing
+    // enforces — VAL-31 only requires an end after the start — so a 48-hour
+    // entry fell outside its own candidate set and a request landing inside it
+    // was stored with a 201. A row is a clash when it starts before this one
+    // ends and ends after this one starts; touching boundaries are adjacent,
+    // not overlapping, matching `intervalsOverlap`.
+    const clashes = await this.prisma.timeEntry.count({
       where: {
         user_id: userId,
         ...(excludeEntryId === undefined ? {} : { id: { not: excludeEntryId } }),
-        start_at: {
-          gte: new Date(start.getTime() - OVERLAP_WINDOW_MS),
-          lte: new Date(end.getTime() + OVERLAP_WINDOW_MS),
-        },
+        start_at: { lt: end },
+        // A running entry has no end instant to compare, so it cannot clash
+        // here; the timer enforces its own rule (VAL-37, §8.6).
+        end_at: { gt: start },
       },
-      select: { id: true, start_at: true, end_at: true },
     });
 
-    const clash = findOverlap(
-      { startAt: start, endAt: end },
-      candidates.map((candidate) => ({
-        id: candidate.id,
-        startAt: candidate.start_at,
-        endAt: candidate.end_at,
-      })),
-    );
-
-    if (clash !== undefined) {
-      throw new ConflictException({
-        statusCode: 409,
-        message: 'Conflict',
-        error: 'Conflict',
-        details: [
-          {
-            field: 'startAt',
-            rule: 'VAL-32',
-            message: VAL_MESSAGES['VAL-32'],
-          },
-        ],
-      });
+    if (clashes > 0) {
+      throw this.overlapConflict();
     }
   }
 

@@ -1,5 +1,5 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
-import { VAL_MESSAGES, type ValCode } from '@abra/contracts';
+import { valDetail, type ValCode } from '@abra/contracts';
 import { PrismaService } from '../../prisma/prisma.service';
 
 /**
@@ -75,7 +75,7 @@ function forbidden(rule: Extract<ValCode, 'VAL-33' | 'VAL-33A'>): ForbiddenExcep
     statusCode: 403,
     message: 'Forbidden',
     error: 'Forbidden',
-    details: [{ field: 'taskId', rule, message: VAL_MESSAGES[rule] }],
+    details: [valDetail('taskId', rule)],
   });
 }
 

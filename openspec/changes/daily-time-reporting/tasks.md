@@ -45,7 +45,7 @@
 
 - [x] 5.1 In the service, fetch overlap candidates for the user with a start-time window widened by one day on each side of the candidate interval; name and comment the widening constant (D6).
 - [x] 5.2 Reject overlapping writes with `VAL-32` via the pure comparison from task 3.4; exclude the entry being edited from its own candidate set.
-- [x] 5.3 Integration-test overlap against the database, including both night-shift orderings, an adjacent (touching) entry accepted, an overlap with another user's entry accepted, and an overlap with a soft-deleted entry accepted.
+- [x] 5.3 Unit-test overlap with a mocked Prisma client, including both night-shift orderings, an adjacent (touching) entry accepted, an overlap with another user's entry accepted, and an overlap with a soft-deleted entry accepted. *(Reworded from "integration-test against the database": no DB-backed test was delivered, so the soft-delete extension's filtering is asserted through the query the service builds, not through a real row. See 9.7.)*
 - [x] 5.4 Add the guard test asserting the candidate window's documented bound.
 
 ## 6. Time-entries API: edit and delete (KAN-79)
@@ -54,8 +54,17 @@
 - [x] 6.2 Call `assertMonthNotLocked` for both the entry's existing month and its target month, so an edit cannot move an entry across a lock boundary (D5).
 - [x] 6.3 Implement `DELETE /api/v1/time-entries/:id`: owner only, month open. Deletion is soft via the existing Prisma extension — no new delete logic.
 - [x] 6.4 Return not-found for an unknown entry and reject any attempt to edit or delete another user's entry, without revealing that it exists.
-- [x] 6.5 Test edit and delete: valid edit, edit creating an overlap, edit onto an unassigned task, edit and delete refused in a locked month, deleted entries excluded from reads, totals, and overlap checks while the row is retained.
+- [x] 6.5 Unit-test edit and delete with a mocked Prisma client: valid edit, edit creating an overlap, edit onto an unassigned task, edit and delete refused in a locked month, deleted entries excluded from reads, totals, and overlap checks while the row is retained. *(Same rewording as 5.3 — the exclusion of deleted rows is asserted at the query, not against the database.)*
 - [x] 6.6 Verify `pnpm --filter @abra/api test:coverage` passes the 70% gate.
+
+### Review follow-ups (PR #57 and #58)
+
+- [x] 6.6 Enforce VAL-32 in the database with a Postgres exclusion constraint (`20260819140000_time_entry_no_overlap`), and translate its violation into the same 409. The check was a read followed by an unguarded write, so two concurrent requests both passed it — a double-clicked submit stored the day twice and broke an invariant every later read assumes, with no repair path.
+- [x] 6.7 Replace the ±1-day overlap candidate window with a direct predicate. Nothing caps entry duration, so a 48-hour entry fell outside its own candidate set and a request landing inside it was accepted with a 201.
+- [x] 6.8 Scope the update write by owner and liveness (`updateMany` on `{id, user_id, deleted_at: null}`). The soft-delete extension rewrites reads and deletes but not updates, so a row deleted between the check and the write was silently mutated and answered 200.
+- [x] 6.9 Reject a route id that is not a UUID as 404. `TimeEntry.id` is `@db.Uuid`, so a malformed value raised Prisma P2023 and, with nothing mapping Prisma errors, surfaced as a 500 where both endpoints document a 404.
+- [x] 6.10 Extract `zodIssuesToHebrewDetails` and `valDetail` into contracts and delete the six duplicated `hebrewDetails` copies plus the four hand-assembled single-rule envelopes, so a change to the payload shape cannot reach one endpoint and miss another.
+- [x] 6.11 Reword tasks 5.3 and 6.5 to describe the mocked unit tests actually delivered, and add 9.7/9.8 for the database-backed coverage they claimed.
 
 ## 7. Entry form (KAN-73)
 
@@ -86,6 +95,8 @@
 - [ ] 9.4 Assert an edit and a delete both round-trip.
 - [ ] 9.5 Assert a write into the locked month is refused with 403 and the screen shows the locked state, scoping assertions to entries dated inside that month.
 - [ ] 9.6 Confirm the spec runs in the required CI e2e job.
+- [ ] 9.7 Cover the soft-delete extension against a real database, since 5.3 and 6.5 assert it only through the queries the service builds: delete an entry, re-report the same slot, and confirm it is accepted rather than refused with VAL-32. An extension refactor or a Prisma upgrade that changed operation names would otherwise put deleted rows back in the overlap set with every test still green.
+- [ ] 9.8 Cover the `time_entries_no_overlap` exclusion constraint against a real database: two concurrent writes for the same slot, one accepted and one answered with VAL-32.
 
 ## 10. Close out
 

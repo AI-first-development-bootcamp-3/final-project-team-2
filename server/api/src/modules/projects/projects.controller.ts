@@ -18,19 +18,11 @@ import {
   CreateProjectBodySchema,
   UpdateProjectBodySchema,
   UpdateProjectReportTypeBodySchema,
-  VAL_MESSAGES,
-  zodIssuesToDetails,
-  type ValCode,
+  zodIssuesToHebrewDetails,
 } from '@abra/contracts';
 import { Roles } from '../../auth/auth.decorators';
 import { ProjectsService } from './projects.service';
 
-function hebrewDetails(issues: Parameters<typeof zodIssuesToDetails>[0]) {
-  return zodIssuesToDetails(issues).map((detail) => ({
-    ...detail,
-    message: detail.rule in VAL_MESSAGES ? VAL_MESSAGES[detail.rule as ValCode] : detail.message,
-  }));
-}
 
 // A malformed :id must be a 400 in the API's details shape, not a Prisma
 // P2023 surfacing as a 500. VAL-25 is the existing "valid project" rule.
@@ -60,7 +52,7 @@ export class ProjectsController {
         statusCode: 400,
         message: 'Validation failed',
         error: 'Bad Request',
-        details: hebrewDetails(parsed.error.issues),
+        details: zodIssuesToHebrewDetails(parsed.error.issues),
       });
     }
     return this.projectsService.list(parsed.data);
@@ -83,7 +75,7 @@ export class ProjectsController {
         statusCode: 400,
         message: 'Validation failed',
         error: 'Bad Request',
-        details: hebrewDetails(parsed.error.issues),
+        details: zodIssuesToHebrewDetails(parsed.error.issues),
       });
     }
     const data = await this.projectsService.create(parsed.data);
@@ -99,7 +91,7 @@ export class ProjectsController {
         statusCode: 400,
         message: 'Validation failed',
         error: 'Bad Request',
-        details: hebrewDetails(parsed.error.issues),
+        details: zodIssuesToHebrewDetails(parsed.error.issues),
       });
     }
     const data = await this.projectsService.update(id, parsed.data);
@@ -115,7 +107,7 @@ export class ProjectsController {
         statusCode: 400,
         message: 'Validation failed',
         error: 'Bad Request',
-        details: hebrewDetails(parsed.error.issues),
+        details: zodIssuesToHebrewDetails(parsed.error.issues),
       });
     }
     // Same write path as the generic PATCH — the dedicated URL is kept for

@@ -114,6 +114,16 @@ The system SHALL reject an entry whose interval overlaps any existing entry of t
 - **WHEN** an employee submits an entry whose interval matches another employee's entry
 - **THEN** the entry is accepted
 
+#### Scenario: Overlap with an entry longer than a day
+
+- **WHEN** an employee holds a 48-hour entry and submits a one-hour entry falling inside it
+- **THEN** the request is rejected with rule `VAL-32`
+
+#### Scenario: Concurrent writes for the same period
+
+- **WHEN** two requests for the same overlapping period are processed concurrently
+- **THEN** at most one entry is stored, and the other is rejected with rule `VAL-32`
+
 ### Requirement: Employee must be assigned to the task
 
 The system SHALL reject an entry against a task the employee is not assigned to, reporting rule `VAL-33`. Assignment SHALL be verified on both create and update.
@@ -288,6 +298,16 @@ The system SHALL allow an employee to update their own entry while its month is 
 
 - **WHEN** an employee attempts to update an entry belonging to somebody else
 - **THEN** the response is the same as for an unknown entry, so the caller cannot learn that the entry exists
+
+#### Scenario: An entry deleted while an edit is in flight
+
+- **WHEN** an entry is deleted after an edit has been authorised but before it is written
+- **THEN** the edit is reported as not found, and the deleted entry is left unchanged
+
+#### Scenario: A route identifier that is not a valid identifier
+
+- **WHEN** an edit or delete names an entry with a malformed identifier
+- **THEN** the request is reported as not found, not as a server error
 
 ### Requirement: Employee deletes own entries
 

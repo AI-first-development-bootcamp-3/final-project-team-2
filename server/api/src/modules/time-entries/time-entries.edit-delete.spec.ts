@@ -36,10 +36,14 @@ const ROW = {
 function createPrisma() {
   return {
     timeEntry: {
+      count: vi.fn().mockResolvedValue(0),
       findFirst: vi.fn().mockResolvedValue(ROW),
       // Serves the overlap-candidate lookup; defaults to no neighbours.
       findMany: vi.fn().mockResolvedValue([]),
-      update: vi.fn().mockResolvedValue(ROW),
+      // The write is scoped by owner and liveness, so it goes through
+      // updateMany and re-reads the row it touched.
+      updateMany: vi.fn().mockResolvedValue({ count: 1 }),
+      findFirstOrThrow: vi.fn().mockResolvedValue(ROW),
       delete: vi.fn().mockResolvedValue(ROW),
       create: vi.fn().mockResolvedValue(ROW),
     },
@@ -86,14 +90,14 @@ describe('TimeEntriesService.update', () => {
   it('applies a partial edit and returns the updated entry', async () => {
     const result = await createService(prisma).update(USER_ID, ENTRY_ID, { location: 'home' });
 
-    expect(prisma.timeEntry.update).toHaveBeenCalledOnce();
+    expect(prisma.timeEntry.updateMany).toHaveBeenCalledOnce();
     expect(result.id).toBe(ENTRY_ID);
   });
 
   it('merges the patch onto the stored row, leaving untouched fields alone', async () => {
     await createService(prisma).update(USER_ID, ENTRY_ID, { location: 'home' });
 
-    const call = prisma.timeEntry.update.mock.calls[0]?.[0];
+    const call = prisma.timeEntry.updateMany.mock.calls[0]?.[0];
     expect(call.data.location).toBe('home');
     expect(call.data.task_id).toBe(TASK_ID);
     expect(call.data.start_at.toISOString()).toBe(ROW.start_at.toISOString());
@@ -122,7 +126,7 @@ describe('TimeEntriesService.update', () => {
     await expect(
       createService(prisma).update(OTHER_USER_ID, ENTRY_ID, { location: 'home' }),
     ).rejects.toBeInstanceOf(NotFoundException);
-    expect(prisma.timeEntry.update).not.toHaveBeenCalled();
+    expect(prisma.timeEntry.updateMany).not.toHaveBeenCalled();
   });
 
   it('holds the merged entry to the rules a create must satisfy', async () => {
@@ -130,7 +134,7 @@ describe('TimeEntriesService.update', () => {
     await expect(
       createService(prisma).update(USER_ID, ENTRY_ID, { startAt: '2026-08-10T16:00:00.000Z' }),
     ).rejects.toBeInstanceOf(BadRequestException);
-    expect(prisma.timeEntry.update).not.toHaveBeenCalled();
+    expect(prisma.timeEntry.updateMany).not.toHaveBeenCalled();
   });
 
   it('re-checks the assignment on edit', async () => {
@@ -139,7 +143,7 @@ describe('TimeEntriesService.update', () => {
     await expect(
       createService(prisma, scope).update(USER_ID, ENTRY_ID, { taskId: TASK_ID }),
     ).rejects.toBeInstanceOf(ForbiddenException);
-    expect(prisma.timeEntry.update).not.toHaveBeenCalled();
+    expect(prisma.timeEntry.updateMany).not.toHaveBeenCalled();
   });
 
   it('holds an edit onto a different task to the full availability check', async () => {
@@ -163,7 +167,7 @@ describe('TimeEntriesService.update', () => {
 
     expect(scope.assertUserAssignedToTask).toHaveBeenCalledWith(USER_ID, TASK_ID);
     expect(scope.assertTaskAvailableForReporting).not.toHaveBeenCalled();
-    expect(prisma.timeEntry.update).toHaveBeenCalledOnce();
+    expect(prisma.timeEntry.updateMany).toHaveBeenCalledOnce();
   });
 
   it('lets an entry on a task that has since closed still be deleted', async () => {
@@ -208,27 +212,57 @@ describe('TimeEntriesService.update', () => {
     expect(lock.assertMonthNotLocked).toHaveBeenCalledTimes(1);
   });
 
-  it('excludes the entry from its own overlap candidates', async () => {
+  it('excludes the entry from its own overlap check', async () => {
     await createService(prisma).update(USER_ID, ENTRY_ID, { location: 'home' });
 
-    const overlapQuery = prisma.timeEntry.findMany.mock.calls[0]?.[0];
+    const overlapQuery = prisma.timeEntry.count.mock.calls[0]?.[0];
     expect(overlapQuery.where.id).toEqual({ not: ENTRY_ID });
   });
 
   it('rejects an edit that would overlap another entry', async () => {
-    prisma.timeEntry.findMany.mockResolvedValue([
-      { id: 'other-1', start_at: ROW.start_at, end_at: ROW.end_at },
-    ]);
+    prisma.timeEntry.count.mockResolvedValue(1);
 
     await expect(
       createService(prisma).update(USER_ID, ENTRY_ID, { location: 'home' }),
     ).rejects.toBeInstanceOf(ConflictException);
   });
 
+  it('translates the database no-overlap constraint into the same VAL-32 conflict', async () => {
+    // The check and the write are not atomic, so a concurrent edit can slip
+    // between them; the database refuses the loser and the caller must still
+    // see VAL-32 rather than a 500.
+    prisma.timeEntry.updateMany.mockRejectedValue(
+      Object.assign(new Error('conflicting key value'), { code: '23P01' }),
+    );
+
+    await expect(
+      createService(prisma).update(USER_ID, ENTRY_ID, { location: 'home' }),
+    ).rejects.toMatchObject({
+      response: { statusCode: 409, details: [expect.objectContaining({ rule: 'VAL-32' })] },
+    });
+  });
+
+  it('reports an entry deleted between the check and the write as missing', async () => {
+    // The soft-delete extension rewrites reads and deletes but not updates, so
+    // the scoped write is what keeps a deleted row from being mutated.
+    prisma.timeEntry.updateMany.mockResolvedValue({ count: 0 });
+
+    await expect(
+      createService(prisma).update(USER_ID, ENTRY_ID, { location: 'home' }),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('scopes the write by owner and liveness, not by id alone', async () => {
+    await createService(prisma).update(USER_ID, ENTRY_ID, { location: 'home' });
+
+    const call = prisma.timeEntry.updateMany.mock.calls[0]?.[0];
+    expect(call.where).toEqual({ id: ENTRY_ID, user_id: USER_ID, deleted_at: null });
+  });
+
   it('clears the description when an explicit null is sent', async () => {
     await createService(prisma).update(USER_ID, ENTRY_ID, { description: null });
 
-    const call = prisma.timeEntry.update.mock.calls[0]?.[0];
+    const call = prisma.timeEntry.updateMany.mock.calls[0]?.[0];
     expect(call.data.description).toBeNull();
   });
 
@@ -240,7 +274,7 @@ describe('TimeEntriesService.update', () => {
     ).rejects.toMatchObject({
       response: { details: [expect.objectContaining({ rule: 'VAL-RUNNING-ENTRY' })] },
     });
-    expect(prisma.timeEntry.update).not.toHaveBeenCalled();
+    expect(prisma.timeEntry.updateMany).not.toHaveBeenCalled();
   });
 
   it('does not report a rule against a field the caller never sent', async () => {
