@@ -97,7 +97,10 @@ export type ValCode =
   | 'VAL-25'
   | 'VAL-26'
   | 'VAL-27'
-  | 'VAL-28';
+  | 'VAL-28'
+  | 'VAL-29'
+  | 'VAL-30'
+  | 'VAL-31';
 
 export const VAL_MESSAGES: Record<ValCode, string> = {
   'VAL-01': 'כתובת האימייל היא שדה חובה',
@@ -117,6 +120,9 @@ export const VAL_MESSAGES: Record<ValCode, string> = {
   'VAL-26': 'יש לבחור משתמש ומשימה תקינים',
   'VAL-27': 'השיוך כבר קיים במערכת',
   'VAL-28': 'יש לבחור אופן דיווח תקין',
+  'VAL-29': 'יש לבחור מנהל תקין',
+  'VAL-30': 'יש להזין תאריך תקין',
+  'VAL-31': 'תאריך הסיום לא יכול להיות לפני תאריך ההתחלה',
 };
 
 // --- Clients ---
