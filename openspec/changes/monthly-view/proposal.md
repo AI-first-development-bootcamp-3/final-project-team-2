@@ -26,7 +26,7 @@ Epic 6 (KAN-65, Confluence "Epic 6 Spec - Monthly View") gives an employee their
 
 ## Impact
 
-- **Depends on the unmerged time-entry stack** (#49 → #54 → #57 → #58): `computeDayStatus`, the time-entries module, and `MonthLockService` all live there. Branch strategy: branch from the stack tip (`feat/kan-79-edit-delete`) and re-target to `dev` once the stack merges — or start after the merge if it lands first. This is the same stacking pattern the auth work used; the risk is bounded because this change only *reads* those modules.
+- **Depends on the unmerged time-entry stack** (#49 → #54 → #57 → #58): `computeDayStatus`, the time-entries module, and `MonthLockService` all live there. Branch strategy: branch from the stack tip (`feat/kan-79-edit-delete`) and re-target to `dev` once the stack merges — or start after the merge if it lands first. This is the same stacking pattern the auth work used; the risk is bounded because this change only _reads_ those modules.
 - **Code**: `server/api/src/modules/` (new month-query endpoint beside time-entries), `packages/contracts/src/` (month query response schema), `apps/mobile/src/features/` (monthly screen, drill-down, LockStatusIndicator), `e2e/specs/` (+ seeded fixtures).
 - **Implementation discipline**: TDD throughout (red-green-refactor) — each task starts from a failing test; the DoD in the epic spec is already phrased as test cases.
 - **Risk**: low-medium — new read-only surface; no writes, no schema migrations (MonthLock table already exists on the stack). The absence stub is contract-shaped, so Epic 7 is additive.
