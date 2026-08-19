@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { UserListItem } from '@abra/contracts';
+import type { EmploymentType, UserListItem } from '@abra/contracts';
 import { apiFetch } from '@/lib/api/client';
 
 interface EditUserModalProps {
@@ -12,11 +12,15 @@ export function EditUserModal({ user, onClose, onSuccess }: EditUserModalProps) 
   const [fullName, setFullName] = useState(user.fullName);
   const [email, setEmail] = useState(user.email);
   const [role, setRole] = useState(user.role);
-  const [employeeNumber, setEmployeeNumber] = useState('');
-  const [jobTitle, setJobTitle] = useState('');
-  const [employmentType, setEmploymentType] = useState('');
-  const [employmentPercentage, setEmploymentPercentage] = useState('100');
-  const [orgUnit, setOrgUnit] = useState('');
+  const [employeeNumber, setEmployeeNumber] = useState(user.employeeNumber ?? '');
+  const [roleTitle, setRoleTitle] = useState(user.roleTitle ?? '');
+  const [employmentType, setEmploymentType] = useState<EmploymentType | ''>(
+    user.employmentType ?? '',
+  );
+  const [employmentPercent, setEmploymentPercent] = useState(
+    user.employmentPercent != null ? String(user.employmentPercent) : '',
+  );
+  const [orgUnit, setOrgUnit] = useState(user.orgUnit ?? '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -29,11 +33,11 @@ export function EditUserModal({ user, onClose, onSuccess }: EditUserModalProps) 
       fullName,
       email,
       role,
-      ...(employeeNumber.trim() ? { employeeNumber: employeeNumber.trim() } : {}),
-      ...(jobTitle.trim() ? { jobTitle: jobTitle.trim() } : {}),
-      ...(employmentType.trim() ? { employmentType: employmentType.trim() } : {}),
-      ...(employmentPercentage ? { employmentPercentage: Number(employmentPercentage) } : {}),
-      ...(orgUnit.trim() ? { orgUnit: orgUnit.trim() } : {}),
+      employeeNumber: employeeNumber.trim() || null,
+      roleTitle: roleTitle.trim() || null,
+      employmentType: employmentType || null,
+      employmentPercent: employmentPercent.trim() ? Number(employmentPercent) : null,
+      orgUnit: orgUnit.trim() || null,
     };
 
     try {
@@ -116,8 +120,8 @@ export function EditUserModal({ user, onClose, onSuccess }: EditUserModalProps) 
               <input
                 type="text"
                 placeholder="מפתח תוכנה"
-                value={jobTitle}
-                onChange={(e) => setJobTitle(e.target.value)}
+                value={roleTitle}
+                onChange={(e) => setRoleTitle(e.target.value)}
                 className="mt-1 w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
               />
             </label>
@@ -125,22 +129,24 @@ export function EditUserModal({ user, onClose, onSuccess }: EditUserModalProps) 
           <div className="grid grid-cols-2 gap-3">
             <label className="block text-sm">
               סוג העסקה
-              <input
-                type="text"
-                placeholder="מלאה"
+              <select
                 value={employmentType}
-                onChange={(e) => setEmploymentType(e.target.value)}
+                onChange={(e) => setEmploymentType(e.target.value as EmploymentType | '')}
                 className="mt-1 w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
-              />
+              >
+                <option value="">ללא</option>
+                <option value="worker">עובד</option>
+                <option value="manager">מנהל</option>
+              </select>
             </label>
             <label className="block text-sm">
               אחוז משרה
               <input
                 type="number"
-                min="1"
+                min="0"
                 max="100"
-                value={employmentPercentage}
-                onChange={(e) => setEmploymentPercentage(e.target.value)}
+                value={employmentPercent}
+                onChange={(e) => setEmploymentPercent(e.target.value)}
                 className="mt-1 w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
               />
             </label>
