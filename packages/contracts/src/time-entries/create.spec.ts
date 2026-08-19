@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { z } from 'zod';
 import { CreateTimeEntryBodySchema } from './create.js';
 
 const TASK_ID = '550e8400-e29b-41d4-a716-446655440000';
@@ -252,5 +253,30 @@ describe('CreateTimeEntryBodySchema — calendar-invalid dates', () => {
 
   it('rejects a month of 13 with VAL-38', () => {
     expect(rulesFor({ ...validBody, date: '2026-13-01' }, 'date')).toContain('VAL-38');
+  });
+});
+
+describe('CreateTimeEntryBodySchema — input type and non-throwing parse', () => {
+  it('keeps required fields on z.input so a form resolver can see them', () => {
+    type Input = z.input<typeof CreateTimeEntryBodySchema>;
+
+    const typed: Input = validBody;
+    expect(CreateTimeEntryBodySchema.safeParse(typed).success).toBe(true);
+
+    // @ts-expect-error — taskId is required on the create body
+    const missingTask: Input = {
+      date: validBody.date,
+      startAt: validBody.startAt,
+      endAt: validBody.endAt,
+      location: validBody.location,
+    };
+    void missingTask;
+  });
+
+  it('strips unknown keys without throwing through safeParse', () => {
+    const result = CreateTimeEntryBodySchema.safeParse({ ...validBody, extra: 'nope' });
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(result.data).not.toHaveProperty('extra');
   });
 });

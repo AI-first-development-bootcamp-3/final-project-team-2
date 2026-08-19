@@ -106,7 +106,8 @@ export type ValCode =
   | 'VAL-36'
   | 'VAL-38'
   | 'VAL-DATE-RANGE'
-  | 'VAL-EMPTY-UPDATE';
+  | 'VAL-EMPTY-UPDATE'
+  | 'VAL-RUNNING-ENTRY';
 
 export const VAL_MESSAGES: Record<ValCode, string> = {
   'VAL-01': 'כתובת האימייל היא שדה חובה',
@@ -138,6 +139,9 @@ export const VAL_MESSAGES: Record<ValCode, string> = {
   'VAL-38': 'התאריך אינו תואם את יום תחילת הדיווח',
   'VAL-DATE-RANGE': 'יש לציין תאריך יחיד או טווח תאריכים תקין',
   'VAL-EMPTY-UPDATE': 'לא נשלחו שדות לעדכון',
+  // Punch Clock (KAN-79): PATCH/DELETE of a running entry is refused outright
+  // rather than exempted from the merged-entry rules (design D7).
+  'VAL-RUNNING-ENTRY': 'לא ניתן לערוך דיווח שעות שטרם הסתיים',
 };
 
 // --- Clients ---
@@ -238,6 +242,8 @@ export {
   APP_TIME_ZONE,
   LOCAL_DATE_PATTERN,
   toLocalDate,
+  toLocalDateOrNull,
+  isRealCalendarDate,
   isSameLocalDate,
   toYearMonth,
 } from './day-status/local-date.js';

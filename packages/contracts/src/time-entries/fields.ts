@@ -128,8 +128,11 @@ export function refineTimeEntryTimes(value: TimeEntryTimes, ctx: z.RefinementCtx
 export function timeEntryBodySchema<Shape extends z.ZodRawShape>(
   shape: Shape,
   afterFields?: (raw: Record<string, unknown>, ctx: z.RefinementCtx) => void,
-) {
-  const fields = z.object(shape);
+): z.ZodType<z.infer<z.ZodObject<Shape>>, z.ZodTypeDef, z.input<z.ZodObject<Shape>>> {
+  type Fields = z.ZodObject<Shape>;
+  // WeakMap so a concurrent parse of a different body cannot steal this one's
+  // trimmed fields; keyed by the raw object zod already accepted.
+  const passedByRaw = new WeakMap<object, Record<string, unknown>>();
 
   return (
     z
@@ -156,11 +159,17 @@ export function timeEntryBodySchema<Shape extends z.ZodRawShape>(
           }
         }
 
+        passedByRaw.set(raw, passed);
         refineTimeEntryTimes(passed as TimeEntryTimes, ctx);
         afterFields?.(supplied, ctx);
       })
-      // Reached only when every field passed above, so this re-parse cannot fail;
-      // it exists to hand back the trimmed, typed, unknown-key-stripped value.
-      .transform((raw) => fields.parse(raw))
+      // Hands back the already-parsed fields. Must not call `fields.parse`:
+      // zod 3.25 does not catch a throw inside `.transform`, so a divergence
+      // would turn `safeParse` into an exception (a 500) instead of a 400.
+      .transform((raw) => passedByRaw.get(raw) as z.infer<Fields>) as unknown as z.ZodType<
+      z.infer<Fields>,
+      z.ZodTypeDef,
+      z.input<Fields>
+    >
   );
 }

@@ -6,6 +6,9 @@ import {
   HalfDayPeriod,
   TaskStatus,
   AuditAction,
+  VAL_MESSAGES,
+  toLocalDateOrNull,
+  isRealCalendarDate,
 } from './index';
 
 describe('contracts', () => {
@@ -79,5 +82,19 @@ describe('contracts', () => {
     it('rejects invalid actions', () => {
       expect(() => AuditAction.parse('archive')).toThrow();
     });
+  });
+});
+
+describe('VAL_MESSAGES — running-entry refusal', () => {
+  it('translates VAL-RUNNING-ENTRY so Punch Clock does not ship a raw code', () => {
+    expect(VAL_MESSAGES['VAL-RUNNING-ENTRY']).toBe('לא ניתן לערוך דיווח שעות שטרם הסתיים');
+  });
+});
+
+describe('local-date public surface', () => {
+  it('exports the non-throwing helpers next to toLocalDate', () => {
+    expect(toLocalDateOrNull(new Date('nonsense'))).toBeNull();
+    expect(isRealCalendarDate('2026-02-30')).toBe(false);
+    expect(isRealCalendarDate('2026-08-10')).toBe(true);
   });
 });
