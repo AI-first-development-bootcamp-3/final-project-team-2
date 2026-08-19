@@ -84,6 +84,38 @@ This change never _creates_ an entry without an end time — the manual form alw
 
 **Editing and deleting a running entry is refused, not exempted.** An earlier reading of this decision implied the write path should simply skip VAL-31/35/36 for a running entry, which would have let PATCH edit one. Two problems: the merged-entry rules could then only report VAL-31 against a field the caller never sent, which is actively misleading; and it would build a code path this epic cannot test, for an epic that has not yet specified its own behaviour. So `PATCH` and `DELETE` return 409 with `VAL-RUNNING-ENTRY` when the target has no end time. Completing or cancelling a running entry is the timer's job (§8.6), and the Punch Clock epic decides that flow explicitly rather than inheriting a silent one.
 
+### D11 — Build the screens as designed in Figma
+
+Source: Figma file `3CK80SB84FluVRrWCDlmaw`, page **Mobile web app**.
+
+The UI follows the design. The home screen is the month of day rows the design shows — `16/10/25, יום ה'` — each with a status chip (`חסר`, `ש 9` with a tick, `ש 7` with a warning, `מחלה`, `סופ"ש`), expanding in place to reveal that day's entries with `עריכה` affordances and `הוספת דיווח`. The entry form is the `דיווח ידני` frame.
+
+Where the design and Epic 5 §1 differ — the spec describes a today-only home screen — the design is authoritative for layout, per the project's standing rule that the spec decides behaviour and the Figma decides looks. Every behavioural rule in this change is unaffected: VAL-30…38, assignment scoping, month locking, and the day-status thresholds all hold exactly as specified.
+
+*Overlap noted, accepted*: the month list also appears in Epic 6 (KAN-81/82). Coordinate before that epic starts so the screen is not built twice.
+
+### D12 — Copy and layout come from the Figma frames, not invented
+
+Strings, states, and structure taken from the design rather than paraphrased, so the build can be checked against it:
+
+| Element | Design |
+| --- | --- |
+| Screen title / month nav | `דיווח שעות` with `‹ אוקטובר ›` |
+| Bottom action bar | `הפעלת שעון` (timer, Epic 8) · `דיווח ידני` (manual entry) |
+| Picker rows | `פרויקט` → client ← project chips · `משימה` → task chip |
+| Required location | `מיקום` with a red asterisk |
+| Time fields | `שעת התחלה` · `שעת סיום` |
+| Description placeholder | `תיאור העבודה בכמה מילים, לא ארוך מידי…` |
+| Per-entry actions | `מחיקת פרויקט` (red) · `הוספת פרויקט` (blue, with ⊕) |
+| Quota bar | `6 מתוך 9 שעות` leading, `חסרות 3 שעות לדיווח` trailing, orange fill on grey |
+| Save | `שמירה`, navy, full width |
+| Validation banner | `חסר לנו פרט או שניים` / `מלא את כל הנתונים הדרושים כדי שנוכל לשמור את הדיווח בהצלחה` |
+| Save toast | `דיווח נשמר בהצלחה` (393×64, `#555555`, radius 8) |
+| Load failure | `אופססס...` / `אין מידע זמין כרגע, נסה שוב מאוחר יותר או פנה למנהל ישיר` / `חזור למסך ראשי` |
+| Frame | 393×852, radius 40, background `#F2F2F7`; form container padding 16px, gap 4px |
+
+Two notes where design and spec differ. The design places the quota bar **on the form**; Epic 5 §3 places it on the home screen — it is one shared component, so it renders in both. And the design labels an entry `פרויקט` (`הוספת פרויקט` / `מחיקת פרויקט`) where the domain calls it a time entry; the design's wording is kept on screen because that is what employees will read, while code and API keep the domain term.
+
 ### D8 — The cascading picker is client-side grouping over one request
 
 `GET /me/assignments` returns the full assignment set, already scoped. The form fetches it once and derives the three levels by grouping: distinct clients, then projects filtered by the chosen client, then tasks filtered by the chosen project. No new endpoint, no request per cascade level.
