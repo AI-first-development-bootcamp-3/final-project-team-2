@@ -11,7 +11,8 @@ import { TimeEntriesService } from './time-entries.service';
   providers: [TimeEntriesService, AssignmentScopeService, MonthLockService],
   // The Month Close and Absences epics need the same assignment and lock
   // checks on their own writes, so they are exported rather than kept
-  // module-private. Auth is the global APP_GUARD pair, same as /me.
-  exports: [AssignmentScopeService, MonthLockService],
+  // module-private; the months read (KAN-80) delegates to the list read the
+  // same way. Auth is the global APP_GUARD pair, same as /me.
+  exports: [AssignmentScopeService, MonthLockService, TimeEntriesService],
 })
 export class TimeEntriesModule {}

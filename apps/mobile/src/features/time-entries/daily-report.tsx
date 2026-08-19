@@ -91,6 +91,9 @@ export function DailyReport({ date, locked = false }: DailyReportProps) {
     >
       <header className="flex items-center justify-between">
         <h1 className="text-lg font-semibold text-navy">דיווח שעות</h1>
+        <Link to="/monthly" className="text-sm font-medium text-blue-600">
+          מבט חודשי
+        </Link>
       </header>
 
       {monthLocked ? (
