@@ -17,19 +17,12 @@ import {
   ResetPasswordSchema,
   UpdateUserSchema,
   UsersListQuerySchema,
-  VAL_MESSAGES,
   zodIssuesToDetails,
-  type ValCode,
+  zodIssuesToHebrewDetails,
 } from '@abra/contracts';
 import { Roles } from '../../auth/auth.decorators';
 import { UsersService } from './users.service';
 
-function hebrewDetails(issues: Parameters<typeof zodIssuesToDetails>[0]) {
-  return zodIssuesToDetails(issues).map((detail) => ({
-    ...detail,
-    message: detail.rule in VAL_MESSAGES ? VAL_MESSAGES[detail.rule as ValCode] : detail.message,
-  }));
-}
 
 @ApiTags('users')
 @ApiBearerAuth()
@@ -62,7 +55,7 @@ export class UsersController {
         statusCode: 400,
         message: 'Validation failed',
         error: 'Bad Request',
-        details: hebrewDetails(parsed.error.issues),
+        details: zodIssuesToHebrewDetails(parsed.error.issues),
       });
     }
     const data = await this.usersService.create(parsed.data);

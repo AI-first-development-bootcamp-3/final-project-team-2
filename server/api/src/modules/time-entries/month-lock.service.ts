@@ -1,5 +1,5 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
-import { VAL_MESSAGES } from '@abra/contracts';
+import { valDetail } from '@abra/contracts';
 import { PrismaService } from '../../prisma/prisma.service';
 
 /**
@@ -44,13 +44,7 @@ export class MonthLockService {
         statusCode: 403,
         message: 'Forbidden',
         error: 'Forbidden',
-        details: [
-          {
-            field: 'date',
-            rule: 'VAL-34',
-            message: VAL_MESSAGES['VAL-34'],
-          },
-        ],
+        details: [valDetail('date', 'VAL-34')],
       });
     }
   }

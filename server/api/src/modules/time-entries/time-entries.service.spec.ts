@@ -37,6 +37,7 @@ const validBody = {
 function createPrisma() {
   return {
     timeEntry: {
+      count: vi.fn().mockResolvedValue(0),
       create: vi.fn().mockResolvedValue(ROW),
       // Serves both the list reads and the overlap-candidate lookup; tests that
       // care about collisions override it.
@@ -231,14 +232,6 @@ function at(date: string, time: string): string {
   return `${date}T${time}:00.000+03:00`;
 }
 
-function existing(startDate: string, start: string, endDate: string, end: string) {
-  return {
-    id: 'existing-1',
-    start_at: new Date(at(startDate, start)),
-    end_at: new Date(at(endDate, end)),
-  };
-}
-
 function bodyFor(startDate: string, start: string, endDate: string, end: string) {
   return {
     ...validBody,
@@ -259,10 +252,28 @@ describe('TimeEntriesService.create — overlap (VAL-32)', () => {
     return createService(prisma).create(USER_ID, body);
   }
 
+  /** The predicate the service asks the database, for one attempted entry. */
+  function overlapQuery() {
+    return prisma.timeEntry.count.mock.calls[0]?.[0];
+  }
+
+  /** Whether that predicate would match a stored row. */
+  function matches(query: { where: Record<string, { lt?: Date; gt?: Date }> }, row: {
+    start: string;
+    end: string | null;
+  }): boolean {
+    if (row.end === null) {
+      // `end_at: { gt: ... }` never matches NULL, so a running entry is out.
+      return false;
+    }
+
+    const startBefore = new Date(row.start) < (query.where['start_at']?.lt as Date);
+    const endAfter = new Date(row.end) > (query.where['end_at']?.gt as Date);
+    return startBefore && endAfter;
+  }
+
   it('rejects an entry overlapping an existing one', async () => {
-    prisma.timeEntry.findMany.mockResolvedValue([
-      existing('2026-08-10', '09:00', '2026-08-10', '12:00'),
-    ]);
+    prisma.timeEntry.count.mockResolvedValue(1);
 
     await expect(
       attempt(bodyFor('2026-08-10', '11:00', '2026-08-10', '13:00')),
@@ -271,9 +282,7 @@ describe('TimeEntriesService.create — overlap (VAL-32)', () => {
   });
 
   it('names VAL-32 in the error envelope', async () => {
-    prisma.timeEntry.findMany.mockResolvedValue([
-      existing('2026-08-10', '09:00', '2026-08-10', '12:00'),
-    ]);
+    prisma.timeEntry.count.mockResolvedValue(1);
 
     await expect(
       attempt(bodyFor('2026-08-10', '11:00', '2026-08-10', '13:00')),
@@ -282,73 +291,65 @@ describe('TimeEntriesService.create — overlap (VAL-32)', () => {
     });
   });
 
-  it('accepts an entry that starts exactly where another ended', async () => {
-    prisma.timeEntry.findMany.mockResolvedValue([
-      existing('2026-08-10', '09:00', '2026-08-10', '12:00'),
-    ]);
-
+  it('accepts an entry when nothing clashes', async () => {
     await expect(
-      attempt(bodyFor('2026-08-10', '12:00', '2026-08-10', '14:00')),
+      attempt(bodyFor('2026-08-10', '09:00', '2026-08-10', '17:00')),
     ).resolves.toBeDefined();
     expect(prisma.timeEntry.create).toHaveBeenCalledOnce();
   });
 
-  it('accepts an entry when the employee has none', async () => {
-    prisma.timeEntry.findMany.mockResolvedValue([]);
+  /**
+   * The comparison moved from a JS scan into the query, so these assert the
+   * predicate the database is asked — which row it would match, and which it
+   * would not.
+   */
+  it('would match an entry that overlaps', async () => {
+    await attempt(bodyFor('2026-08-10', '11:00', '2026-08-10', '13:00'));
 
-    await expect(
-      attempt(bodyFor('2026-08-10', '09:00', '2026-08-10', '17:00')),
-    ).resolves.toBeDefined();
+    expect(matches(overlapQuery(), { start: at('2026-08-10', '09:00'), end: at('2026-08-10', '12:00') })).toBe(true);
   });
 
-  it('rejects a morning entry colliding with the previous night shift', async () => {
+  it('would not match an entry that starts exactly where this one ends', async () => {
+    await attempt(bodyFor('2026-08-10', '09:00', '2026-08-10', '12:00'));
+
+    // Touching boundaries are adjacent, not overlapping.
+    expect(matches(overlapQuery(), { start: at('2026-08-10', '12:00'), end: at('2026-08-10', '14:00') })).toBe(false);
+  });
+
+  it('would match a night shift that runs into this morning', async () => {
+    await attempt(bodyFor('2026-08-11', '05:00', '2026-08-11', '07:00'));
+
     // 22:00 on the 10th to 06:00 on the 11th.
-    prisma.timeEntry.findMany.mockResolvedValue([
-      existing('2026-08-10', '22:00', '2026-08-11', '06:00'),
-    ]);
-
-    await expect(
-      attempt(bodyFor('2026-08-11', '05:00', '2026-08-11', '07:00')),
-    ).rejects.toBeInstanceOf(ConflictException);
+    expect(matches(overlapQuery(), { start: at('2026-08-10', '22:00'), end: at('2026-08-11', '06:00') })).toBe(true);
   });
 
-  it('rejects a night shift colliding with an entry on the following morning', async () => {
-    prisma.timeEntry.findMany.mockResolvedValue([
-      existing('2026-08-11', '05:00', '2026-08-11', '07:00'),
-    ]);
+  it('would match a morning entry this night shift runs into', async () => {
+    await attempt(bodyFor('2026-08-10', '22:00', '2026-08-11', '06:00'));
 
-    await expect(
-      attempt(bodyFor('2026-08-10', '22:00', '2026-08-11', '06:00')),
-    ).rejects.toBeInstanceOf(ConflictException);
+    expect(matches(overlapQuery(), { start: at('2026-08-11', '05:00'), end: at('2026-08-11', '07:00') })).toBe(true);
   });
 
-  it('ignores an existing entry that is still running', async () => {
-    prisma.timeEntry.findMany.mockResolvedValue([
-      { id: 'running-1', start_at: new Date(at('2026-08-10', '10:00')), end_at: null },
-    ]);
+  /**
+   * The window this replaced spanned ±1 day, which assumed no entry runs longer
+   * than that — nothing enforces it, so a long entry fell outside its own
+   * candidate set and a request landing inside it was accepted.
+   */
+  it('would match an entry far longer than a day, which the old window missed', async () => {
+    await attempt(bodyFor('2026-08-11', '19:00', '2026-08-11', '20:00'));
 
-    await expect(
-      attempt(bodyFor('2026-08-10', '09:00', '2026-08-10', '17:00')),
-    ).resolves.toBeDefined();
+    expect(matches(overlapQuery(), { start: at('2026-08-10', '06:00'), end: at('2026-08-12', '06:00') })).toBe(true);
   });
 
-  it('widens the candidate window by a day on each side to catch night shifts', async () => {
+  it('would not match an entry that is still running', async () => {
     await attempt(bodyFor('2026-08-10', '09:00', '2026-08-10', '17:00'));
 
-    const overlapQuery = prisma.timeEntry.findMany.mock.calls[0]?.[0];
-    const start = new Date(at('2026-08-10', '09:00')).getTime();
-    const end = new Date(at('2026-08-10', '17:00')).getTime();
-    const dayMs = 24 * 60 * 60 * 1000;
-
-    expect(overlapQuery.where.start_at.gte.getTime()).toBe(start - dayMs);
-    expect(overlapQuery.where.start_at.lte.getTime()).toBe(end + dayMs);
+    expect(matches(overlapQuery(), { start: at('2026-08-10', '10:00'), end: null })).toBe(false);
   });
 
-  it('scopes the candidate lookup to the employee, so another user cannot collide', async () => {
+  it('scopes the lookup to the employee, so another user cannot collide', async () => {
     await attempt(bodyFor('2026-08-10', '09:00', '2026-08-10', '17:00'));
 
-    const overlapQuery = prisma.timeEntry.findMany.mock.calls[0]?.[0];
-    expect(overlapQuery.where.user_id).toBe(USER_ID);
+    expect(overlapQuery().where.user_id).toBe(USER_ID);
   });
 
   it('relies on the soft-delete extension rather than filtering deleted rows itself', async () => {
@@ -356,8 +357,7 @@ describe('TimeEntriesService.create — overlap (VAL-32)', () => {
 
     // Setting deleted_at here would override the extension default and start
     // matching deleted rows, so its absence is the assertion.
-    const overlapQuery = prisma.timeEntry.findMany.mock.calls[0]?.[0];
-    expect(overlapQuery.where.deleted_at).toBeUndefined();
+    expect(overlapQuery().where.deleted_at).toBeUndefined();
   });
 
   it('checks the month lock and the assignment before querying for overlaps', async () => {
@@ -369,6 +369,33 @@ describe('TimeEntriesService.create — overlap (VAL-32)', () => {
       ),
     ).rejects.toBeInstanceOf(ForbiddenException);
 
-    expect(prisma.timeEntry.findMany).not.toHaveBeenCalled();
+    expect(prisma.timeEntry.count).not.toHaveBeenCalled();
+  });
+
+  /**
+   * The check is a read followed by an unguarded write, so two concurrent
+   * requests can both pass it. The database refuses the second; this asserts
+   * the caller still sees VAL-32 rather than a 500.
+   */
+  it('translates the database no-overlap constraint into the same VAL-32 conflict', async () => {
+    prisma.timeEntry.create.mockRejectedValue(Object.assign(new Error('conflicting key value'), {
+      code: '23P01',
+    }));
+
+    await expect(
+      attempt(bodyFor('2026-08-10', '09:00', '2026-08-10', '17:00')),
+    ).rejects.toMatchObject({
+      response: { statusCode: 409, details: [expect.objectContaining({ rule: 'VAL-32' })] },
+    });
+  });
+
+  it('does not swallow an unrelated database error', async () => {
+    prisma.timeEntry.create.mockRejectedValue(Object.assign(new Error('connection lost'), {
+      code: '08006',
+    }));
+
+    await expect(attempt(bodyFor('2026-08-10', '09:00', '2026-08-10', '17:00'))).rejects.toThrow(
+      'connection lost',
+    );
   });
 });
