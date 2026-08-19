@@ -261,12 +261,41 @@ describe('POST /api/v1/auth/logout', () => {
       .expect(401);
   });
 
-  it('rejects a logout without a valid access token', async () => {
-    await request(app.getHttpServer()).post('/api/v1/auth/logout').expect(401);
-    await request(app.getHttpServer())
+  it('ends the session from a refresh cookie when no Bearer is sent', async () => {
+    const loginRes = await request(app.getHttpServer())
+      .post('/api/v1/auth/login')
+      .send({ email: 'employee1@abra.co', password: 'Employee123!' })
+      .expect(200);
+    const cookie = extractRefreshCookie(loginRes);
+    const versionBefore = user.token_version;
+
+    const logoutRes = await request(app.getHttpServer())
       .post('/api/v1/auth/logout')
-      .set('Authorization', 'Bearer not-a-token')
+      .set('Cookie', cookie)
+      .expect(204);
+
+    expect(user.token_version).toBe(versionBefore + 1);
+
+    const clearCookie = (logoutRes.headers['set-cookie'] as unknown as string[])?.find((c) =>
+      c.startsWith(`${REFRESH_COOKIE}=`),
+    );
+    expect(clearCookie).toBeDefined();
+    expect(clearCookie).toMatch(/Expires=Thu, 01 Jan 1970|Max-Age=0/i);
+
+    await request(app.getHttpServer())
+      .post('/api/v1/auth/refresh')
+      .set('Cookie', cookie)
       .expect(401);
+  });
+
+  it('returns 204 and expires the refresh cookie when no credentials are sent', async () => {
+    const logoutRes = await request(app.getHttpServer()).post('/api/v1/auth/logout').expect(204);
+
+    const clearCookie = (logoutRes.headers['set-cookie'] as unknown as string[])?.find((c) =>
+      c.startsWith(`${REFRESH_COOKIE}=`),
+    );
+    expect(clearCookie).toBeDefined();
+    expect(clearCookie).toMatch(/Expires=Thu, 01 Jan 1970|Max-Age=0/i);
   });
 });
 

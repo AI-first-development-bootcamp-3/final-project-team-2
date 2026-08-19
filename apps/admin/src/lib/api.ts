@@ -17,6 +17,9 @@ export class InvalidCredentialsError extends Error {
   }
 }
 
+let signedOut = false;
+let sessionEpoch = 0;
+
 export async function login(data: LoginFormData): Promise<AuthSession> {
   const res = await fetch(`${API_URL}/auth/login`, {
     method: 'POST',
@@ -34,6 +37,8 @@ export async function login(data: LoginFormData): Promise<AuthSession> {
     throw new Error(`login request failed with status ${res.status}`);
   }
   const body = LoginResponse.parse(await res.json());
+  signedOut = false;
+  sessionEpoch += 1;
   return { accessToken: body.accessToken, user: body.user };
 }
 
@@ -46,6 +51,7 @@ let inflightRefresh: Promise<AuthSession | null> | null = null;
  * On success the session store is updated as a side effect.
  */
 export function refreshSession(): Promise<AuthSession | null> {
+  const epoch = sessionEpoch;
   inflightRefresh ??= (async () => {
     try {
       const res = await fetch(`${API_URL}/auth/refresh`, {
@@ -55,6 +61,7 @@ export function refreshSession(): Promise<AuthSession | null> {
       if (!res.ok) return null;
       const body = RefreshResponse.parse(await res.json());
       const next = { accessToken: body.accessToken, user: body.user };
+      if (signedOut || sessionEpoch !== epoch) return null;
       setAuthSession(next);
       return next;
     } catch {
@@ -82,6 +89,9 @@ export async function bootstrapSession(): Promise<void> {
  * cannot bounce the visitor back in via bootstrap.
  */
 export async function logout(): Promise<void> {
+  signedOut = true;
+  sessionEpoch += 1;
+  inflightRefresh = null;
   const token = getAuthSession()?.accessToken;
   try {
     await fetch(`${API_URL}/auth/logout`, {
@@ -89,7 +99,17 @@ export async function logout(): Promise<void> {
       credentials: 'include',
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
+  } catch {
+    // Session is still cleared below; a dead network must not leave the
+    // operator signed in or skip the redirect in logoutAndRedirect.
   } finally {
     clearAuthSession();
   }
+}
+
+/** End the session via {@link logout}, then full-page navigate to sign-in. */
+export async function logoutAndRedirect(): Promise<void> {
+  await logout();
+  const { redirectToSignIn } = await import('./api/client');
+  redirectToSignIn();
 }

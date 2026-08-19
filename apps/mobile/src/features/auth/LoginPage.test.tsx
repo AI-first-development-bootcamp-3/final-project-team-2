@@ -73,6 +73,21 @@ describe('LoginPage Component', () => {
     );
   });
 
+  it('masks the password by default and reveals then hides it via the toggle', () => {
+    renderComponent();
+
+    const passwordInput = screen.getByLabelText('סיסמה');
+    expect(passwordInput).toHaveAttribute('type', 'password');
+
+    fireEvent.click(screen.getByRole('button', { name: 'הצג סיסמה' }));
+    expect(passwordInput).toHaveAttribute('type', 'text');
+    expect(screen.getByRole('button', { name: 'הסתר סיסמה' })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'הסתר סיסמה' }));
+    expect(passwordInput).toHaveAttribute('type', 'password');
+    expect(screen.getByRole('button', { name: 'הצג סיסמה' })).toBeInTheDocument();
+  });
+
   it('displays generic error on invalid credential submission', async () => {
     renderComponent();
 

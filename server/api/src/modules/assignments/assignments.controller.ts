@@ -14,19 +14,11 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import {
   AssignmentsListQuerySchema,
   CreateAssignmentBodySchema,
-  VAL_MESSAGES,
   zodIssuesToDetails,
-  type ValCode,
+  zodIssuesToHebrewDetails,
 } from '@abra/contracts';
 import { Roles } from '../../auth/auth.decorators';
 import { AssignmentsService } from './assignments.service';
-
-function hebrewDetails(issues: Parameters<typeof zodIssuesToDetails>[0]) {
-  return zodIssuesToDetails(issues).map((detail) => ({
-    ...detail,
-    message: detail.rule in VAL_MESSAGES ? VAL_MESSAGES[detail.rule as ValCode] : detail.message,
-  }));
-}
 
 @ApiTags('assignments')
 @ApiBearerAuth()
@@ -59,7 +51,7 @@ export class AssignmentsController {
         statusCode: 400,
         message: 'Validation failed',
         error: 'Bad Request',
-        details: hebrewDetails(parsed.error.issues),
+        details: zodIssuesToHebrewDetails(parsed.error.issues),
       });
     }
     const data = await this.assignmentsService.create(parsed.data);
