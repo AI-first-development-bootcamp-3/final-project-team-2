@@ -163,7 +163,7 @@ test.describe('Monthly view', () => {
     // Sign into the employee app and open the monthly view from home.
     await page.goto('/login');
     await page.getByLabel('אימייל').fill(email);
-    await page.getByLabel('סיסמה').fill(CREATED_EMPLOYEE_PASSWORD);
+    await page.getByLabel('סיסמה', { exact: true }).fill(CREATED_EMPLOYEE_PASSWORD);
     await page.getByRole('button', { name: 'התחבר' }).click();
     await expect(page).not.toHaveURL(/\/login/);
 
