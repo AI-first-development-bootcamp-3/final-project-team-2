@@ -245,6 +245,14 @@ export {
   toYearMonth,
 } from './day-status/local-date.js';
 
+// --- Months ---
+export {
+  MonthAbsenceSchema,
+  MonthLockStatusSchema,
+  MonthQueryResponseSchema,
+} from './months/query.js';
+export type { MonthAbsence, MonthLockStatus, MonthQueryResponse } from './months/query.js';
+
 // --- Time entries ---
 export {
   TimeEntryLocationSchema,
