@@ -12,6 +12,9 @@ const config: Config = {
         darkGray: '#53575B',
         lightBg: '#F2F2F7',
       },
+      fontFamily: {
+        sans: ['"Assistant Variable"', 'Assistant', 'system-ui', 'sans-serif'],
+      },
     },
   },
   plugins: [tailwindAnimate],

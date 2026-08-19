@@ -1,5 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+// Hebrew brand font — free stand-in for the Figma's commercial SimplerPro.
+import '@fontsource-variable/assistant';
 import App from './App';
 import './index.css';
 
