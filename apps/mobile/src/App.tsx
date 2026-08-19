@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { LoginPage } from './features/auth/LoginPage';
 import { DailyReport } from './features/time-entries/daily-report';
 import { EntryPage } from './features/time-entries/entry-page';
+import { MonthlyPage } from './features/monthly/monthly-page';
 import { isAuthenticated } from './lib/auth';
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -37,6 +38,14 @@ export function AppRoutes() {
         element={
           <ProtectedRoute>
             <EntryPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/monthly"
+        element={
+          <ProtectedRoute>
+            <MonthlyPage />
           </ProtectedRoute>
         }
       />

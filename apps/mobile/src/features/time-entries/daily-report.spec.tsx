@@ -71,6 +71,16 @@ describe('DailyReport', () => {
     expect(screen.getByRole('link', { name: 'דיווח ידני' })).toHaveAttribute('href', '/entry/new');
   });
 
+  it('links to the monthly view (KAN-81)', async () => {
+    mockedAuthFetch.mockResolvedValue(jsonResponse({ data: [] }));
+    renderReport();
+
+    expect(await screen.findByRole('link', { name: 'מבט חודשי' })).toHaveAttribute(
+      'href',
+      '/monthly',
+    );
+  });
+
   it('shows a loading state instead of the empty state', () => {
     mockedAuthFetch.mockImplementation(() => new Promise(() => undefined));
     renderReport();
