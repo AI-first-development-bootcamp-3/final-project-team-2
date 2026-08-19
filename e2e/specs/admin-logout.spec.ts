@@ -43,12 +43,12 @@ test.describe('Admin logout (KAN-116)', () => {
     await logoutFromSidebar(page);
 
     await page.getByLabel('אימייל').fill(ADMIN_EMAIL);
-    await page.getByLabel('סיסמה').fill('WrongPassword1!');
+    await page.getByLabel('סיסמה', { exact: true }).fill('WrongPassword1!');
     await page.getByRole('button', { name: 'התחבר למערכת' }).click();
     await expect(page).toHaveURL(/\/login/);
     await expect(page.getByText('שם המשתמש או הסיסמה שהוזנו אינם נכונים.')).toBeVisible();
 
-    await page.getByLabel('סיסמה').fill(ADMIN_PASSWORD);
+    await page.getByLabel('סיסמה', { exact: true }).fill(ADMIN_PASSWORD);
     await page.getByRole('button', { name: 'התחבר למערכת' }).click();
     await expect(page).not.toHaveURL(/\/login/);
     await expect(page.getByRole('heading', { name: 'משתמשים' })).toBeVisible({ timeout: 30_000 });
@@ -63,7 +63,7 @@ test.describe('Admin logout (KAN-116)', () => {
     await expect(page.getByLabel('אימייל')).toBeVisible({ timeout: 15_000 });
     await page.getByLabel('זכור אותי').check();
     await page.getByLabel('אימייל').fill(ADMIN_EMAIL);
-    await page.getByLabel('סיסמה').fill(ADMIN_PASSWORD);
+    await page.getByLabel('סיסמה', { exact: true }).fill(ADMIN_PASSWORD);
     await page.getByRole('button', { name: 'התחבר למערכת' }).click();
     await expect(page.getByRole('heading', { name: 'משתמשים' })).toBeVisible({ timeout: 30_000 });
 

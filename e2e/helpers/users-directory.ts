@@ -9,7 +9,7 @@ export async function signInAsAdmin(page: Page): Promise<void> {
     'Admin sign-in form must exist (KAN-70). Seed admin is required (FR-012).',
   ).toBeVisible({ timeout: 15_000 });
   await page.getByLabel('אימייל').fill(ADMIN_EMAIL);
-  await page.getByLabel('סיסמה').fill(ADMIN_PASSWORD);
+  await page.getByLabel('סיסמה', { exact: true }).fill(ADMIN_PASSWORD);
   await page.getByRole('button', { name: 'התחבר למערכת' }).click();
   await expect(
     page.getByRole('heading', { name: 'משתמשים' }),
