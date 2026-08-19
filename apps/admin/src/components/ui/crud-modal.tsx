@@ -66,7 +66,9 @@ export function CrudModal({
           </svg>
         </button>
         <form onSubmit={handleSubmit} noValidate>
-          <div className="mb-6 flex items-start justify-between gap-4">
+          {/* Figma 12-12563: the title/subtitle block sits at the right with the
+              blue ⊕ badge immediately beside it (not at the far edge). */}
+          <div className="mb-6 flex items-start gap-4">
             <div>
               <h2 id="crud-modal-title" className="text-lg font-bold text-navy">
                 {title}
@@ -75,7 +77,7 @@ export function CrudModal({
             </div>
             <span
               aria-hidden="true"
-              className="ml-6 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-linkBlue text-white"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-linkBlue text-white"
             >
               <svg
                 viewBox="0 0 24 24"

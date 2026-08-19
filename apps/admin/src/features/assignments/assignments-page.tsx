@@ -124,13 +124,10 @@ export function AssignmentsPage() {
 
   return (
     <section>
-      <div className="flex items-start justify-between gap-3">
-        <PageHeader
-          title="שיוכים"
-          subtitle="כאן תוכל לשייך עובדים למשימות מתוך פרויקטים שונים של לקוחות."
-        />
-        <PrimaryButton onClick={() => setCreateOpen(true)}>שיוך חדש</PrimaryButton>
-      </div>
+      <PageHeader
+        title="שיוכים"
+        subtitle="כאן תוכל לשייך עובדים למשימות מתוך פרויקטים שונים של לקוחות."
+      />
 
       {successMessage ? (
         <div
@@ -149,7 +146,13 @@ export function AssignmentsPage() {
       ) : null}
 
       <div className="mb-4 flex flex-wrap items-end gap-3">
-        <SearchField placeholder="חיפוש לפי שם עובד" value={q} onChange={onSearchChange} />
+        <SearchField
+          className="ms-auto"
+          placeholder="חיפוש לפי שם עובד"
+          value={q}
+          onChange={onSearchChange}
+        />
+        <PrimaryButton onClick={() => setCreateOpen(true)}>שיוך חדש</PrimaryButton>
         <label className="flex flex-col gap-1 text-sm font-medium text-neutral-700">
           עובד
           <select

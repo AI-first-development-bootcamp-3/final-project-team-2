@@ -144,10 +144,7 @@ export function TasksPage() {
 
   return (
     <section>
-      <div className="flex items-start justify-between gap-3">
-        <PageHeader title="משימות" subtitle="כאן תוכל לנהל את המשימות בתוך הפרויקטים." />
-        <PrimaryButton onClick={() => setCreateOpen(true)}>משימה חדשה</PrimaryButton>
-      </div>
+      <PageHeader title="משימות" subtitle="כאן תוכל לנהל את המשימות בתוך הפרויקטים." />
 
       {successMessage ? (
         <div
@@ -166,7 +163,13 @@ export function TasksPage() {
       ) : null}
 
       <div className="mb-4 flex flex-wrap items-end gap-3">
-        <SearchField placeholder="חיפוש לפי שם משימה" value={q} onChange={onSearchChange} />
+        <SearchField
+          className="ms-auto"
+          placeholder="חיפוש לפי שם משימה"
+          value={q}
+          onChange={onSearchChange}
+        />
+        <PrimaryButton onClick={() => setCreateOpen(true)}>משימה חדשה</PrimaryButton>
         <label className="flex flex-col gap-1 text-sm font-medium text-neutral-700">
           פרויקט
           <select

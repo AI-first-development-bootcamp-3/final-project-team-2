@@ -107,10 +107,7 @@ export function ClientsPage() {
 
   return (
     <section>
-      <div className="flex items-start justify-between gap-3">
-        <PageHeader title="לקוחות" subtitle="כאן תוכל לנהל את רשימת הלקוחות של אברא." />
-        <PrimaryButton onClick={() => setCreateOpen(true)}>לקוח חדש</PrimaryButton>
-      </div>
+      <PageHeader title="לקוחות" subtitle="כאן תוכל לנהל את רשימת הלקוחות של אברא." />
 
       {successMessage ? (
         <div
@@ -129,7 +126,13 @@ export function ClientsPage() {
       ) : null}
 
       <div className="mb-4 flex flex-wrap items-end gap-3">
-        <SearchField placeholder="חיפוש לפי שם לקוח" value={q} onChange={onSearchChange} />
+        <SearchField
+          className="ms-auto"
+          placeholder="חיפוש לפי שם לקוח"
+          value={q}
+          onChange={onSearchChange}
+        />
+        <PrimaryButton onClick={() => setCreateOpen(true)}>לקוח חדש</PrimaryButton>
         <label className="flex flex-col gap-1 text-sm font-medium text-neutral-700">
           סטטוס
           <select

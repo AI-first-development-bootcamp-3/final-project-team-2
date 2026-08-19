@@ -10,10 +10,11 @@ export function SearchField(props: {
   placeholder: string;
   value: string;
   onChange: (value: string) => void;
+  className?: string;
 }) {
   const label = props.label ?? 'חיפוש';
   return (
-    <label className="relative block w-full max-w-[400px]">
+    <label className={`relative block w-full max-w-[400px] ${props.className ?? ''}`}>
       <span className="sr-only">{label}</span>
       <input
         type="search"
@@ -61,14 +62,29 @@ export function PrimaryButton(props: {
   onClick: () => void;
   disabled?: boolean;
 }) {
+  // base_Button per Figma: label at right, 24px icon in the left slot, gap 8.
+  // Ours opens a create modal directly, so the icon is the design's add-circle
+  // rather than the dropdown chevron of the יצירה menu variant.
   return (
     <button
       type="button"
       onClick={props.onClick}
       disabled={props.disabled}
-      className="h-12 rounded-lg bg-linkBlue px-4 text-lg font-bold text-white shadow-sm transition-colors hover:bg-linkBlue/90 disabled:opacity-50"
+      className="flex h-12 shrink-0 items-center gap-2 rounded-lg bg-linkBlue px-4 text-lg font-bold text-white shadow-sm transition-colors hover:bg-linkBlue/90 disabled:opacity-50"
     >
-      {props.children}
+      <span>{props.children}</span>
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        className="h-6 w-6"
+        aria-hidden="true"
+      >
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 8v8 M8 12h8" />
+      </svg>
     </button>
   );
 }

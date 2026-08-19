@@ -106,13 +106,10 @@ export function UsersPage() {
 
   return (
     <section>
-      <div className="flex items-start justify-between gap-3">
-        <PageHeader
-          title="משתמשים"
-          subtitle="כאן תוכל לנהל את משתמשי המערכת — עריכה, איפוס סיסמה והשבתה."
-        />
-        <PrimaryButton onClick={() => setCreateOpen(true)}>יצירת משתמש</PrimaryButton>
-      </div>
+      <PageHeader
+        title="משתמשים"
+        subtitle="כאן תוכל לנהל את משתמשי המערכת — עריכה, איפוס סיסמה והשבתה."
+      />
 
       {successMessage ? (
         <div
@@ -131,7 +128,6 @@ export function UsersPage() {
       ) : null}
 
       <div className="mb-4 flex flex-wrap items-center gap-3">
-        <SearchField placeholder="חיפוש לפי שם או אימייל" value={q} onChange={onSearchChange} />
         <FilterSelect
           label="תפקיד"
           value={role}
@@ -167,6 +163,13 @@ export function UsersPage() {
           />
           כולל מושבתים
         </label>
+        <SearchField
+          className="ms-auto"
+          placeholder="חיפוש לפי שם או אימייל"
+          value={q}
+          onChange={onSearchChange}
+        />
+        <PrimaryButton onClick={() => setCreateOpen(true)}>יצירת משתמש</PrimaryButton>
       </div>
 
       {loading ? <p>טוען…</p> : null}

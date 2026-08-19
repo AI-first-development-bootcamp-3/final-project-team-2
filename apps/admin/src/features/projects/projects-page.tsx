@@ -140,10 +140,7 @@ export function ProjectsPage() {
 
   return (
     <section>
-      <div className="flex items-start justify-between gap-3">
-        <PageHeader title="פרויקטים" subtitle="כאן תוכל לנהל את הפרויקטים של כל לקוח." />
-        <PrimaryButton onClick={() => setCreateOpen(true)}>פרויקט חדש</PrimaryButton>
-      </div>
+      <PageHeader title="פרויקטים" subtitle="כאן תוכל לנהל את הפרויקטים של כל לקוח." />
 
       {successMessage ? (
         <div
@@ -162,7 +159,13 @@ export function ProjectsPage() {
       ) : null}
 
       <div className="mb-4 flex flex-wrap items-end gap-3">
-        <SearchField placeholder="חיפוש לפי שם פרויקט" value={q} onChange={onSearchChange} />
+        <SearchField
+          className="ms-auto"
+          placeholder="חיפוש לפי שם פרויקט"
+          value={q}
+          onChange={onSearchChange}
+        />
+        <PrimaryButton onClick={() => setCreateOpen(true)}>פרויקט חדש</PrimaryButton>
         <label className="flex flex-col gap-1 text-sm font-medium text-neutral-700">
           לקוח
           <select
