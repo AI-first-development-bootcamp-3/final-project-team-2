@@ -26,6 +26,11 @@ const USER_LIST_SELECT = {
   email: true,
   role: true,
   is_active: true,
+  employee_number: true,
+  role_title: true,
+  employment_type: true,
+  employment_percent: true,
+  org_unit: true,
 } as const;
 
 const BCRYPT_SALT_ROUNDS = 10;
@@ -36,6 +41,11 @@ function toListItem(row: {
   email: string;
   role: UserListItem['role'];
   is_active: boolean;
+  employee_number?: string | null;
+  role_title?: string | null;
+  employment_type?: NonNullable<UserListItem['employmentType']> | null;
+  employment_percent?: number | null;
+  org_unit?: string | null;
 }): UserListItem {
   return {
     id: row.id,
@@ -43,6 +53,11 @@ function toListItem(row: {
     email: row.email,
     role: row.role,
     isActive: row.is_active,
+    employeeNumber: row.employee_number ?? null,
+    roleTitle: row.role_title ?? null,
+    employmentType: row.employment_type ?? null,
+    employmentPercent: row.employment_percent ?? null,
+    orgUnit: row.org_unit ?? null,
   };
 }
 
@@ -99,6 +114,13 @@ export class UsersService {
           email,
           password_hash: passwordHash,
           role: input.role,
+          ...(input.employeeNumber !== undefined ? { employee_number: input.employeeNumber } : {}),
+          ...(input.roleTitle !== undefined ? { role_title: input.roleTitle } : {}),
+          ...(input.employmentType !== undefined ? { employment_type: input.employmentType } : {}),
+          ...(input.employmentPercent !== undefined
+            ? { employment_percent: input.employmentPercent }
+            : {}),
+          ...(input.orgUnit !== undefined ? { org_unit: input.orgUnit } : {}),
         },
         select: USER_LIST_SELECT,
       });
@@ -151,17 +173,22 @@ export class UsersService {
         ...(payload.fullName ? { full_name: payload.fullName } : {}),
         ...(payload.email ? { email: payload.email } : {}),
         ...(payload.role ? { role: payload.role } : {}),
+        ...(payload.employeeNumber !== undefined
+          ? { employee_number: payload.employeeNumber }
+          : {}),
+        ...(payload.roleTitle !== undefined ? { role_title: payload.roleTitle } : {}),
+        ...(payload.employmentType !== undefined
+          ? { employment_type: payload.employmentType }
+          : {}),
+        ...(payload.employmentPercent !== undefined
+          ? { employment_percent: payload.employmentPercent }
+          : {}),
+        ...(payload.orgUnit !== undefined ? { org_unit: payload.orgUnit } : {}),
       },
       select: USER_LIST_SELECT,
     });
 
-    return {
-      id: updated.id,
-      fullName: updated.full_name,
-      email: updated.email,
-      role: updated.role,
-      isActive: updated.is_active,
-    };
+    return toListItem(updated);
   }
 
   async resetPassword(id: string, payload: ResetPasswordPayload): Promise<{ message: string }> {

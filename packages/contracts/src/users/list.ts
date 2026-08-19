@@ -16,6 +16,9 @@ const includeDeletedQuery = z.preprocess((value) => {
   return value;
 }, z.boolean());
 
+export const EmploymentType = z.enum(['worker', 'manager']);
+export type EmploymentType = z.infer<typeof EmploymentType>;
+
 export const UsersListSortSchema = z.enum(['fullName', 'email', 'role', 'isActive']);
 export const UsersListOrderSchema = z.enum(['asc', 'desc']);
 
@@ -43,6 +46,11 @@ export const UserListItemSchema = z.object({
   email: z.string(),
   role: UserRole,
   isActive: z.boolean(),
+  employeeNumber: z.string().nullable().optional(),
+  roleTitle: z.string().nullable().optional(),
+  employmentType: EmploymentType.nullable().optional(),
+  employmentPercent: z.number().int().min(0).max(100).nullable().optional(),
+  orgUnit: z.string().nullable().optional(),
 });
 
 export const UsersListSuccessSchema = listSuccessSchema(UserListItemSchema);

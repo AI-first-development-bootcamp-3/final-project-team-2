@@ -15,6 +15,19 @@ const ALICE = {
   role: 'employee' as const,
   is_active: true,
   deleted_at: null,
+  employee_number: 'EMP-001',
+  role_title: 'מפתחת תוכנה',
+  employment_type: 'worker' as const,
+  employment_percent: 80,
+  org_unit: 'פיתוח',
+};
+
+const ALICE_HR_CAMEL = {
+  employeeNumber: 'EMP-001',
+  roleTitle: 'מפתחת תוכנה',
+  employmentType: 'worker',
+  employmentPercent: 80,
+  orgUnit: 'פיתוח',
 };
 
 function userFor(auth: 'none' | 'admin' | 'employee') {
@@ -60,6 +73,11 @@ async function createApp(auth: 'none' | 'admin' | 'employee') {
         email: data.email,
         role: data.role,
         is_active: true,
+        employee_number: data.employee_number ?? null,
+        role_title: data.role_title ?? null,
+        employment_type: data.employment_type ?? null,
+        employment_percent: data.employment_percent ?? null,
+        org_unit: data.org_unit ?? null,
       })),
     },
   };
@@ -115,6 +133,7 @@ describe('GET /api/v1/users', () => {
           email: 'employee1@abra.co',
           role: 'employee',
           isActive: true,
+          ...ALICE_HR_CAMEL,
         },
       ],
       meta: { page: 1, limit: 20, total: 1 },
@@ -145,7 +164,115 @@ describe('PATCH /api/v1/users/:id', () => {
       email: 'employee1@abra.co',
       role: 'admin',
       isActive: false,
+      ...ALICE_HR_CAMEL,
     });
+  });
+
+  it('persists HR metadata to snake_case columns and returns camelCase fields', async () => {
+    const created = await createApp('admin');
+    app = created.app;
+    created.prisma.user.update.mockResolvedValue({
+      ...ALICE,
+      employee_number: 'EMP-002',
+      role_title: 'ראש צוות',
+      employment_type: 'manager',
+      employment_percent: 50,
+      org_unit: 'תפעול',
+    });
+
+    const response = await request(app.getHttpServer())
+      .patch(`/api/v1/users/${ALICE.id}`)
+      .set('Authorization', 'Bearer admin-token')
+      .send({
+        employeeNumber: 'EMP-002',
+        roleTitle: 'ראש צוות',
+        employmentType: 'manager',
+        employmentPercent: 50,
+        orgUnit: 'תפעול',
+      })
+      .expect(200);
+
+    expect(created.prisma.user.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: ALICE.id },
+        data: {
+          employee_number: 'EMP-002',
+          role_title: 'ראש צוות',
+          employment_type: 'manager',
+          employment_percent: 50,
+          org_unit: 'תפעול',
+        },
+      }),
+    );
+    expect(response.body).toMatchObject({
+      employeeNumber: 'EMP-002',
+      roleTitle: 'ראש צוות',
+      employmentType: 'manager',
+      employmentPercent: 50,
+      orgUnit: 'תפעול',
+    });
+  });
+
+  it('clears HR metadata when nulls are sent', async () => {
+    const created = await createApp('admin');
+    app = created.app;
+    created.prisma.user.update.mockResolvedValue({
+      ...ALICE,
+      employee_number: null,
+      role_title: null,
+      employment_type: null,
+      employment_percent: null,
+      org_unit: null,
+    });
+
+    const response = await request(app.getHttpServer())
+      .patch(`/api/v1/users/${ALICE.id}`)
+      .set('Authorization', 'Bearer admin-token')
+      .send({
+        employeeNumber: null,
+        roleTitle: null,
+        employmentType: null,
+        employmentPercent: null,
+        orgUnit: null,
+      })
+      .expect(200);
+
+    expect(created.prisma.user.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: {
+          employee_number: null,
+          role_title: null,
+          employment_type: null,
+          employment_percent: null,
+          org_unit: null,
+        },
+      }),
+    );
+    expect(response.body).toMatchObject({
+      employeeNumber: null,
+      roleTitle: null,
+      employmentType: null,
+      employmentPercent: null,
+      orgUnit: null,
+    });
+  });
+
+  it('returns 400 for an out-of-range employmentPercent', async () => {
+    ({ app } = await createApp('admin'));
+    await request(app.getHttpServer())
+      .patch(`/api/v1/users/${ALICE.id}`)
+      .set('Authorization', 'Bearer admin-token')
+      .send({ employmentPercent: 101 })
+      .expect(400);
+  });
+
+  it('returns 400 for an unknown employmentType', async () => {
+    ({ app } = await createApp('admin'));
+    await request(app.getHttpServer())
+      .patch(`/api/v1/users/${ALICE.id}`)
+      .set('Authorization', 'Bearer admin-token')
+      .send({ employmentType: 'freelancer' })
+      .expect(400);
   });
 
   it('returns 409 Conflict if email is taken by another user', async () => {
@@ -282,6 +409,11 @@ describe('POST /api/v1/users', () => {
         email: 'nadav@org.com',
         role: 'employee',
         isActive: true,
+        employeeNumber: null,
+        roleTitle: null,
+        employmentType: null,
+        employmentPercent: null,
+        orgUnit: null,
       },
     });
     expectNoSecrets(response.body);
@@ -305,6 +437,42 @@ describe('POST /api/v1/users', () => {
     expect(createArgs.select).not.toHaveProperty('password_hash');
     expect(createArgs.select).not.toHaveProperty('token_version');
     expect(createArgs.data).not.toHaveProperty('token_version');
+  });
+
+  it('persists optional HR metadata on create and returns it in camelCase', async () => {
+    const created = await createApp('admin');
+    app = created.app;
+    const response = await request(app.getHttpServer())
+      .post('/api/v1/users')
+      .set('Authorization', 'Bearer admin-token')
+      .send({
+        ...CREATE_EMPLOYEE,
+        employeeNumber: 'EMP-101',
+        roleTitle: 'מפתח תוכנה',
+        employmentType: 'worker',
+        employmentPercent: 100,
+        orgUnit: 'פיתוח',
+      })
+      .expect(201);
+
+    expect(created.prisma.user.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          employee_number: 'EMP-101',
+          role_title: 'מפתח תוכנה',
+          employment_type: 'worker',
+          employment_percent: 100,
+          org_unit: 'פיתוח',
+        }),
+      }),
+    );
+    expect(response.body.data).toMatchObject({
+      employeeNumber: 'EMP-101',
+      roleTitle: 'מפתח תוכנה',
+      employmentType: 'worker',
+      employmentPercent: 100,
+      orgUnit: 'פיתוח',
+    });
   });
 
   it('creates an active admin', async () => {

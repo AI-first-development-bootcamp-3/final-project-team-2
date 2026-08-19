@@ -75,6 +75,27 @@ describe('CreateUserBodySchema', () => {
     expect(result.error.issues[0]?.message).toBe('VAL-04');
   });
 
+  it('accepts optional HR metadata fields', () => {
+    const withHr = {
+      ...validBody,
+      employeeNumber: 'EMP-101',
+      roleTitle: 'מפתח תוכנה',
+      employmentType: 'manager' as const,
+      employmentPercent: 100,
+      orgUnit: 'פיתוח',
+    };
+    expect(CreateUserBodySchema.parse(withHr)).toEqual(withHr);
+  });
+
+  it('rejects an invalid employmentType and out-of-range employmentPercent', () => {
+    expect(
+      CreateUserBodySchema.safeParse({ ...validBody, employmentType: 'freelancer' }).success,
+    ).toBe(false);
+    expect(CreateUserBodySchema.safeParse({ ...validBody, employmentPercent: 101 }).success).toBe(
+      false,
+    );
+  });
+
   it('rejects an invalid role with VAL-12', () => {
     const result = CreateUserBodySchema.safeParse({ ...validBody, role: 'manager' });
     expect(result.success).toBe(false);

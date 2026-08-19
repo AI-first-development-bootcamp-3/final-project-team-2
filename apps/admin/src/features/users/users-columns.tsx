@@ -25,6 +25,12 @@ export function createUsersColumns(params: {
       cell: (row) => row.fullName,
     },
     {
+      id: 'employeeNumber',
+      header: "מס' עובד",
+      sortable: false,
+      cell: (row) => row.employeeNumber ?? '—',
+    },
+    {
       id: 'email',
       header: 'אימייל',
       sortable: true,
@@ -35,6 +41,12 @@ export function createUsersColumns(params: {
       header: 'תפקיד',
       sortable: true,
       cell: (row) => ROLE_LABEL[row.role],
+    },
+    {
+      id: 'orgUnit',
+      header: 'יחידה ארגונית',
+      sortable: false,
+      cell: (row) => row.orgUnit ?? '—',
     },
     {
       id: 'isActive',
