@@ -62,6 +62,31 @@ describe('Admin LoginPage — form and client-side validation (KAN-70 3.1)', () 
     expect(rtlRegion).not.toBeNull();
   });
 
+  it('masks the password by default and reveals then hides it via the toggle', () => {
+    renderLogin();
+
+    const passwordInput = screen.getByLabelText('סיסמה');
+    expect(passwordInput).toHaveAttribute('type', 'password');
+    expect(screen.getByRole('button', { name: 'הצג סיסמה' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'הצג סיסמה' }));
+    expect(passwordInput).toHaveAttribute('type', 'text');
+    expect(screen.getByRole('button', { name: 'הסתר סיסמה' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'הסתר סיסמה' }));
+    expect(passwordInput).toHaveAttribute('type', 'password');
+    expect(screen.getByRole('button', { name: 'הצג סיסמה' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
+  });
+
   it('shows the shared Hebrew message for a malformed email without calling the API', async () => {
     renderLogin();
     fillAndSubmit('not-an-email', 'Password123!');
